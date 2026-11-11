@@ -1,0 +1,14 @@
+{
+  "name": "archiveos",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:ui": "playwright test",
+    "tauri": "tauri"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.0",
+    "@tauri-apps/cli": "2.12.4"
+  }
+}

@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ArchiveOS</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&family=Noto+Sans+JP:wght@500;600&text=档案·索引開く戻るカテゴリ詳細閉じるすべて&display=swap">
+<style>
+:root {
+  --paper: #EDE6DA; --sheet: #F5EFE6;
+  --mocha-ink: #261A14; --mocha-mid: #5C463B; --mocha-muted: #8A7367;
+  --forest: #234434; --gold: #B89658;
+  --rule: rgba(38, 26, 20, .88);
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --H: min(46vh, 31vw);
+  --font-serif: "Newsreader", Georgia, serif;
+  --font-sans: "Inter Tight", "Noto Sans JP", system-ui, sans-serif;
+  --font-logo: "Noto Serif SC", serif;
+}
+@media (max-width: 760px) { :root { --H: min(60vw, 40svh); } }
+
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  background: var(--paper); color: var(--mocha-ink);
+  font-family: var(--font-sans); -webkit-font-smoothing: antialiased;
+  user-select: none; -webkit-user-select: none;
+}
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+@media (pointer: fine) { body, body * { cursor: none !important; } }
+
+.lbl { font: 600 10.5px/1 var(--font-sans); letter-spacing: .09em; text-transform: uppercase; }
+.box { display: inline-flex; align-items: center; height: 21px; padding: 0 8px; border: 1px solid var(--rule); white-space: nowrap; }
+mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
+
+/* masked line reveals: overflow mask + translate, never opacity */
+.m { display: block; overflow: hidden; }
+.mi { display: block; transform: translateY(110%); transition: transform .9s var(--ease) var(--dl, 0s); }
+/* roll containers: stacked spans that slide through a mask */
+.rl { display: inline-grid; overflow: hidden; vertical-align: top; }
+.rl > span { grid-area: 1 / 1; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+.grain {
+  position: fixed; inset: 0; z-index: 40; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .38 0 0 0 0 .30 0 0 0 0 .24 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+#probe { position: fixed; left: -10px; top: 0; width: 1px; height: var(--H); visibility: hidden; }
+
+/* ---------- Stage 0: meadow ---------- */
+#landing { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
+#meadow { position: absolute; left: 0; top: 0; image-rendering: pixelated; }
+.hero { position: absolute; left: clamp(20px, 5vw, 72px); top: clamp(28px, 9vh, 104px); max-width: min(760px, 88vw); }
+.hero h1 { font: 400 clamp(36px, 4.8vw, 68px)/1.02 var(--font-serif); letter-spacing: -.012em; }
+.hero p { font: 400 clamp(16px, 1.35vw, 19px)/1.5 var(--font-serif); color: var(--mocha-mid); max-width: 42ch; margin-top: 18px; }
+.hero .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+.cta { height: 36px; padding: 0 14px; font-size: 12px; color: var(--mocha-ink); background: var(--sheet); transition: background-color .3s var(--ease); }
+.cta.primary { background: var(--forest); color: var(--paper); border-color: var(--gold); }
+.cta:hover { background: var(--gold); color: var(--mocha-ink); }
+#landing.ready .mi { transform: none; }
+.pills { position: absolute; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.pill { display: inline-flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; background: rgba(35, 68, 52, .92); color: var(--paper); border: 1px solid var(--gold); font-size: 10.5px; }
+.pill::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex: none; }
+#deskHit { position: absolute; }
+
+/* ---------- sheets ---------- */
+.sheet { position: fixed; inset: 0; visibility: hidden; }
+#vault { z-index: 10; background: var(--paper); }
+#tier2 { z-index: 20; background: var(--sheet); }
+
+/* ---------- 3D shelf ---------- */
+.shelf { position: absolute; inset: 0; perspective: 2200px; perspective-origin: 50% 50%; touch-action: pan-y; }
+.stage { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform-style: preserve-3d; }
+.tape { position: absolute; left: 0; top: 0; transform-style: preserve-3d; will-change: transform; --o: 0; }
+.sp, .cv { position: absolute; top: calc(var(--H) / -2); height: var(--H); backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 2px; border: 1px solid var(--rule); overflow: hidden; }
+.sp::after, .cv::after { content: ''; position: absolute; inset: 0; background: #1A110D; opacity: var(--shade); pointer-events: none; }
+.sp { --shade: calc(var(--o) * .55); width: var(--ws); left: calc(var(--ws) / -2); transform: translateZ(calc(var(--d) / 2)); background: var(--mocha-mid); display: flex; flex-direction: column; align-items: center; gap: calc(var(--H) * .022); padding: calc(var(--H) * .03) 0; }
+.t1 .sp { background: var(--forest); }
+.cv { --shade: calc((1 - var(--o)) * .5); width: var(--d); left: calc(var(--d) / -2); transform: rotateY(90deg) translateZ(calc(var(--ws) / 2)); background: var(--sheet); box-shadow: 0 30px 60px -28px rgba(38, 26, 20, .55); display: flex; flex-direction: column; gap: calc(var(--H) * .022); padding: calc(var(--H) * .036); }
+.sp .ext { background: var(--gold); color: var(--mocha-ink); padding: 3px 4px; font-size: 8.5px; letter-spacing: .06em; max-width: 86%; overflow: hidden; }
+/* vertical-rl: line-height is the column width, so one line sits centred in the label */
+.sp .name { flex: 1; min-height: 0; width: 72%; background: var(--sheet); border: 1px solid var(--rule); writing-mode: vertical-rl; padding: calc(var(--H) * .025) 0; display: block; font: 400 calc(var(--H) * .044) var(--font-serif); line-height: calc(var(--ws) * .72 - 2px); letter-spacing: -.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sp .meta { writing-mode: vertical-rl; color: var(--paper); font-size: 8px; letter-spacing: .14em; white-space: nowrap; max-height: 30%; overflow: hidden; }
+.sp .fmt { color: var(--paper); border-color: rgba(237, 230, 218, .7); height: 17px; padding: 0 4px; font-size: 8px; }
+.cv .hd { display: flex; justify-content: space-between; gap: 6px; color: var(--forest); font-size: 8.5px; }
+.cv h3 { font: 400 calc(var(--H) * .05)/1.06 var(--font-serif); letter-spacing: -.01em; overflow-wrap: anywhere; max-height: 3.2em; overflow: hidden; }
+.cv .art { flex: 1; min-height: 0; border: 1px solid var(--rule); background: var(--paper); overflow: hidden; }
+.cv .art svg { width: 100%; height: 100%; display: block; }
+.cv .snip { background: var(--forest); color: var(--paper); font: 400 calc(var(--H) * .028)/1.32 var(--font-serif); padding: 6px 8px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; flex: none; }
+.cv .snip b { font: 600 8px/1 var(--font-sans); letter-spacing: .1em; color: var(--gold); margin-right: 4px; }
+.cv .snip mark { background: rgba(184, 150, 88, .45); }
+.cv .ft { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 8.5px; color: var(--mocha-mid); }
+.cv .ft .box { height: 18px; font-size: 8.5px; color: var(--mocha-ink); }
+
+/* ---------- chrome (top bar, search, tabs, caption, ring) ---------- */
+#chrome { position: fixed; inset: 0; z-index: 30; pointer-events: none; visibility: hidden; transition: visibility 0s .7s; }
+[data-chrome="on"] #chrome { visibility: visible; transition-delay: 0s; }
+#chrome .hit { pointer-events: auto; }
+[data-chrome="on"] #chrome .mi { transform: none; }
+.top { position: absolute; top: 0; left: 0; right: 0; height: 84px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 clamp(14px, 3vw, 40px); }
+.top .right { justify-self: end; display: flex; align-items: center; gap: 14px; }
+.top .count { color: var(--mocha-mid); }
+.emblem { text-align: center; color: var(--forest); }
+.emblem .cn { font: 700 17px/1 var(--font-logo); letter-spacing: .1em; }
+.emblem .cn i { font-style: normal; color: var(--gold); }
+.emblem .en { font: 600 9px/1 var(--font-sans); letter-spacing: .34em; margin-top: 7px; padding-left: .34em; }
+.search-wrap { position: absolute; left: 50%; transform: translateX(-50%); width: min(580px, 88vw); top: max(92px, calc(50% - var(--H) / 2 - 142px)); }
+.search { height: 38px; display: flex; align-items: stretch; border: 1px solid var(--rule); background: var(--sheet); }
+.search:focus-within { outline: 2px solid var(--gold); outline-offset: -3px; }
+.search .tag { display: flex; align-items: center; padding: 0 10px; border-right: 1px solid var(--rule); color: var(--forest); }
+#q { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; padding: 0 12px; font: 400 17px var(--font-serif); color: var(--mocha-ink); user-select: text; -webkit-user-select: text; }
+#q::placeholder { color: var(--mocha-mid); }
+.search .hint { display: flex; align-items: center; padding: 0 10px; color: var(--mocha-mid); }
+.rows { position: absolute; left: 0; right: 0; top: max(142px, calc(50% - var(--H) / 2 - 86px)); display: grid; justify-items: center; }
+.row { grid-area: 1 / 1; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; visibility: hidden; transition: visibility 0s .6s; }
+.row .mi { transition-duration: .6s; }
+[data-mode="vault"] #tabs1, [data-mode="files"] #tabs2, [data-mode="detail"] #tabs2 { visibility: visible; transition-delay: 0s; }
+[data-chrome="on"]:not([data-mode="vault"]) #tabs1 .mi, [data-chrome="on"][data-mode="vault"] #tabs2 .mi { transform: translateY(110%); }
+.tabs { position: relative; display: flex; }
+.row > .m { max-width: 100vw; }
+.tabs button { position: relative; z-index: 1; margin-left: -1px; transition: color .6s var(--ease); }
+.tabs button.on { color: var(--paper); }
+.tabs .ind { position: absolute; left: 0; top: 0; height: 21px; width: 0; background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .6s var(--ease), width .6s var(--ease); }
+.ctx-wrap { grid-row: 2; margin-top: 12px; max-width: 92vw; text-align: center; color: var(--mocha-mid); }
+.cap { position: absolute; left: 50%; transform: translateX(-50%); top: calc(50% + var(--H) / 2 + 30px); width: min(92vw, 940px); text-align: center; }
+.cap .rl { display: grid; justify-items: center; width: 100%; }
+.cap .rl > span { max-width: 100%; }
+#cap1 { font: 400 31px/1.2 var(--font-serif); letter-spacing: -.01em; }
+#cap2 { color: var(--forest); margin-top: 10px; line-height: 1.25; }
+#cap3 { font: 500 11px/1.3 var(--font-sans); color: var(--mocha-mid); letter-spacing: .06em; margin-top: 8px; text-transform: uppercase; }
+#ring {
+  position: fixed; left: calc(50vw - .5 * var(--d) - 6px); top: calc(50vh + .36 * var(--H));
+  width: 42px; height: 42px; margin: -21px 0 0 -21px; border-radius: 50%;
+  border: 1px solid var(--forest); background: rgba(237, 230, 218, .85); color: var(--gold);
+  display: grid; place-items: center; transform: scale(var(--rs, 0)); pointer-events: auto;
+}
+[data-mode="landing"] #ring, [data-mode="detail"] #ring { visibility: hidden; }
+#empty { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(90vw, 560px); text-align: center; visibility: hidden; }
+#empty.on { visibility: visible; }
+#empty h2 { font: 400 31px/1.2 var(--font-serif); }
+#empty p { margin-top: 12px; color: var(--mocha-mid); line-height: 1.5; }
+
+/* ---------- inspector ---------- */
+#detail {
+  z-index: 60; background: var(--sheet); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4vw; align-items: center;
+  padding: 84px clamp(20px, 6vw, 96px) 40px;
+}
+#detail .close { position: absolute; top: 30px; right: clamp(14px, 3vw, 40px); }
+.d-left .m + .m { margin-top: 18px; }
+.d-left .mi { transition-duration: .9s; transform: translateY(110%); }
+#detail.in .d-left .mi { transform: none; }
+#d-badge { color: var(--forest); }
+#d-name:focus { outline: none; }
+#d-name { font: 400 clamp(36px, 4.5vw, 68px)/1.04 var(--font-serif); letter-spacing: -.015em; overflow-wrap: break-word; }
+#d-meta { color: var(--mocha-mid); line-height: 1.5; }
+#d-snippet { font: 400 17px/1.6 var(--font-serif); max-width: 62ch; user-select: text; -webkit-user-select: text; }
+#d-path { font: italic 400 15px/1.45 var(--font-serif); color: var(--mocha-mid); overflow-wrap: anywhere; }
+.d-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.act { height: 44px; padding: 0 16px; border-color: var(--forest); color: var(--forest); background: transparent; transition: background-color .3s var(--ease), color .3s var(--ease); }
+.act:hover { background: var(--gold); color: var(--mocha-ink); }
+.d-right svg { display: block; height: min(80vh, 900px); width: auto; aspect-ratio: 474 / 900; }
+@media (max-width: 860px) {
+  #detail { grid-template-columns: 1fr; align-content: start; overflow-y: auto; }
+  .d-right svg { height: 56vh; margin: 0 auto; }
+  .top .count { display: none; }
+}
+@media (max-width: 560px) {
+  .top { grid-template-columns: auto 1fr; gap: 12px; }
+  .top .right { display: none; }
+  .emblem { justify-self: end; }
+  .row { gap: 8px; }
+  .row .tabs { overflow-x: auto; scrollbar-width: none; }
+  #cap1 { font-size: 24px; }
+}
+
+/* ---------- toast + cursor ---------- */
+#toast {
+  position: fixed; left: 50%; bottom: 28px; z-index: 90; max-width: min(560px, 90vw);
+  transform: translate(-50%, calc(100% + 40px)); transition: transform .5s var(--ease);
+  background: var(--mocha-ink); color: var(--paper); border: 1px solid var(--gold); padding: 12px 16px; font: 400 15px/1.4 var(--font-serif);
+}
+#toast.on { transform: translate(-50%, 0); }
+#cursor { position: fixed; left: 0; top: 0; width: 58px; height: 58px; margin: -29px 0 0 -29px; z-index: 100; pointer-events: none; }
+@media (pointer: coarse) {
+  #cursor { display: none; }
+  /* brief fixes .box at 21px tall; widen the touch area without changing the look */
+  button.box { position: relative; }
+  button.box::after { content: ''; position: absolute; inset: -12px -2px; }
+}
+.c-ring { position: absolute; inset: 0; border: 1.5px solid var(--mocha-ink); border-radius: 50%; transition: transform .35s var(--ease), background-color .35s var(--ease), border-color .35s var(--ease); }
+.c-dot { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--mocha-ink); transition: transform .25s var(--ease); }
+.c-lbl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--paper); font-size: 7.5px; line-height: 1.3; clip-path: circle(0% at 50% 50%); transition: clip-path .35s var(--ease); }
+#cursor.spine .c-ring { transform: scale(.72); }
+#cursor.btn .c-ring { transform: scale(.55); }
+#cursor.btn .c-dot, #cursor.open .c-dot { transform: scale(0); }
+#cursor.open .c-ring { transform: scale(1.75); background: var(--forest); border-color: var(--gold); }
+#cursor.open .c-lbl { clip-path: circle(70% at 50% 50%); }
+
+/* Scoped to the elements that move: a universal rule would also transition every element's
+   inherited visibility, so a just-revealed input stays unfocusable for a frame. */
+@media (prefers-reduced-motion: reduce) {
+  .mi, .rl > span, .tabs .ind, .tabs button, #toast, .c-ring, .c-dot, .c-lbl, .cta, .act { transition-duration: 1ms !important; transition-delay: 0s !important; }
+}
+</style>
+</head>
+<body data-view="landing" data-mode="landing">
+<div class="grain" aria-hidden="true"></div>
+<div id="probe" aria-hidden="true"></div>
+
+<section id="landing" aria-label="Welcome">
+  <canvas id="meadow" aria-hidden="true"></canvas>
+  <div class="hero">
+    <h1><span class="m"><span class="mi">Every file you own,</span></span><span class="m"><span class="mi" style="--dl:.08s">indexed inside and out.</span></span></h1>
+    <p class="m"><span class="mi" style="--dl:.18s">Search by filename, date, category, or a single phrase buried inside a PDF or photo.</span></p>
+    <div class="m"><div class="mi acts" style="--dl:.28s">
+      <button class="cta primary lbl box" id="enterBtn">Enter file vault / 開く</button>
+      <button class="cta lbl box" id="voiceBtn">Voice / semantic search</button>
+    </div></div>
+  </div>
+  <div class="pills" id="pills"></div>
+  <button id="deskHit" aria-label="Open the archive binder"></button>
+</section>
+
+<section id="vault" class="sheet" aria-label="Category shelf">
+  <div class="shelf" id="shelf1"><div class="stage t1"></div></div>
+</section>
+
+<section id="tier2" class="sheet" aria-label="File shelf">
+  <div class="shelf" id="shelf2"><div class="stage t2"></div></div>
+  <div id="empty" role="status"><h2 id="emptyTitle"></h2><p class="lbl" id="emptyHint"></p></div>
+</section>
+
+<div id="chrome">
+  <header class="top">
+    <div class="m"><div class="mi"><button class="lbl box hit" id="back"><span class="rl" id="backLbl"></span></button></div></div>
+    <div class="m emblem"><div class="mi" style="--dl:.06s"><div class="cn">档案 <i>·</i> 索引</div><div class="en">ARCHIVE OS</div></div></div>
+    <div class="right">
+      <div class="m"><div class="mi lbl count" id="count" style="--dl:.12s"></div></div>
+      <div class="m"><div class="mi" style="--dl:.16s"><button class="lbl box hit" id="searchBtn">⌘K / Search inside files</button></div></div>
+    </div>
+  </header>
+  <div class="m search-wrap"><form class="search hit mi" id="searchForm" role="search" style="--dl:.1s">
+    <label class="tag lbl" for="q">Find</label>
+    <input id="q" type="search" autocomplete="off" spellcheck="false" maxlength="200" placeholder="blood related, invoice, hackathon deck…">
+    <span class="hint lbl"><span class="rl" id="qhint"><span>/ or ⌘K</span></span></span>
+  </form></div>
+  <div class="rows">
+    <div class="row" id="tabs1"><div class="m"><div class="mi tabs hit" data-group="tab" style="--dl:.18s">
+      <span class="ind"></span>
+      <button class="lbl box on" data-v="all">All / すべて</button>
+      <button class="lbl box" data-v="docs">Docs (PDF/PPT/DOCX)</button>
+      <button class="lbl box" data-v="media">Media (JPEG/MP4)</button>
+      <button class="lbl box" data-v="code">Code &amp; data</button>
+      <button class="lbl box" data-v="smart">Smart clusters</button>
+    </div></div></div>
+    <div class="row" id="tabs2">
+      <div class="m"><div class="mi tabs hit" data-group="sort">
+        <span class="ind"></span>
+        <button class="lbl box on" data-v="relevance">Sort: relevance</button>
+        <button class="lbl box" data-v="name">Name (A–Z)</button>
+        <button class="lbl box" data-v="newest">Date (newest)</button>
+        <button class="lbl box" data-v="oldest">Date (oldest)</button>
+        <button class="lbl box" data-v="largest">Size (largest)</button>
+      </div></div>
+      <div class="m"><div class="mi tabs hit" data-group="fmt" style="--dl:.06s">
+        <span class="ind"></span>
+        <button class="lbl box on" data-v="ALL">All</button>
+        <button class="lbl box" data-v="PDF">PDF</button>
+        <button class="lbl box" data-v="PPT">PPT</button>
+        <button class="lbl box" data-v="JPEG">JPEG</button>
+        <button class="lbl box" data-v="DOCX">DOCX</button>
+      </div></div>
+    </div>
+    <div class="m ctx-wrap"><div class="mi lbl" style="--dl:.22s"><span class="rl" id="ctx"></span></div></div>
+  </div>
+  <div class="cap" aria-live="polite">
+    <div class="rl" id="cap1"></div>
+    <div class="rl lbl" id="cap2"></div>
+    <div class="rl" id="cap3"></div>
+  </div>
+  <button id="ring" class="hit" aria-label="Open"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg></button>
+</div>
+
+<section id="detail" class="sheet" aria-label="File inspector">
+  <button class="lbl box close" id="closeBtn">Close / 閉じる</button>
+  <div class="d-left">
+    <div class="m"><div class="mi lbl" id="d-badge" style="--dl:.62s"></div></div>
+    <div class="m"><h2 class="mi" id="d-name" tabindex="-1" style="--dl:.695s"></h2></div>
+    <div class="m"><div class="mi lbl" id="d-meta" style="--dl:.77s"></div></div>
+    <div class="m"><p class="mi" id="d-snippet" style="--dl:.845s"></p></div>
+    <div class="m"><p class="mi" id="d-path" style="--dl:.92s"></p></div>
+    <div class="m"><div class="mi d-acts" style="--dl:.995s">
+      <button class="lbl box act" data-act="open_file">Open in default app / 開く</button>
+      <button class="lbl box act" data-act="quick_look">Quick Look (space)</button>
+      <button class="lbl box act" data-act="reveal_file">Reveal in Finder</button>
+    </div></div>
+  </div>
+  <div class="d-right">
+    <svg viewBox="0 0 474 900" role="img" aria-label="File preview">
+      <defs>
+        <filter id="ink" x="-30%" y="-30%" width="160%" height="160%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="7" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="120" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+        <mask id="ink-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="474" height="900">
+          <g filter="url(#ink)" fill="#fff" id="blobs"></g>
+        </mask>
+      </defs>
+      <rect width="474" height="900" fill="#EDE6DA"/>
+      <g mask="url(#ink-mask)" id="d-art"></g>
+      <rect x=".5" y=".5" width="473" height="899" fill="none" stroke="rgba(38,26,20,.88)"/>
+    </svg>
+  </div>
+</section>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="cursor" aria-hidden="true"><div class="c-ring"></div><div class="c-dot"></div><div class="c-lbl lbl" id="cLbl"></div></div>
+
+<script src="core.js"></script>
+<script>
+(() => {
+'use strict';
+const C = window.ArchiveCore;
+const TAURI = window.__TAURI__ && window.__TAURI__.core;
+const $ = (s) => document.querySelector(s);
+const body = document.body, rootStyle = document.documentElement.style;
+const esc = C.esc;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const dur = (ms) => (reduce ? 1 : ms);
+const SHEET_EASE = 'cubic-bezier(.76, 0, .18, 1)';
+const INK = '#261A14', MID = '#5C463B', MUTED = '#8A7367', FOREST = '#234434', GOLD = '#B89658', PAPER = '#EDE6DA', SHEET = '#F5EFE6';
+const mod = (a, n) => ((a % n) + n) % n;
+
+const st = { mode: 'landing', busy: false, files: [], terms: null, sort: 'relevance', fmt: 'ALL', tab: 'all', ctx: '', detailFile: null };
+const els = { landing: $('#landing'), vault: $('#vault'), tier2: $('#tier2'), chrome: $('#chrome'), detail: $('#detail'), q: $('#q') };
+
+// ---------- geometry (brief §4) ----------
+let H = 400, ws = 68, d = 210, gap = 12;
+function measure() {
+  H = $('#probe').getBoundingClientRect().height;
+  ws = H * 142 / 840; d = H * 474 / 900; gap = H * 0.03;
+  rootStyle.setProperty('--ws', ws + 'px');
+  rootStyle.setProperty('--d', d + 'px');
+}
+
+// ---------- small helpers ----------
+function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.codePointAt(0), 16777619); return h >>> 0; }
+function rng(seed) {
+  return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function mix(a, b, t) {
+  const p = (h, i) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  return '#' + [0, 1, 2].map((i) => Math.round(p(a, i) + (p(b, i) - p(a, i)) * t).toString(16).padStart(2, '0')).join('');
+}
+const breakable = (name) => esc(name).replace(/([_.\-])/g, '$1<wbr>'); // wrap file names at _ . - not mid-word
+const dirOf = (p) => p.slice(0, p.lastIndexOf('/')) || '/';
+const fmtOf = (f) => { const c = C.categoryOf(f.ext); return c === 'OTHER' ? (f.ext || 'file').toUpperCase() : c; };
+const snippetOf = (f) => f.snippet || (st.terms && f.text ? C.snippetFor(f.text, st.terms) : null);
+
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 4200);
+}
+
+// Slide new content in through a mask; old content slides out the other way (brief §6).
+function roll(el, html, dir = 1) {
+  const old = [...el.children];
+  const span = document.createElement('span');
+  span.innerHTML = html;
+  el.appendChild(span);
+  if (!old.length || reduce) { old.forEach((o) => o.remove()); return; }
+  const opt = { duration: 650, easing: 'cubic-bezier(.2, .8, .2, 1)' };
+  span.animate([{ transform: `translateY(${dir * 105}%)` }, { transform: 'translateY(0)' }], opt);
+  for (const o of old) {
+    o.getAnimations().forEach((a) => a.cancel());
+    o.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${-dir * 105}%)` }], { ...opt, fill: 'forwards' })
+      .finished.then(() => o.remove(), () => o.remove());
+  }
+}
+
+// ---------- generated cover art (duotone mocha / forest / gold) ----------
+const svg = (inner, vb = '0 0 200 240') => `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${inner}</svg>`;
+const R = (x, y, w, h, f, extra = '') => `<rect x="${x.toFixed ? x.toFixed(1) : x}" y="${y.toFixed ? y.toFixed(1) : y}" width="${w.toFixed ? w.toFixed(1) : w}" height="${h.toFixed ? h.toFixed(1) : h}" fill="${f}" ${extra}/>`;
+function textLines(r, x, y, w, n, step, color) {
+  let s = '';
+  for (let i = 0; i < n; i++) s += R(x, y + i * step, w * (0.45 + r() * 0.55), 3, color);
+  return s;
+}
+function page(r, x, y, w, h, opts = {}) {
+  let s = R(x, y, w, h, SHEET, `stroke="${INK}" stroke-width="1.2"`);
+  s += R(x + 12, y + 14, w * (0.35 + r() * 0.3), 8, opts.head || FOREST);
+  s += textLines(r, x + 12, y + 32, w - 24, 3, 9, MID);
+  s += R(x + 12, y + 62, w - 24, h * 0.18, mix(GOLD, SHEET, 0.55));
+  s += textLines(r, x + 12, y + 70 + h * 0.18, w - 24, Math.max(2, Math.floor((h - 90 - h * 0.18) / 9)), 9, MUTED);
+  return s;
+}
+function art(kind, seedName, text) {
+  const r = rng(hash(seedName));
+  let s = '';
+  switch (kind) {
+    case 'PDF': case 'DOCX': case 'OTHER':
+      s = page(r, 34, 18, 132, 204, { head: kind === 'DOCX' ? MID : FOREST });
+      if (kind === 'PDF') s += R(130, 26, 26, 12, GOLD) + `<text x="143" y="35" font-size="8" text-anchor="middle" font-family="Inter Tight" font-weight="600" fill="${INK}">PDF</text>`;
+      break;
+    case 'PPT': {
+      s = R(0, 0, 200, 240, mix(MID, PAPER, 0.75)) + R(18, 58, 164, 112, SHEET, `stroke="${INK}" stroke-width="1.2"`) + R(30, 70, 70 + r() * 40, 9, FOREST);
+      for (let i = 0; i < 5; i++) { const h = 14 + r() * 50; s += R(36 + i * 26, 156 - h, 16, h, i % 2 ? GOLD : FOREST); }
+      s += R(18, 178, 164, 3, INK) + R(60, 186, 80, 6, MUTED);
+      break;
+    }
+    case 'JPEG':
+      if (text) { // a photographed document: skewed paper on a dark surface
+        s = R(0, 0, 200, 240, mix(MID, INK, 0.35)) + `<g transform="rotate(${(-6 + r() * 12).toFixed(1)} 100 120)">${page(r, 40, 24, 120, 192, { head: INK })}<circle cx="132" cy="186" r="14" fill="none" stroke="${FOREST}" stroke-width="2.5"/></g>`;
+      } else {
+        s = R(0, 0, 200, 240, mix(GOLD, SHEET, 0.5)) + `<circle cx="${60 + r() * 80}" cy="70" r="22" fill="${GOLD}"/>`;
+        s += `<path d="M0 150 Q 50 ${100 + r() * 30} 100 140 T 200 ${120 + r() * 30} V240 H0Z" fill="${mix(FOREST, PAPER, 0.35)}"/>`;
+        s += `<path d="M0 190 Q 70 ${150 + r() * 20} 130 180 T 200 175 V240 H0Z" fill="${FOREST}"/>`;
+      }
+      break;
+    case 'XLSX': {
+      s = R(20, 30, 160, 180, SHEET, `stroke="${INK}" stroke-width="1.2"`) + R(20, 30, 160, 18, FOREST);
+      for (let y = 66; y < 210; y += 18) s += R(20, y, 160, 1, mix(MUTED, SHEET, 0.4));
+      for (let x = 60; x < 180; x += 40) s += R(x, 48, 1, 162, mix(MUTED, SHEET, 0.4));
+      let pts = '';
+      for (let i = 0; i < 7; i++) pts += `${30 + i * 24},${190 - r() * 110} `;
+      s += `<polyline points="${pts}" fill="none" stroke="${GOLD}" stroke-width="3"/>`;
+      break;
+    }
+    case 'CODE': {
+      s = R(0, 0, 200, 240, INK);
+      const cols = [GOLD, mix(FOREST, PAPER, 0.45), MUTED, PAPER];
+      for (let i = 0; i < 17; i++) {
+        let x = 18 + (i % 4 === 0 ? 0 : 10 + Math.floor(r() * 3) * 10);
+        const words = 1 + Math.floor(r() * 4);
+        for (let k = 0; k < words && x < 180; k++) { const w = 10 + r() * 34; s += R(x, 22 + i * 12, Math.min(w, 182 - x), 4, cols[Math.floor(r() * cols.length)]); x += w + 6; }
+      }
+      break;
+    }
+    case 'MEDIA': {
+      s = R(0, 0, 200, 240, mix(FOREST, INK, 0.3));
+      for (let y = 10; y < 240; y += 22) s += R(8, y, 8, 12, PAPER) + R(184, y, 8, 12, PAPER);
+      for (let i = 0; i < 26; i++) { const h = 6 + r() * 60; s += R(28 + i * 5.6, 120 - h / 2, 3, h, i % 3 ? GOLD : PAPER); }
+      s += `<circle cx="100" cy="196" r="16" fill="none" stroke="${GOLD}" stroke-width="2"/><path d="M95 188v16l13-8z" fill="${GOLD}"/>`;
+      break;
+    }
+    case 'ZIP': {
+      s = R(36, 26, 128, 188, MID, `stroke="${INK}" stroke-width="1.2"`) + R(92, 26, 16, 188, mix(MID, INK, 0.4));
+      for (let y = 32; y < 150; y += 8) s += R(y % 16 ? 92 : 100, y, 8, 4, GOLD);
+      s += R(88, 150, 24, 30, GOLD, `stroke="${INK}"`) + R(96, 170, 8, 6, INK);
+      break;
+    }
+    case 'MEDICAL':
+      s = page(r, 30, 20, 140, 200) + R(118, 28, 40, 12, SHEET) + R(132, 26, 12, 30, FOREST) + R(122, 36, 32, 10, FOREST);
+      s += `<polyline points="40,170 70,170 80,146 92,196 104,160 112,170 160,170" fill="none" stroke="${GOLD}" stroke-width="3"/>`;
+      break;
+    case 'FINANCE':
+      s = page(r, 30, 20, 140, 200, { head: MID }) + `<circle cx="134" cy="178" r="22" fill="${GOLD}"/><circle cx="134" cy="178" r="15" fill="none" stroke="${INK}" stroke-width="1.5"/>`;
+      break;
+    case 'PROJECTS':
+      s = R(0, 0, 200, 240, mix(PAPER, SHEET, 0.5));
+      for (let c = 0; c < 3; c++) {
+        s += R(16 + c * 58, 24, 52, 8, c === 1 ? GOLD : FOREST);
+        const n = 2 + Math.floor(r() * 4);
+        for (let i = 0; i < n; i++) s += R(16 + c * 58, 40 + i * 38, 52, 30, SHEET, `stroke="${INK}"`) + R(22 + c * 58, 48 + i * 38, 30 + r() * 12, 4, MUTED);
+      }
+      break;
+    case 'RECENT':
+      s = R(26, 30, 148, 176, SHEET, `stroke="${INK}" stroke-width="1.2"`) + R(26, 30, 148, 24, FOREST);
+      for (let i = 0; i < 28; i++) s += R(36 + (i % 7) * 19, 66 + Math.floor(i / 7) * 32, 14, 22, i > 20 ? GOLD : mix(MUTED, SHEET, 0.55));
+      break;
+  }
+  return svg(s);
+}
+function vaultArt(cat) { // a format vault: two back pages behind a sample cover
+  if (!cat.exts) return art(cat.key, cat.key);
+  return svg(R(46, 12, 120, 190, mix(MID, PAPER, 0.5)) + R(40, 18, 120, 190, mix(MID, PAPER, 0.3)) +
+    `<g transform="translate(22 30) scale(.82)">${art(cat.key, cat.key).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`);
+}
+
+// ---------- shelf faces ----------
+const SPINE_CODE = { MEDICAL: 'MED', FINANCE: 'FIN', PROJECTS: 'PROJ', RECENT: 'WEEK' };
+function catFaces(c) {
+  const code = SPINE_CODE[c.key] || c.key;
+  const n = TAURI ? null : C.filesInCategory(C.DEMO_FILES, c, Date.now()).length;
+  return `<div class="sp"><span class="ext lbl">${esc(code)}</span><span class="name">${esc(c.label)}</span>` +
+    `<span class="meta lbl">${n == null ? 'Spotlight' : n + ' files'}</span><span class="fmt lbl box">Vault</span></div>` +
+    `<div class="cv"><div class="hd lbl"><span>Vault // ${esc(c.key)}</span><span>${n == null ? '' : n}</span></div>` +
+    `<h3>${esc(c.label)}</h3><div class="art">${vaultArt(c)}</div>` +
+    `<div class="ft"><span class="lbl">${esc(c.sub)}</span><span class="box lbl">${esc(code)}</span></div></div>`;
+}
+function fileFaces(f) {
+  const fmt = fmtOf(f), snip = snippetOf(f);
+  const short = snip && st.terms ? C.snippetFor(snip, st.terms, 30, 90) : snip;
+  return `<div class="sp"><span class="ext lbl">${esc((f.ext || '—').slice(0, 5))}</span><span class="name">${esc(f.name)}</span>` +
+    `<span class="meta lbl">${C.formatSize(f.size)} · ${C.formatDate(f.modified)}</span><span class="fmt lbl box">${esc(fmt.slice(0, 5))}</span></div>` +
+    `<div class="cv"><div class="hd lbl"><span>Local file // ${esc((f.ext || 'file').toUpperCase())}</span></div>` +
+    `<h3>${breakable(f.name)}</h3><div class="art">${art(C.categoryOf(f.ext), f.name, f.text || f.snippet)}</div>` +
+    (short ? `<div class="snip"><b>Match</b>${C.highlight(short, st.terms || [])}</div>` : '') +
+    `<div class="ft"><span class="lbl">${C.formatSize(f.size)}</span><span class="box lbl">${esc((f.ext || 'file').toUpperCase().slice(0, 5))}</span></div></div>`;
+}
+
+// ---------- shelf engine (one rAF loop drives everything) ----------
+function makeShelf(el, kind) {
+  return { el, stage: el.querySelector('.stage'), kind, items: [], tapes: [], total: 0, s: 0, T: 0, dragging: false, hover: null, tilt: { x: 0, y: 0, tx: 0, ty: 0 }, activeV: -1, lastT: 0 };
+}
+const shelf1 = makeShelf($('#shelf1'), 'cat');
+const shelf2 = makeShelf($('#shelf2'), 'file');
+const currentShelf = () => (st.mode === 'vault' ? shelf1 : st.mode === 'files' ? shelf2 : null);
+const activeIndex = (sh) => (sh.total ? mod(Math.round(sh.T), sh.total) % sh.items.length : -1);
+const activeItem = (sh) => sh.items[activeIndex(sh)];
+
+function setItems(sh, items) {
+  sh.items = items;
+  const n = items.length;
+  sh.total = n ? n * Math.ceil(36 / n) : 0; // repeat to ≥36 virtual slots so wrapping happens off-screen
+  const faces = items.map((it) => (sh.kind === 'cat' ? catFaces(it) : fileFaces(it)));
+  let html = '';
+  for (let v = 0; v < sh.total; v++) {
+    const i = v % n, it = items[i];
+    html += `<div class="tape" aria-hidden="true" data-i="${i}" ${sh.kind === 'cat' ? `data-key="${it.key}"` : `data-name="${esc(it.name)}"`}>${faces[i]}</div>`;
+  }
+  sh.stage.innerHTML = html;
+  sh.tapes = [...sh.stage.children].map((el, v) => ({ el, v, lift: 0, hidden: false }));
+  sh.s = sh.total ? C.wrapRel(sh.s, 0, sh.total) : 0; // keep the glide short, then spring to the first item
+  sh.T = 0; sh.activeV = -1; sh.hover = null;
+  if (sh === currentShelf()) updateShelf(sh, 0);
+}
+
+function updateShelf(sh, dt) {
+  if (!sh.total) return;
+  sh.s += (sh.T - sh.s) * (1 - Math.exp(-(sh.dragging ? 18 : 5.2) * Math.min(dt, 0.05)));
+  const tl = sh.tilt, ta = 1 - Math.exp(-7 * dt);
+  tl.x += (tl.tx - tl.x) * ta; tl.y += (tl.ty - tl.y) * ta;
+  const la = 1 - Math.exp(-12 * dt), half = innerWidth / 2 + d + ws;
+  const av = mod(Math.round(sh.T), sh.total);
+  if (av !== sh.activeV) {
+    const prev = sh.tapes[sh.activeV];
+    if (prev) prev.el.classList.remove('is-active');
+    sh.tapes[av].el.classList.add('is-active');
+    const dir = Math.sign(sh.T - sh.lastT) || 1;
+    sh.activeV = av; sh.lastT = sh.T;
+    if (sh === currentShelf()) onActive(sh, dir);
+  }
+  for (const t of sh.tapes) {
+    const r = C.wrapRel(t.v, sh.s, sh.total);
+    const x = C.xPos(r, ws, d, gap);
+    if (Math.abs(x) > half) { if (!t.hidden) { t.el.style.visibility = 'hidden'; t.hidden = true; } continue; }
+    if (t.hidden) { t.el.style.visibility = ''; t.hidden = false; }
+    const o = C.openness(r);
+    t.lift += ((sh.hover === t.el && Math.abs(r) > 0.5 ? 1 : 0) - t.lift) * la;
+    const y = -o * 0.025 * H - t.lift * 0.045 * H, z = o * 0.2 * H;
+    t.el.style.transform = `translate3d(${x.toFixed(2)}px,${y.toFixed(2)}px,${z.toFixed(2)}px) rotateZ(${(-4.5 * o).toFixed(3)}deg) rotateX(${(tl.x * o).toFixed(3)}deg) rotateY(${(-90 * o + tl.y * o).toFixed(3)}deg)`;
+    t.el.style.zIndex = Math.round(100 - Math.abs(r) * 4);
+    t.el.style.setProperty('--o', o.toFixed(3));
+  }
+}
+
+function bindShelf(sh) {
+  let down = null;
+  sh.el.addEventListener('pointerdown', (e) => {
+    if (st.busy || !sh.total || e.button > 0) return;
+    down = { x: e.clientX, T: Math.round(sh.T), moved: false, id: e.pointerId };
+  });
+  sh.el.addEventListener('pointermove', (e) => {
+    sh.hover = e.target.closest('.tape');
+    const cv = e.target.closest('.tape.is-active .cv');
+    if (cv) {
+      const b = cv.getBoundingClientRect();
+      sh.tilt.ty = ((e.clientX - b.left) / b.width - 0.5) * 18;
+      sh.tilt.tx = -((e.clientY - b.top) / b.height - 0.5) * 12;
+    } else { sh.tilt.tx = sh.tilt.ty = 0; }
+    if (!down) return;
+    const dx = e.clientX - down.x;
+    if (!down.moved && Math.abs(dx) > 6) { down.moved = true; sh.dragging = true; sh.el.setPointerCapture(down.id); }
+    if (down.moved) sh.T = down.T - dx / (ws + gap);
+  });
+  sh.el.addEventListener('pointerup', (e) => {
+    if (!down) return;
+    const dragged = down.moved;
+    down = null; sh.dragging = false;
+    if (dragged) { sh.T = Math.round(sh.T); return; }
+    const tape = e.target.closest('.tape');
+    if (!tape) return;
+    if (tape.classList.contains('is-active')) return openActive();
+    const t = sh.tapes.find((x) => x.el === tape);
+    sh.T = Math.round(sh.s + C.wrapRel(t.v, sh.s, sh.total));
+  });
+  sh.el.addEventListener('pointercancel', () => { down = null; sh.dragging = false; sh.T = Math.round(sh.T); });
+  sh.el.addEventListener('pointerleave', () => { sh.hover = null; sh.tilt.tx = sh.tilt.ty = 0; });
+}
+
+// ---------- captions ----------
+function captionFor(sh) {
+  const it = activeItem(sh);
+  if (!it) return ['', '', ''];
+  if (sh.kind === 'cat') {
+    const n = TAURI ? null : C.filesInCategory(C.DEMO_FILES, it, Date.now()).length;
+    return [
+      `${esc(it.label)} vault${n == null ? '' : ` — ${n} files`}`,
+      esc(it.sub),
+      it.exts ? it.exts.map((e) => '.' + e).join('   ') : it.keywords ? 'Grouped by what’s inside the files' : 'Modified in the last 7 days',
+    ];
+  }
+  const snip = snippetOf(it);
+  const short = snip && st.terms ? C.snippetFor(snip, st.terms, 24, 60) : null;
+  return [
+    esc(it.name),
+    `${esc(fmtOf(it))} file / ${C.formatSize(it.size)}${short ? ` / Match: “${C.highlight(short, st.terms)}”` : ''}`,
+    `Modified ${C.formatDate(it.modified)} • ${esc(dirOf(it.path))}`,
+  ];
+}
+function clearCaption() {
+  body.dataset.active = '';
+  ['#cap1', '#cap2', '#cap3'].forEach((s) => roll($(s), ''));
+}
+function onActive(sh, dir) {
+  const it = activeItem(sh);
+  body.dataset.active = it ? (sh.kind === 'cat' ? it.key : it.name) : '';
+  const [a, b, c] = captionFor(sh);
+  roll($('#cap1'), a, dir); roll($('#cap2'), b, dir); roll($('#cap3'), c, dir);
+  $('#ring').setAttribute('aria-label', it ? (sh.kind === 'cat' ? `Open ${it.label} vault` : `Inspect ${it.name}`) : 'Open');
+}
+
+// ---------- data: Tauri backend or demo set ----------
+async function fetchFiles({ terms, cat }) {
+  if (!TAURI) {
+    if (terms) return C.searchDemo(C.DEMO_FILES, terms);
+    return C.filesInCategory(C.DEMO_FILES, cat, Date.now());
+  }
+  const args = terms ? { terms, exts: [], days: null }
+    : cat.exts ? { terms: [], exts: cat.exts, days: null }
+    : cat.keywords ? { terms: cat.keywords, exts: [], days: null }
+    : { terms: [], exts: [], days: cat.recentDays };
+  return TAURI.invoke('search_files', args);
+}
+async function load(args, label) {
+  st.busy = true;
+  roll($('#ctx'), label + '…');
+  try { return await fetchFiles(args); }
+  catch (err) { toast(`Search failed: ${err}`); roll($('#ctx'), 'Search failed. Try again or check that Spotlight indexing is on.'); return null; }
+  finally { st.busy = false; }
+}
+
+// ---------- modes, sheets and transitions ----------
+function setMode(m) {
+  st.mode = m; body.dataset.mode = m;
+  els.landing.inert = m !== 'landing';
+  els.vault.inert = m !== 'vault';
+  els.tier2.inert = m !== 'files';
+  els.detail.inert = m !== 'detail';
+  els.chrome.inert = m === 'landing' || m === 'detail';
+  const back = m === 'files' || m === 'detail' ? '← All categories / カテゴリ' : 'Back to meadow / 戻る';
+  if ($('#backLbl').textContent !== back) roll($('#backLbl'), back, m === 'vault' ? -1 : 1);
+  const sh = currentShelf();
+  if (sh) { sh.activeV = -1; if (sh.total) updateShelf(sh, 0); else clearCaption(); }
+  if (m === 'vault') roll($('#ctx'), 'Drag, scroll or use ← → to browse. Enter opens a vault.');
+  if (m === 'files') updateFilesContext();
+  requestAnimationFrame(() => document.querySelectorAll('.tabs').forEach(moveInd));
+}
+const setView = (v) => { body.dataset.view = v; };
+
+function insetOf(b) {
+  return `inset(${b.top.toFixed(1)}px ${(innerWidth - b.right).toFixed(1)}px ${(innerHeight - b.bottom).toFixed(1)}px ${b.left.toFixed(1)}px round 3px)`;
+}
+function coverRect(sh) {
+  const t = sh.tapes[sh.activeV];
+  return t ? t.el.querySelector('.cv').getBoundingClientRect() : { top: innerHeight / 2, bottom: innerHeight / 2, left: innerWidth / 2, right: innerWidth / 2 };
+}
+// Expand/collapse a full-screen sheet from/to a rect (clip-path geometry + tilt; no opacity).
+async function sheet(el, rect, rot, ms, open, extra = '') {
+  el.style.transformOrigin = `${(rect.left + rect.right) / 2}px ${(rect.top + rect.bottom) / 2}px`;
+  el.style.visibility = 'visible';
+  const small = { clipPath: insetOf(rect), transform: `rotate(${rot}deg)${extra}` };
+  const full = { clipPath: 'inset(0px 0px 0px 0px round 0px)', transform: 'rotate(0deg) scale(1)' };
+  const a = el.animate(open ? [small, full] : [full, small], { duration: dur(ms), easing: SHEET_EASE, fill: 'forwards' });
+  await a.finished;
+  a.cancel();
+  if (!open) el.style.visibility = 'hidden';
+}
+
+async function dive(thenSearch) {
+  if (st.busy || st.mode !== 'landing') return;
+  st.busy = true;
+  const rect = $('#deskHit').getBoundingClientRect();
+  setMode('vault');
+  const rise = $('#shelf1').animate([{ transform: 'translateY(25%)' }, { transform: 'translateY(0)' }], { duration: dur(1100), delay: dur(520), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' });
+  await sheet(els.vault, rect, -3.5, 950, true, ' scale(.92)');
+  body.dataset.chrome = 'on';
+  await rise.finished;
+  st.busy = false;
+  setView('tier1');
+  if (thenSearch) { els.q.focus(); listen(); }
+}
+async function backToMeadow() {
+  if (st.busy) return;
+  st.busy = true;
+  body.dataset.chrome = '';
+  setMode('landing');
+  await sheet(els.vault, $('#deskHit').getBoundingClientRect(), -3.5, 950, false, ' scale(.92)');
+  st.busy = false;
+  setView('landing');
+}
+
+function applyFiles() {
+  const items = C.filterFormat(C.sortFiles(st.files, st.sort), st.fmt);
+  setItems(shelf2, items);
+  const empty = !items.length;
+  $('#empty').classList.toggle('on', empty);
+  if (empty) {
+    const searched = st.ctx.startsWith('Search');
+    $('#emptyTitle').textContent = !st.files.length
+      ? (searched ? `No files match ${st.ctx.slice(7)}` : 'This vault is empty')
+      : `No ${st.fmt} files here`;
+    $('#emptyHint').textContent = !st.files.length
+      ? (searched ? 'Try a broader word, or a related one: “lab” instead of “CBC”.' : 'Files you add will appear here.')
+      : 'Choose All to see every format.';
+    $('#emptyTitle').textContent = $('#emptyTitle').textContent.toUpperCase();
+    if (st.mode === 'files') clearCaption();
+  }
+  if (st.mode === 'files') updateFilesContext();
+}
+function updateFilesContext() {
+  const n = shelf2.items.length;
+  roll($('#ctx'), `${esc(st.ctx)} — ${n} file${n === 1 ? '' : 's'}`);
+}
+function setFiles(files) {
+  st.files = files; st.sort = 'relevance'; st.fmt = 'ALL';
+  selectTab('sort', 'relevance'); selectTab('fmt', 'ALL');
+  applyFiles();
+}
+
+async function openFiles(files) {
+  const rect = coverRect(shelf1);
+  st.busy = true;
+  setFiles(files);
+  setMode('files');
+  await sheet(els.tier2, rect, -4.5, 1050, true);
+  st.busy = false;
+  setView('tier2');
+}
+async function openCategory() {
+  const cat = activeItem(shelf1);
+  if (!cat || st.busy) return;
+  const files = await load({ cat }, `Opening ${cat.label}`);
+  if (!files) return;
+  st.terms = cat.keywords || null;
+  st.ctx = `${cat.label} vault`;
+  await openFiles(files);
+}
+async function runSearch(terms, raw) {
+  if (st.busy) return;
+  const exp = C.expandTerms(terms);
+  const files = await load({ terms: exp }, `Searching for “${esc(raw)}”`);
+  if (!files) return;
+  st.terms = exp;
+  st.ctx = `Search “${raw}”`;
+  if (st.mode === 'files') { setFiles(files); return; }
+  await openFiles(files);
+}
+async function collapse() {
+  if (st.busy || st.mode !== 'files') return;
+  st.busy = true;
+  setMode('vault');
+  await sheet(els.tier2, coverRect(shelf1), -4.5, 850, false);
+  $('#empty').classList.remove('on');
+  st.busy = false;
+  setView('tier1');
+}
+
+// ---------- inspector ----------
+let ink = null;
+const BLOBS = [[150, 330, 0], [340, 600, 120], [250, 120, 220], [90, 760, 300], [400, 250, 360], [260, 860, 420], [230, 470, 180]];
+$('#blobs').innerHTML = BLOBS.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="0"/>`).join('');
+function wrapWords(text, max) {
+  const out = []; let line = '';
+  for (const w of text.split(/\s+/)) {
+    if ((line + ' ' + w).trim().length > max) { if (line) out.push(line); line = w; } else line = (line + ' ' + w).trim();
+  }
+  if (line) out.push(line);
+  return out;
+}
+function bigArt(f) {
+  const text = f.text || f.snippet || '';
+  let s = `<rect width="474" height="900" fill="${SHEET}"/>`;
+  s += `<g transform="translate(36 40) scale(2.01)">${art(C.categoryOf(f.ext), f.name, text).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`;
+  s += `<rect x="36" y="540" width="402" height="1.5" fill="${INK}"/>`;
+  s += `<text x="36" y="580" font-family="Inter Tight" font-weight="600" font-size="13" letter-spacing="1.4" fill="${FOREST}">${esc(fmtOf(f))} // ${C.formatSize(f.size)}</text>`;
+  const lines = wrapWords(text || 'No text preview for this file.', 46).slice(0, 11);
+  lines.forEach((l, i) => { s += `<text x="36" y="${620 + i * 24}" font-family="Newsreader, Georgia, serif" font-size="17" fill="${INK}">${esc(l)}</text>`; });
+  return s;
+}
+function fillDetail(f) {
+  st.detailFile = f;
+  const snip = snippetOf(f);
+  $('#d-badge').textContent = `${fmtOf(f)} file // ${snip && st.terms ? 'deep content match' : 'local file'}`;
+  $('#d-name').innerHTML = breakable(f.name);
+  $('#d-meta').textContent = [C.formatSize(f.size), f.created ? `Created ${C.formatDate(f.created)}` : null, `Modified ${C.formatDate(f.modified)}`].filter(Boolean).join(' / ');
+  $('#d-snippet').innerHTML = snip ? C.highlight(snip, st.terms || [])
+    : f.text ? esc(f.text.slice(0, 280)) + (f.text.length > 280 ? '…' : '')
+    : 'No text preview for this file. Open it to see what’s inside.';
+  $('#d-path').textContent = TAURI ? `Stored at ${f.path}` : `Demo file at ${f.path}`;
+  $('#d-art').innerHTML = bigArt(f);
+  document.querySelectorAll('#blobs circle').forEach((c) => c.setAttribute('r', 0));
+}
+async function openDetail() {
+  const f = activeItem(shelf2);
+  if (!f || st.busy) return;
+  st.busy = true;
+  const rect = coverRect(shelf2);
+  fillDetail(f);
+  setMode('detail');
+  els.detail.classList.remove('in');
+  void els.detail.offsetWidth;
+  els.detail.classList.add('in');
+  ink = { start: performance.now() + dur(520) };
+  await sheet(els.detail, rect, -4.5, 1050, true);
+  $('#d-name').focus({ preventScroll: true }); // announce the file; Space stays Quick Look (not a button press)
+  st.busy = false;
+  setView('detail');
+}
+async function closeDetail() {
+  if (st.busy || st.mode !== 'detail') return;
+  st.busy = true;
+  els.detail.classList.remove('in');
+  setMode('files');
+  await sheet(els.detail, coverRect(shelf2), -4.5, 850, false);
+  st.busy = false;
+  setView('tier2');
+}
+function openActive() {
+  if (st.mode === 'vault') openCategory();
+  else if (st.mode === 'files') openDetail();
+}
+
+const ACT_DONE = { open_file: 'Opened in default app', quick_look: 'Showing Quick Look', reveal_file: 'Revealed in Finder' };
+async function act(cmd) {
+  const f = st.detailFile;
+  if (!f) return;
+  if (!TAURI) return toast('Opening files needs the desktop app. This browser preview only has demo files.');
+  try { await TAURI.invoke(cmd, { path: f.path }); toast(`${ACT_DONE[cmd]}: ${f.name}`); }
+  catch (err) { toast(`${ACT_DONE[cmd].split(' ')[0]} failed: ${err}`); }
+}
+
+// ---------- tabs ----------
+function moveInd(row) {
+  const b = row.querySelector('button.on'), ind = row.querySelector('.ind');
+  if (!b || !ind) return;
+  ind.style.width = b.offsetWidth + 'px';
+  ind.style.transform = `translateX(${b.offsetLeft}px)`;
+}
+function selectTab(group, v) {
+  const row = document.querySelector(`.tabs[data-group="${group}"]`);
+  row.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+  moveInd(row);
+}
+document.querySelectorAll('.tabs').forEach((row) => row.addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b || st.busy) return;
+  const g = row.dataset.group, v = b.dataset.v;
+  selectTab(g, v);
+  if (g === 'tab') { st.tab = v; setItems(shelf1, C.categoriesForTab(v)); }
+  if (g === 'sort') { st.sort = v; applyFiles(); }
+  if (g === 'fmt') { st.fmt = v; applyFiles(); }
+}));
+
+// ---------- voice ----------
+function listen() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  const rec = new SR();
+  rec.lang = 'en-US';
+  rec.onresult = (e) => { els.q.value = e.results[0][0].transcript; $('#searchForm').requestSubmit(); };
+  rec.onerror = (e) => toast(`Voice input unavailable (${e.error}). Type your search instead.`);
+  try { rec.start(); roll($('#ctx'), 'Listening… say what’s inside the file you want.'); } catch (err) { toast(`Voice input unavailable (${err.message}). Type your search instead.`); }
+}
+
+// ---------- input wiring ----------
+$('#enterBtn').addEventListener('click', () => dive(false));
+$('#deskHit').addEventListener('click', () => dive(false));
+$('#voiceBtn').addEventListener('click', () => dive(true));
+$('#back').addEventListener('click', () => (st.mode === 'vault' ? backToMeadow() : collapse()));
+$('#searchBtn').addEventListener('click', () => { els.q.focus(); els.q.select(); });
+$('#ring').addEventListener('click', openActive);
+$('#closeBtn').addEventListener('click', closeDetail);
+document.querySelectorAll('.act').forEach((b) => b.addEventListener('click', () => act(b.dataset.act)));
+$('#searchForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const raw = els.q.value.trim();
+  const terms = C.cleanQuery(raw);
+  if (!terms.length) { roll($('#qhint'), raw ? 'Add a word' : '/ or ⌘K'); return; }
+  roll($('#qhint'), '/ or ⌘K');
+  els.q.blur();
+  runSearch(terms, raw);
+});
+bindShelf(shelf1);
+bindShelf(shelf2);
+
+addEventListener('keydown', (e) => {
+  if (e.target === els.q) { if (e.key === 'Escape') els.q.blur(); return; }
+  const inShelf = st.mode === 'vault' || st.mode === 'files';
+  if (inShelf && !st.busy && (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)))) {
+    e.preventDefault(); els.q.focus(); els.q.select(); return;
+  }
+  if (st.busy) return;
+  const onButton = e.target.closest && e.target.closest('button');
+  const sh = currentShelf();
+  if (e.key === 'Enter' && !onButton) { if (st.mode === 'landing') dive(false); else openActive(); }
+  else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && sh && sh.total) { e.preventDefault(); sh.T = Math.round(sh.T) + (e.key === 'ArrowRight' ? 1 : -1); }
+  else if (e.key === 'Escape') { if (st.mode === 'detail') closeDetail(); else if (st.mode === 'files') collapse(); }
+  else if (e.key === ' ' && st.mode === 'detail' && !onButton) { e.preventDefault(); act('quick_look'); }
+});
+let wheelAcc = 0;
+addEventListener('wheel', (e) => {
+  const sh = currentShelf();
+  if (!sh || st.busy || !sh.total) return;
+  wheelAcc += Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  while (Math.abs(wheelAcc) >= 60) { const s = Math.sign(wheelAcc); sh.T = Math.round(sh.T) + s; wheelAcc -= 60 * s; }
+}, { passive: true });
+
+// ---------- cursor ----------
+const cur = { el: $('#cursor'), x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
+addEventListener('pointermove', (e) => {
+  cur.tx = e.clientX; cur.ty = e.clientY;
+  const t = e.target;
+  const open = t.closest && t.closest('.tape.is-active .cv') && (st.mode === 'vault' || st.mode === 'files');
+  const state = open ? 'open' : t.closest && t.closest('button, input, a, .hit .box') ? 'btn' : t.closest && t.closest('.tape') ? 'spine' : '';
+  if (cur.el.dataset.s !== state) {
+    cur.el.dataset.s = state;
+    cur.el.className = state;
+    if (open) $('#cLbl').innerHTML = st.mode === 'vault' ? 'Open<br>開く' : 'Inspect<br>詳細';
+  }
+});
+
+// ---------- Stage 0: pixel meadow ----------
+const md = { cv: $('#meadow'), ctx: null, s: 4, W: 0, Hc: 0, sky: null, fg: null, clouds: [], tufts: [], leaves: [], desk: null, acc: 0, t: 0 };
+md.ctx = md.cv.getContext('2d');
+function layer(W, Hc) { const c = document.createElement('canvas'); c.width = W; c.height = Hc; return c; }
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+function hexRgb(h) { return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); }
+function gradient(img, W, y0, y1, colors) { // ordered-dither vertical gradient through a palette
+  const cs = colors.map(hexRgb);
+  for (let y = y0; y < y1; y++) {
+    const t = ((y - y0) / Math.max(1, y1 - y0 - 1)) * (cs.length - 1);
+    const i = Math.min(cs.length - 2, Math.floor(t)), f = t - i;
+    for (let x = 0; x < W; x++) {
+      const c = f * 16 > BAYER[(y % 4) * 4 + (x % 4)] ? cs[i + 1] : cs[i];
+      const k = (y * W + x) * 4;
+      img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255;
+    }
+  }
+}
+function blob(g, cx, cy, rad, color, r) {
+  g.fillStyle = color;
+  for (let y = -rad; y <= rad; y++) {
+    const w = Math.round(Math.sqrt(rad * rad - y * y) * (0.92 + r() * 0.16));
+    g.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2, 1);
+  }
+}
+function buildMeadow() {
+  const narrow = innerWidth < 700;
+  const s = Math.max(2, Math.round((narrow ? Math.min(innerHeight, innerWidth * 1.3) : innerHeight) / 180));
+  const W = Math.ceil(innerWidth / s), Hc = Math.ceil(innerHeight / s);
+  Object.assign(md, { s, W, Hc });
+  md.cv.width = W; md.cv.height = Hc;
+  md.cv.style.width = W * s + 'px'; md.cv.style.height = Hc * s + 'px';
+  const r = rng(7), horizon = Math.round(Hc * 0.6);
+  md.horizon = horizon;
+
+  // sky
+  md.sky = layer(W, Hc);
+  let g = md.sky.getContext('2d'), img = g.createImageData(W, Hc);
+  gradient(img, W, 0, horizon, [SHEET, SHEET, PAPER, mix(PAPER, GOLD, 0.22), mix(PAPER, GOLD, 0.38)]);
+  g.putImageData(img, 0, 0);
+  const heroBottom = Math.round($('.hero').getBoundingClientRect().bottom / s);
+  const sunX = Math.round(W * (narrow ? 0.3 : 0.58)), sunY = narrow ? heroBottom + 16 : Math.round(Hc * 0.22);
+  blob(g, sunX, sunY, 13, mix(GOLD, SHEET, 0.55), r);
+  blob(g, sunX, sunY, 9, GOLD, r);
+
+  // foreground (transparent above the skyline)
+  md.fg = layer(W, Hc);
+  g = md.fg.getContext('2d');
+  // skyline
+  let x = Math.round(W * 0.04);
+  while (x < W * 0.78) {
+    const bw = 4 + Math.floor(r() * 9), bh = 5 + Math.floor(r() * (r() > 0.85 ? 26 : 15));
+    g.fillStyle = mix(MUTED, PAPER, 0.42 + r() * 0.12);
+    g.fillRect(x, horizon - bh, bw, bh);
+    if (r() > 0.8) g.fillRect(x + (bw >> 1), horizon - bh - 4, 1, 4);
+    g.fillStyle = mix(MUTED, SHEET, 0.7);
+    for (let wy = horizon - bh + 2; wy < horizon - 2; wy += 3) for (let wx = x + 1; wx < x + bw - 1; wx += 2) if (r() > 0.55) g.fillRect(wx, wy, 1, 1);
+    x += bw + (r() > 0.7 ? 2 : 0);
+  }
+  // hills + meadow
+  img = g.getImageData(0, 0, W, Hc);
+  gradient(img, W, horizon, Hc, [mix(FOREST, PAPER, 0.55), mix(FOREST, PAPER, 0.4), mix(FOREST, PAPER, 0.22), FOREST, mix(FOREST, INK, 0.25)]);
+  g.putImageData(img, 0, 0);
+  g.fillStyle = mix(FOREST, PAPER, 0.5);
+  for (let hx = 0; hx < W; hx++) { const hy = Math.round(3 + 2.5 * Math.sin(hx / 17) + 1.5 * Math.sin(hx / 7)); g.fillRect(hx, horizon - hy, 1, hy); }
+  // grass speckle + flowers
+  for (let i = 0; i < W * Hc * 0.02; i++) {
+    const gx = Math.floor(r() * W), gy = horizon + 3 + Math.floor(r() * (Hc - horizon - 3));
+    const depth = (gy - horizon) / (Hc - horizon);
+    g.fillStyle = r() > 0.94 ? (r() > 0.5 ? GOLD : SHEET) : mix(FOREST, PAPER, 0.15 + (1 - depth) * 0.35 + (r() - 0.5) * 0.1);
+    g.fillRect(gx, gy, 1, depth > 0.4 && r() > 0.5 ? 2 : 1);
+  }
+  // ancient tree (right)
+  const tx = Math.round(W - Math.max(narrow ? 14 : 26, W * 0.13)), ground = Math.round(Hc * 0.8);
+  const crown = narrow ? Math.max(Math.round(Hc * 0.3), heroBottom + 30) : Math.round(Hc * 0.3);
+  g.fillStyle = mix(FOREST, INK, 0.45);
+  for (let i = 0; i < 4; i++) g.fillRect(tx - 14 + i * 2, ground + i, 36 - i * 4, 1);
+  g.fillStyle = MID; g.fillRect(tx - 4, crown, 9, ground - crown);
+  g.fillStyle = mix(MID, INK, 0.45); g.fillRect(tx + 3, crown, 2, ground - crown);
+  g.fillStyle = MID; g.fillRect(tx - 7, ground - 3, 3, 3); g.fillRect(tx + 5, ground - 3, 3, 3);
+  for (let b = 0; b < 3; b++) { g.fillStyle = MID; for (let k = 0; k < 10; k++) g.fillRect(tx - 2 - (b % 2 ? -k : k), crown + 12 + b * 9 - k, 2, 2); }
+  const crownDark = mix(FOREST, INK, 0.35), crownLight = mix(FOREST, GOLD, 0.32);
+  const blobsC = [];
+  for (let i = 0; i < 9; i++) blobsC.push([tx + (r() - 0.5) * 56, crown + (r() - 0.6) * 26, 9 + r() * 10]);
+  blobsC.forEach(([cx, cy, rad]) => blob(g, cx, cy, rad, crownDark, r));
+  blobsC.forEach(([cx, cy, rad]) => blob(g, cx - 2, cy - 3, rad * 0.7, FOREST, r));
+  blobsC.slice(0, 5).forEach(([cx, cy, rad]) => blob(g, cx - 4, cy - 6, rad * 0.35, crownLight, r));
+  md.leaves = Array.from({ length: 40 }, () => { const [cx, cy, rad] = blobsC[Math.floor(r() * blobsC.length)]; return [Math.round(cx + (r() - 0.5) * rad), Math.round(cy + (r() - 0.5) * rad), r() * 6.28]; });
+
+  // workstation: open laptop + leather binder with gold clasp
+  const lx = Math.round(Math.min(W * 0.62, tx - 40)), ly = Math.round(Hc * 0.84);
+  g.fillStyle = mix(FOREST, INK, 0.4); g.fillRect(lx - 3, ly + 1, 50, 2);
+  g.fillStyle = INK; g.fillRect(lx + 1, ly - 18, 24, 16);
+  g.fillStyle = SHEET; g.fillRect(lx + 2, ly - 17, 22, 14);
+  g.fillStyle = FOREST; for (let i = 0; i < 5; i++) g.fillRect(lx + 4 + (i % 2) * 2, ly - 15 + i * 2.4, 6 + ((i * 7) % 9), 1);
+  g.fillStyle = MID; g.fillRect(lx - 1, ly - 2, 28, 2);
+  g.fillStyle = INK; g.fillRect(lx - 2, ly, 30, 1);
+  const bx = lx + 32;
+  g.fillStyle = MID; g.fillRect(bx, ly - 19, 13, 19);
+  g.fillStyle = mix(MID, INK, 0.45); g.fillRect(bx, ly - 19, 3, 19);
+  g.fillStyle = SHEET; g.fillRect(bx + 5, ly - 15, 6, 4);
+  g.fillStyle = GOLD; g.fillRect(bx + 10, ly - 9, 3, 4);
+  md.desk = { x: lx - 3, y: ly - 20, w: 50, h: 23, screen: [lx + 18, ly - 7] };
+  md.tufts = Array.from({ length: Math.round(W / 6) }, () => [Math.floor(r() * W), Math.round(Hc * (0.88 + r() * 0.1)), r() * 6.28]);
+  md.clouds = Array.from({ length: 5 }, (_, i) => {
+    // Sits where the sky is gold-tinted so the pale body reads against it.
+    const w = 20 + Math.round(r() * 20), h = Math.round(w * 0.45), c = layer(w + 4, h + 4), cg = c.getContext('2d');
+    const r1 = Math.round(h * 0.34), r2 = Math.round(h * 0.44);
+    blob(cg, Math.round(w * 0.34) + 2, Math.round(h * 0.6) + 2, r1, mix(PAPER, MUTED, 0.3), r);
+    blob(cg, Math.round(w * 0.62) + 2, Math.round(h * 0.52) + 2, r2, mix(PAPER, MUTED, 0.3), r);
+    blob(cg, Math.round(w * 0.34) + 2, Math.round(h * 0.6), r1, SHEET, r);
+    blob(cg, Math.round(w * 0.62) + 2, Math.round(h * 0.52), r2, SHEET, r);
+    cg.fillStyle = SHEET; cg.fillRect(Math.round(w * 0.14), Math.round(h * 0.62), Math.round(w * 0.78), 3);
+    return { x: r() * W, y: Math.round(Hc * (0.2 + i * 0.045) + r() * 4), w, sprite: c, v: 0.6 + r() * 1.1 };
+  });
+
+  // hit area, pills (CSS px)
+  const hit = $('#deskHit');
+  Object.assign(hit.style, { left: md.desk.x * s + 'px', top: md.desk.y * s + 'px', width: md.desk.w * s + 'px', height: md.desk.h * s + 'px' });
+  const pills = $('#pills');
+  const pillLeft = Math.min(md.desk.x * s, innerWidth - 360);
+  Object.assign(pills.style, { left: Math.max(12, pillLeft) + 'px', bottom: innerHeight - md.desk.y * s + 14 + 'px' });
+  drawMeadow(0);
+}
+function drawMeadow(dt) {
+  const { ctx, W, Hc } = md;
+  md.t += dt;
+  ctx.drawImage(md.sky, 0, 0);
+  for (const c of md.clouds) {
+    c.x += c.v * dt;
+    if (c.x > W + c.w) c.x = -c.w * 2;
+    ctx.drawImage(c.sprite, Math.round(c.x), Math.round(c.y));
+  }
+  ctx.drawImage(md.fg, 0, 0);
+  for (const [x, y, p] of md.tufts) { ctx.fillStyle = mix(FOREST, PAPER, 0.18); ctx.fillRect(x + Math.round(Math.sin(md.t * 1.6 + p)), y - 2, 1, 2); }
+  for (const [x, y, p] of md.leaves) if (Math.sin(md.t * 1.3 + p) > 0.55) { ctx.fillStyle = mix(FOREST, GOLD, 0.45); ctx.fillRect(x, y, 1, 1); }
+  if (Math.floor(md.t * 2) % 2) { ctx.fillStyle = GOLD; ctx.fillRect(md.desk.screen[0], md.desk.screen[1] - 2, 1, 2); }
+}
+function renderPills() {
+  const n = C.DEMO_FILES.length;
+  const lines = TAURI
+    ? ['Index: macOS Spotlight, always current', 'Text inside PDFs, slides and photos is searchable', 'Ask in plain words: “blood related”']
+    : [`Demo index: ${n} files (PDF, PPT, JPEG, DOCX…)`, 'Text inside PDFs and photo scans is searchable', 'Ask in plain words: “blood related”'];
+  $('#pills').innerHTML = lines.map((l, i) => `<div class="m"><div class="mi pill lbl" style="--dl:${0.45 + i * 0.12}s">${esc(l)}</div></div>`).join('');
+  $('#count').textContent = TAURI ? 'Index: Spotlight // this Mac' : `Indexed: ${n} demo files // browser preview`;
+}
+
+// ---------- the one rAF loop ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  cur.x += (cur.tx - cur.x) * (1 - Math.exp(-16 * dt));
+  cur.y += (cur.ty - cur.y) * (1 - Math.exp(-16 * dt));
+  cur.el.style.transform = `translate3d(${cur.x}px, ${cur.y}px, 0)`;
+  if (st.mode === 'landing' || els.vault.style.visibility !== 'visible') {
+    md.acc += dt;
+    if (md.acc > 1 / 12) { drawMeadow(md.acc); md.acc = 0; }
+  }
+  if (els.vault.style.visibility === 'visible' && st.mode !== 'detail') updateShelf(shelf1, dt);
+  if (els.tier2.style.visibility === 'visible' && st.mode !== 'detail') updateShelf(shelf2, dt);
+  const sh = currentShelf();
+  if (sh) {
+    const rs = sh.total ? C.smoothstep(Math.max(0, 1 - Math.abs(sh.T - sh.s) * 3)) : 0;
+    $('#ring').style.setProperty('--rs', rs.toFixed(3));
+  }
+  if (ink) {
+    let done = true;
+    document.querySelectorAll('#blobs circle').forEach((c, i) => {
+      const p = Math.max(0, Math.min(1, (now - ink.start - dur(BLOBS[i][2])) / dur(1250)));
+      if (p < 1) done = false;
+      c.setAttribute('r', (720 * (1 - Math.pow(1 - p, 3))).toFixed(1));
+    });
+    if (done) ink = null;
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------- boot ----------
+measure();
+buildMeadow();
+renderPills();
+setItems(shelf1, C.categoriesForTab('all'));
+setMode('landing');
+addEventListener('resize', () => { measure(); buildMeadow(); document.querySelectorAll('.tabs').forEach(moveInd); });
+requestAnimationFrame(() => els.landing.classList.add('ready'));
+document.fonts.ready.then(() => document.querySelectorAll('.tabs').forEach(moveInd));
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
