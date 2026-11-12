@@ -2,10 +2,16 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!-- Lets the owner put files/folders in "On My iPhone › ArchiveOS" via the Files app. -->
+  <key>CFBundleDisplayName</key>
+  <string>Arkhive</string>
+  <!-- Lets the owner put files/folders in "On My iPhone › Arkhive" via the Files app. -->
   <key>UIFileSharingEnabled</key>
   <true/>
   <key>LSSupportsOpeningDocumentsInPlace</key>
   <true/>
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Arkhive listens only while the mic is on, to turn what you say into a file search.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Arkhive turns what you say into a file search while the mic is on.</string>
 </dict>
 </plist>

@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ArchiveOS",
+  "productName": "Arkhive",
   "version": "0.1.0",
   "identifier": "dev.archiveos.app",
   "build": { "frontendDist": "../app" },
   "app": {
     "withGlobalTauri": true,
     "windows": [
-      { "title": "ArchiveOS", "width": 1440, "height": 900, "minWidth": 900, "minHeight": 620 }
+      { "title": "Arkhive", "width": 1440, "height": 900, "minWidth": 900, "minHeight": 620 }
     ],
     "security": { "csp": null }
   },

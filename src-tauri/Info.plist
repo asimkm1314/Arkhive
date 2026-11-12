@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- macOS terminates an app that touches the microphone or speech recognition without these. -->
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Arkhive listens only while the mic is on, to turn what you say into a file search.</string>
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Arkhive turns what you say into a file search while the mic is on.</string>
+  <!-- Moving a file to the Trash is done by Finder, so it can be put back. macOS asks the owner once. -->
+  <key>NSAppleEventsUsageDescription</key>
+  <string>Arkhive asks Finder to move a file to the Trash when you choose Move to Trash.</string>
+</dict>
+</plist>

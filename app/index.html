@@ -3,12 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ArchiveOS</title>
+<title>Arkhive</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&family=Noto+Sans+JP:wght@500;600&text=档案·索引開く戻るカテゴリ詳細閉じるすべて&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Inter+Tight:wght@500;600;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
 <style>
 :root {
   --paper: #EDE6DA; --sheet: #F5EFE6;
@@ -18,12 +17,12 @@
   --ease: cubic-bezier(.2, .8, .2, 1);
   --H: min(46vh, 31vw);
   --font-serif: "Newsreader", Georgia, serif;
-  --font-sans: "Inter Tight", "Noto Sans JP", system-ui, sans-serif;
-  --font-logo: "Noto Serif SC", serif;
+  --font-sans: "Inter Tight", system-ui, sans-serif;
+  --font-hero: "Inter", "Inter Tight", system-ui, sans-serif;
 }
-@media (max-width: 760px) { :root { --H: min(60vw, 40svh); } }
+@media (max-width: 767px) { :root { --H: min(60vw, 40svh); } }
 
-* { box-sizing: border-box; margin: 0; }
+* { box-sizing: border-box; margin: 0; scrollbar-width: thin; scrollbar-color: var(--mocha-muted) transparent; }
 html, body { height: 100%; overflow: hidden; }
 body {
   background: var(--paper); color: var(--mocha-ink);
@@ -31,10 +30,14 @@ body {
   user-select: none; -webkit-user-select: none;
 }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; }
+[hidden] { display: none !important; } /* author display values would otherwise override the hidden attribute */
+input { caret-color: var(--forest); }
+::selection { background: var(--gold); color: var(--mocha-ink); }
 :focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 @media (pointer: fine) { body, body * { cursor: none !important; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-.lbl { font: 600 10.5px/1 var(--font-sans); letter-spacing: .09em; text-transform: uppercase; }
+.lbl { font: 600 11px/1 var(--font-sans); letter-spacing: .09em; text-transform: uppercase; }
 .box { display: inline-flex; align-items: center; height: 21px; padding: 0 8px; border: 1px solid var(--rule); white-space: nowrap; }
 mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 
@@ -49,23 +52,64 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   position: fixed; inset: 0; z-index: 40; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .38 0 0 0 0 .30 0 0 0 0 .24 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+[data-mode="landing"] .grain { visibility: hidden; } /* the hero is a clean black stage */
 #probe { position: fixed; left: -10px; top: 0; width: 1px; height: var(--H); visibility: hidden; }
 
-/* ---------- Stage 0: meadow ---------- */
-#landing { position: fixed; inset: 0; z-index: 0; overflow: hidden; }
-#meadow { position: absolute; left: 0; top: 0; image-rendering: pixelated; }
-.hero { position: absolute; left: clamp(20px, 5vw, 72px); top: clamp(28px, 9vh, 104px); max-width: min(760px, 88vw); }
-.hero h1 { font: 400 clamp(36px, 4.8vw, 68px)/1.02 var(--font-serif); letter-spacing: -.012em; }
-.hero p { font: 400 clamp(16px, 1.35vw, 19px)/1.5 var(--font-serif); color: var(--mocha-mid); max-width: 42ch; margin-top: 18px; }
-.hero .acts { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
-.cta { height: 36px; padding: 0 14px; font-size: 12px; color: var(--mocha-ink); background: var(--sheet); transition: background-color .3s var(--ease); }
-.cta.primary { background: var(--forest); color: var(--paper); border-color: var(--gold); }
-.cta:hover { background: var(--gold); color: var(--mocha-ink); }
-#landing.ready .mi { transform: none; }
-.pills { position: absolute; display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-.pill { display: inline-flex; align-items: center; gap: 8px; height: 24px; padding: 0 10px; background: rgba(35, 68, 52, .92); color: var(--paper); border: 1px solid var(--gold); font-size: 10.5px; }
-.pill::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--gold); flex: none; }
-#deskHit { position: absolute; }
+/* ---------- Stage 0: prism hero (black stage; its text may fade and blur, as the brief describes) ---------- */
+#hero { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #000; color: #F5F5F5; font-family: var(--font-hero); touch-action: none; }
+#hero ::selection { background: #F5F5F5; color: #000; }
+#prism { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero-nav {
+  position: absolute; z-index: 4; top: 16px; left: 50%; transform: translateX(-50%); width: min(1024px, calc(100vw - 32px)); height: 48px;
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 8px;
+  border: 1px solid rgba(255, 255, 255, .1); border-radius: 999px; background: rgba(255, 255, 255, .03);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+}
+.nav-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.nav-back { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .18); display: grid; place-items: center; transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease); }
+.nav-back:disabled { color: rgba(245, 245, 245, .3); border-color: rgba(255, 255, 255, .08); }
+.nav-back:not(:disabled):hover { background: #F5F5F5; color: #000; }
+.hero-brand { display: inline-flex; align-items: center; gap: 9px; font: 800 14px/1 var(--font-sans); letter-spacing: .2em; }
+.mark { flex: none; width: 18px; height: 18px; border-radius: 5px; background: #F5F5F5; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
+.mark::before, .mark::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #000; }
+.mark::after { background: var(--gold); }
+/* the links smear slightly while the ring is moving fast */
+.nav-links { display: flex; gap: 2px; filter: blur(calc(var(--v, 0) * 2.5px)); opacity: calc(1 - var(--v, 0) * .5); transform: skewX(calc(var(--v, 0) * -8deg)); }
+.nav-links button { height: 32px; padding: 0 14px; border-radius: 999px; font: 500 13px/1 var(--font-hero); letter-spacing: -.01em; color: rgba(245, 245, 245, .74); white-space: nowrap; transition: background-color .3s var(--ease), color .3s var(--ease); }
+.nav-links button:hover, .nav-links button:focus-visible { color: #F5F5F5; background: rgba(255, 255, 255, .09); }
+.nav-status { justify-self: end; max-width: 100%; padding-right: 12px; font: 500 12px/1 var(--font-hero); color: rgba(245, 245, 245, .62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stage-title { position: absolute; z-index: 3; left: clamp(20px, 5vw, 72px); top: clamp(92px, 15vh, 150px); display: grid; font: 500 clamp(3rem, 6vw, 5.5rem)/.95 var(--font-hero); letter-spacing: -.04em; pointer-events: none; }
+/* word-spacing wider than the line puts each word on its own line, as in the brief's two-line headline */
+.st { grid-area: 1 / 1; word-spacing: 100vw; opacity: 0; filter: blur(10px); transform: translateY(.12em); transition: opacity .5s var(--ease), filter .5s var(--ease), transform .5s var(--ease); }
+.st.on { opacity: 1; filter: none; transform: none; }
+.stage-next {
+  position: absolute; z-index: 3; right: clamp(44px, 7vw, 110px); top: clamp(100px, 17vh, 170px); text-align: right; word-spacing: 100vw;
+  font: 500 clamp(2.5rem, 5vw, 4.5rem)/1 var(--font-hero); letter-spacing: -.04em; pointer-events: none;
+  color: rgba(245, 245, 245, calc(.25 + .75 * var(--t, 0))); filter: blur(calc((1 - var(--t, 0)) * 2px));
+}
+.hero-cards { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.prism-card { position: absolute; left: 0; top: 0; pointer-events: auto; border-radius: 3px; }
+.prism-card canvas { display: none; }
+.ruler { position: absolute; z-index: 3; right: 14px; top: 50%; width: 14px; height: 60vh; transform: translateY(-50%); overflow: hidden; pointer-events: none; -webkit-mask: linear-gradient(transparent, #000 14%, #000 86%, transparent); mask: linear-gradient(transparent, #000 14%, #000 86%, transparent); }
+.ruler-track { display: flex; flex-direction: column; align-items: flex-end; transform: translateY(calc(var(--p, 0) * -42%)); }
+.ruler-track i { flex: none; width: 8px; height: 1px; margin-bottom: 5px; background: rgba(255, 255, 255, .2); }
+.ruler-track i:nth-child(5n) { width: 14px; background: rgba(255, 255, 255, .5); }
+.hero-hint { position: absolute; z-index: 3; left: clamp(20px, 5vw, 72px); bottom: 26px; max-width: 44ch; font: 500 13px/1.45 var(--font-hero); color: rgba(245, 245, 245, .64); pointer-events: none; }
+/* flat fallback: the same painted cards in a row */
+#hero[data-ring="flat"] #prism { display: none; }
+#hero[data-ring="flat"] .hero-cards { display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: clamp(10px, 2vw, 22px); padding: 250px 24px 96px; pointer-events: auto; overflow-y: auto; }
+#hero[data-ring="flat"] .prism-card { position: static; width: min(164px, 40vw); aspect-ratio: 3 / 4; transition: transform .45s var(--ease); }
+#hero[data-ring="flat"] .prism-card:hover { transform: translateY(-6px) scale(1.04); }
+#hero[data-ring="flat"] .prism-card canvas { display: block; width: 100%; height: 100%; }
+@media (max-width: 767px) {
+  .hero-brand span { display: none; }
+  .nav-status, .ruler { display: none; }
+  .hero-nav { grid-template-columns: auto 1fr; }
+  .nav-links { justify-self: end; }
+  .nav-links button { padding: 0 10px; }
+  .stage-next { top: auto; bottom: 84px; right: 20px; font-size: 2rem; }
+  #hero[data-ring="flat"] .hero-cards { padding-top: 220px; }
+}
 
 /* ---------- sheets ---------- */
 .sheet { position: fixed; inset: 0; visibility: hidden; }
@@ -84,223 +128,289 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .sp .ext { background: var(--gold); color: var(--mocha-ink); padding: 3px 4px; font-size: 8.5px; letter-spacing: .06em; max-width: 86%; overflow: hidden; }
 /* vertical-rl: line-height is the column width, so one line sits centred in the label */
 .sp .name { flex: 1; min-height: 0; width: 72%; background: var(--sheet); border: 1px solid var(--rule); writing-mode: vertical-rl; padding: calc(var(--H) * .025) 0; display: block; font: 400 calc(var(--H) * .044) var(--font-serif); line-height: calc(var(--ws) * .72 - 2px); letter-spacing: -.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.sp .meta { writing-mode: vertical-rl; color: var(--paper); font-size: 8px; letter-spacing: .14em; white-space: nowrap; max-height: 30%; overflow: hidden; }
+.sp .meta { writing-mode: vertical-rl; color: var(--paper); font-size: 8px; letter-spacing: .14em; white-space: nowrap; max-height: 34%; overflow: hidden; }
 .sp .fmt { color: var(--paper); border-color: rgba(237, 230, 218, .7); height: 17px; padding: 0 4px; font-size: 8px; }
 .cv .hd { display: flex; justify-content: space-between; gap: 6px; color: var(--forest); font-size: 8.5px; }
 .cv h3 { font: 400 calc(var(--H) * .05)/1.06 var(--font-serif); letter-spacing: -.01em; overflow-wrap: anywhere; max-height: 3.2em; overflow: hidden; }
 .cv .art { flex: 1; min-height: 0; border: 1px solid var(--rule); background: var(--paper); overflow: hidden; }
-.cv .art svg { width: 100%; height: 100%; display: block; }
+.cv .art svg, .cv .art img { width: 100%; height: 100%; display: block; }
+.cv .art img { object-fit: cover; object-position: 50% 0; background: var(--sheet); } /* a real preview: the top of the page or picture */
 .cv .snip { background: var(--forest); color: var(--paper); font: 400 calc(var(--H) * .028)/1.32 var(--font-serif); padding: 6px 8px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; flex: none; }
 .cv .snip b { font: 600 8px/1 var(--font-sans); letter-spacing: .1em; color: var(--gold); margin-right: 4px; }
 .cv .snip mark { background: rgba(184, 150, 88, .45); }
 .cv .ft { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 8.5px; color: var(--mocha-mid); }
 .cv .ft .box { height: 18px; font-size: 8.5px; color: var(--mocha-ink); }
 
-/* ---------- chrome (top bar, search, tabs, caption, ring) ---------- */
+/* ---------- chrome: top bar, hairline search, pills, caption ---------- */
 #chrome { position: fixed; inset: 0; z-index: 30; pointer-events: none; visibility: hidden; transition: visibility 0s .7s; }
 [data-chrome="on"] #chrome { visibility: visible; transition-delay: 0s; }
 #chrome .hit { pointer-events: auto; }
 [data-chrome="on"] #chrome .mi { transform: none; }
 .top { position: absolute; top: 0; left: 0; right: 0; height: 84px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 clamp(14px, 3vw, 40px); }
-.top .right { justify-self: end; display: flex; align-items: center; gap: 14px; }
+.top .right { justify-self: end; display: flex; align-items: center; gap: 12px; min-width: 0; }
 .top .count { color: var(--mocha-mid); }
-.emblem { text-align: center; color: var(--forest); }
-.emblem .cn { font: 700 17px/1 var(--font-logo); letter-spacing: .1em; }
-.emblem .cn i { font-style: normal; color: var(--gold); }
-.emblem .en { font: 600 9px/1 var(--font-sans); letter-spacing: .34em; margin-top: 7px; padding-left: .34em; }
-.search-wrap { position: absolute; left: 50%; transform: translateX(-50%); width: min(580px, 88vw); top: max(92px, calc(50% - var(--H) / 2 - 142px)); }
-.search { height: 38px; display: flex; align-items: stretch; border: 1px solid var(--rule); background: var(--sheet); }
-.search:focus-within { outline: 2px solid var(--gold); outline-offset: -3px; }
-.search .tag { display: flex; align-items: center; padding: 0 10px; border-right: 1px solid var(--rule); color: var(--forest); }
-#q { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; padding: 0 12px; font: 400 17px var(--font-serif); color: var(--mocha-ink); user-select: text; -webkit-user-select: text; }
+.top .box { background: var(--paper); transition: background-color .3s var(--ease); }
+.top .box:hover { background: var(--gold); }
+.brand { display: block; font: 800 22px/1 var(--font-sans); letter-spacing: .2em; padding: 6px 0 6px .2em; text-transform: uppercase; color: var(--mocha-ink); white-space: nowrap; }
+/* The search field rests as a 48px hairline under the wordmark and pops out in place. */
+#sbox {
+  position: absolute; left: 50%; top: 62px; width: 48px; height: 1px; transform: translateX(-50%); overflow: hidden; pointer-events: auto;
+  background: var(--mocha-ink); border: 0 solid var(--rule);
+  transition: width .45s var(--ease), height .45s var(--ease), background-color .45s var(--ease), border-width .45s var(--ease);
+}
+#sHit { position: absolute; left: 50%; top: 52px; width: 48px; height: 21px; transform: translateX(-50%); } /* a taller target for the pointer than one pixel */
+#sbox[data-open] { width: min(440px, calc(100vw - 28px)); height: 40px; background: var(--sheet); border-width: 1px 1px 2px; border-bottom-color: var(--forest); }
+#searchForm { position: relative; display: flex; align-items: stretch; height: 37px; width: min(438px, calc(100vw - 30px)); visibility: hidden; transition: visibility 0s .45s; }
+#sbox[data-open] #searchForm { visibility: visible; transition-delay: 0s; }
+#q { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; padding: 0 12px; font: 400 16px var(--font-serif); color: var(--mocha-ink); user-select: text; -webkit-user-select: text; }
 #q::placeholder { color: var(--mocha-mid); }
-.search .hint { display: flex; align-items: center; padding: 0 10px; color: var(--mocha-mid); }
-.rows { position: absolute; left: 0; right: 0; top: max(142px, calc(50% - var(--H) / 2 - 86px)); display: grid; justify-items: center; }
-.row { grid-area: 1 / 1; display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; visibility: hidden; transition: visibility 0s .6s; }
-.row .mi { transition-duration: .6s; }
-[data-mode="vault"] #tabs1, [data-mode="files"] #tabs2, [data-mode="detail"] #tabs2 { visibility: visible; transition-delay: 0s; }
-[data-chrome="on"]:not([data-mode="vault"]) #tabs1 .mi, [data-chrome="on"][data-mode="vault"] #tabs2 .mi { transform: translateY(110%); }
-.tabs { position: relative; display: flex; }
-.row > .m { max-width: 100vw; }
-.tabs button { position: relative; z-index: 1; margin-left: -1px; transition: color .6s var(--ease); }
-.tabs button.on { color: var(--paper); }
-.tabs .ind { position: absolute; left: 0; top: 0; height: 21px; width: 0; background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .6s var(--ease), width .6s var(--ease); }
-.ctx-wrap { grid-row: 2; margin-top: 12px; max-width: 92vw; text-align: center; color: var(--mocha-mid); }
-.cap { position: absolute; left: 50%; transform: translateX(-50%); top: calc(50% + var(--H) / 2 + 30px); width: min(92vw, 940px); text-align: center; }
+.mic { flex: none; width: 40px; display: grid; place-items: center; border-left: 1px solid var(--rule); color: var(--forest); transition: background-color .3s var(--ease), color .3s var(--ease); }
+.mic:hover { background: var(--gold); color: var(--mocha-ink); }
+[data-mic="on"] .mic { background: var(--forest); color: var(--paper); }
+/* two pills, centred just above the shelf; each widens inline to show its options */
+.rows { position: absolute; left: 0; right: 0; top: max(104px, calc(50% - var(--H) / 2 - 97px)); display: grid; justify-items: center; gap: 12px; }
+.rows > .m { height: 11px; overflow: visible; clip-path: inset(-4px 0); }
+#pills { display: flex; justify-content: center; gap: 10px; max-width: 100vw; }
+.pill { display: grid; grid-template-columns: auto 0fr; height: 25px; max-width: calc(100vw - 20px); border: 1px solid var(--rule); transition: grid-template-columns .45s var(--ease), background-color .45s var(--ease); }
+.pill:hover, .pill:focus-within, .pill[data-open] { grid-template-columns: auto 1fr; background: var(--sheet); }
+.pill[data-shut] { grid-template-columns: auto 0fr !important; } /* a choice folds the pill even while the pointer is still on it */
+.pill-label { display: flex; align-items: center; justify-content: center; min-width: 105px; padding: 0 10px; white-space: nowrap; }
+.pill-opts { position: relative; display: flex; min-width: 0; overflow: hidden; }
+.pill:hover .pill-opts, .pill:focus-within .pill-opts, .pill[data-open] .pill-opts { overflow-x: auto; scrollbar-width: none; }
+.pill-opts button { position: relative; z-index: 1; flex: none; padding: 0 10px; border-left: 1px solid var(--rule); white-space: nowrap; transition: color .45s var(--ease); }
+.pill-opts button:hover { color: var(--forest); }
+.pill-opts button[aria-pressed="true"] { color: var(--paper); }
+.pill-opts .ind { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .45s var(--ease), width .45s var(--ease); }
+#ctx { max-width: 92vw; text-align: center; color: var(--mocha-mid); }
+#ctx button { text-transform: inherit; letter-spacing: inherit; color: var(--forest); padding-bottom: 2px; border-bottom: 1px solid var(--forest); }
+#ctx .crumb[aria-current] { color: inherit; border-bottom-color: transparent; }
+.cap { position: absolute; left: 50%; top: calc(50% + var(--H) / 2 + 30px); width: min(92vw, 940px); transform: translateX(-50%); text-align: center; }
 .cap .rl { display: grid; justify-items: center; width: 100%; }
 .cap .rl > span { max-width: 100%; }
 #cap1 { font: 400 31px/1.2 var(--font-serif); letter-spacing: -.01em; }
 #cap2 { color: var(--forest); margin-top: 10px; line-height: 1.25; }
 #cap3 { font: 500 11px/1.3 var(--font-sans); color: var(--mocha-mid); letter-spacing: .06em; margin-top: 8px; text-transform: uppercase; }
-#ring {
-  position: fixed; left: calc(50vw - .5 * var(--d) - 6px); top: calc(50vh + .36 * var(--H));
-  width: 42px; height: 42px; margin: -21px 0 0 -21px; border-radius: 50%;
-  border: 1px solid var(--forest); background: rgba(237, 230, 218, .85); color: var(--gold);
-  display: grid; place-items: center; transform: scale(var(--rs, 0)); pointer-events: auto;
-}
-[data-mode="landing"] #ring, [data-mode="detail"] #ring { visibility: hidden; }
+#acts { display: flex; justify-content: center; gap: 10px; margin-top: 16px; visibility: hidden; }
+[data-mode="files"] #acts.has-file { visibility: visible; }
+#acts .box { height: 27px; padding: 0 12px; border-color: var(--forest); color: var(--forest); background: var(--sheet); transition: background-color .3s var(--ease), color .3s var(--ease); }
+#acts .box:hover { background: var(--gold); color: var(--mocha-ink); }
 #empty { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(90vw, 560px); text-align: center; visibility: hidden; }
 #empty.on { visibility: visible; }
 #empty h2 { font: 400 31px/1.2 var(--font-serif); }
 #empty p { margin-top: 12px; color: var(--mocha-mid); line-height: 1.5; }
+#emptyBtn { margin-top: 18px; height: 34px; padding: 0 16px; border-color: var(--forest); color: var(--forest); background: var(--sheet); transition: background-color .3s var(--ease), color .3s var(--ease); }
+#emptyBtn:hover { background: var(--gold); color: var(--mocha-ink); }
 
 /* ---------- inspector ---------- */
 #detail {
   z-index: 60; background: var(--sheet); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4vw; align-items: center;
   padding: 84px clamp(20px, 6vw, 96px) 40px;
 }
-#detail .close { position: absolute; top: 30px; right: clamp(14px, 3vw, 40px); }
-.d-left .m + .m { margin-top: 18px; }
-.d-left .mi { transition-duration: .9s; transform: translateY(110%); }
+#detail .close { position: absolute; top: 30px; right: clamp(14px, 3vw, 40px); background: var(--sheet); transition: background-color .3s var(--ease); }
+#detail .close:hover { background: var(--gold); }
+.d-left .m { padding: 3px; margin: -3px; } /* room for focus rings inside the reveal mask */
+.d-left .m + .m { margin-top: 15px; }
+.d-left .mi { transition-duration: .9s; transform: translateY(115%); }
 #detail.in .d-left .mi { transform: none; }
-#d-badge { color: var(--forest); }
+#d-name { font: 400 clamp(34px, 4.2vw, 64px)/1.04 var(--font-serif); letter-spacing: -.015em; overflow-wrap: break-word; }
 #d-name:focus { outline: none; }
-#d-name { font: 400 clamp(36px, 4.5vw, 68px)/1.04 var(--font-serif); letter-spacing: -.015em; overflow-wrap: break-word; }
+#renameForm { display: none; }
+#detail[data-renaming] #d-name { display: none; }
+#detail[data-renaming] #renameForm { display: block; }
+#renameInput { width: 100%; padding: 6px 0 8px; border: 0; border-bottom: 2px solid var(--forest); background: transparent; outline: none; font: 400 clamp(22px, 2.3vw, 34px)/1.2 var(--font-serif); letter-spacing: -.01em; color: var(--mocha-ink); user-select: text; -webkit-user-select: text; }
+#d-badge { color: var(--forest); line-height: 1.5; }
 #d-meta { color: var(--mocha-mid); line-height: 1.5; }
 #d-snippet { font: 400 17px/1.6 var(--font-serif); max-width: 62ch; user-select: text; -webkit-user-select: text; }
-#d-path { font: italic 400 15px/1.45 var(--font-serif); color: var(--mocha-mid); overflow-wrap: anywhere; }
+#d-path { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; font: italic 400 15px/1.5 var(--font-serif); color: var(--mocha-mid); }
+#d-path button { color: var(--forest); border-bottom: 1px solid var(--forest); font-style: italic; }
+#d-path button:hover { color: var(--mocha-ink); border-bottom-color: var(--gold); }
 .d-acts { display: flex; flex-wrap: wrap; gap: 10px; }
-.act { height: 44px; padding: 0 16px; border-color: var(--forest); color: var(--forest); background: transparent; transition: background-color .3s var(--ease), color .3s var(--ease); }
+.act { height: 44px; padding: 0 16px; border-color: var(--forest); color: var(--forest); background: transparent; transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease); }
 .act:hover { background: var(--gold); color: var(--mocha-ink); }
+.act.armed, .act.armed:hover { background: var(--mocha-ink); border-color: var(--mocha-ink); color: var(--paper); }
 .d-right svg { display: block; height: min(80vh, 900px); width: auto; aspect-ratio: 474 / 900; }
+@media (max-width: 1100px) { .top .count { display: none; } }
 @media (max-width: 860px) {
   #detail { grid-template-columns: 1fr; align-content: start; overflow-y: auto; }
   .d-right svg { height: 56vh; margin: 0 auto; }
-  .top .count { display: none; }
 }
-@media (max-width: 560px) {
-  .top { grid-template-columns: auto 1fr; gap: 12px; }
-  .top .right { display: none; }
-  .emblem { justify-self: end; }
-  .row { gap: 8px; }
-  .row .tabs { overflow-x: auto; scrollbar-width: none; }
+@media (max-width: 640px) {
+  .top .right { visibility: hidden; }
+  #pills { flex-direction: column; align-items: center; gap: 8px; }
+  .rows { top: max(100px, calc(50% - var(--H) / 2 - 130px)); }
   #cap1 { font-size: 24px; }
 }
 
-/* ---------- toast + cursor ---------- */
+/* ---------- export tray, voice pill, toast, cursor ---------- */
+#tray {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 70; display: grid; gap: 8px; padding: 10px clamp(14px, 3vw, 40px) 12px;
+  background: var(--sheet); border-top: 1px solid var(--rule); transform: translateY(101%); transition: transform .5s var(--ease);
+}
+#tray.on { transform: none; }
+#tray.over { box-shadow: inset 0 3px 0 var(--gold); }
+.tray-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.tray-head .ttl { color: var(--forest); margin-right: auto; }
+.tray-head button { transition: background-color .3s var(--ease); }
+.tray-head button:hover { background: var(--gold); }
+#trayList { list-style: none; padding: 0; display: flex; gap: 8px; overflow-x: auto; min-height: 46px; }
+#trayList:empty::before { content: 'Drop a file here to stage it for export'; align-self: center; font: 400 15px var(--font-serif); color: var(--mocha-mid); }
+#trayList li { flex: none; max-width: 260px; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 8px; align-items: center; padding: 6px 10px; background: var(--paper); border: 1px solid var(--rule); }
+#trayList li .box { height: 17px; padding: 0 5px; font-size: 8.5px; grid-row: span 2; background: var(--gold); border-color: var(--rule); }
+#trayList li b { font: 400 14px/1.2 var(--font-serif); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#trayList li .sz { color: var(--mocha-mid); font-size: 9px; }
+#voicePill {
+  position: fixed; left: 50%; top: 112px; z-index: 80; max-width: min(92vw, 720px); display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 14px;
+  background: var(--forest); color: var(--paper); border: 1px solid var(--gold); transform: translate(-50%, -200px); transition: transform .5s var(--ease);
+}
+[data-mic="on"] #voicePill { transform: translate(-50%, 0); }
+[data-mode="landing"] #voicePill { top: 78px; }
+#voiceText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wave { display: inline-flex; align-items: center; gap: 2px; height: 14px; flex: none; }
+.wave i { width: 2px; height: 100%; background: var(--gold); transform: scaleY(.25); }
+[data-mic="on"] .wave i { animation: wave .9s var(--ease) infinite alternate; }
+.wave i:nth-child(2) { animation-delay: .12s; } .wave i:nth-child(3) { animation-delay: .3s; }
+.wave i:nth-child(4) { animation-delay: .18s; } .wave i:nth-child(5) { animation-delay: .42s; }
+@keyframes wave { to { transform: scaleY(1); } }
 #toast {
-  position: fixed; left: 50%; bottom: 28px; z-index: 90; max-width: min(560px, 90vw);
-  transform: translate(-50%, calc(100% + 40px)); transition: transform .5s var(--ease);
+  --b: 28px; position: fixed; left: 50%; bottom: var(--b); z-index: 90; max-width: min(560px, 90vw);
+  transform: translate(-50%, calc(100% + var(--b) + 12px)); transition: transform .5s var(--ease);
   background: var(--mocha-ink); color: var(--paper); border: 1px solid var(--gold); padding: 12px 16px; font: 400 15px/1.4 var(--font-serif);
 }
 #toast.on { transform: translate(-50%, 0); }
-#cursor { position: fixed; left: 0; top: 0; width: 58px; height: 58px; margin: -29px 0 0 -29px; z-index: 100; pointer-events: none; }
+#tray.on ~ #toast { --b: 136px; } /* never cover the tray's own buttons */
+#cursor { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; display: inline-flex; gap: 4px; margin: -2.5px 0 0 -7px; }
+#cursor i { width: 5px; height: 5px; border-radius: 50%; background: var(--mocha-ink); box-shadow: 0 0 0 1px rgba(237, 230, 218, .85); transition: transform .25s var(--ease), background-color .25s var(--ease); }
+#cursor.on i { background: var(--forest); }
+#cursor.on i:first-child { transform: translateX(-2px); }
+#cursor.on i:last-child { transform: translateX(2px); background: var(--gold); }
+[data-mode="landing"] #cursor i { background: #F5F5F5; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6); }
+[data-mode="landing"] #cursor.on i:last-child { background: var(--gold); }
+#cursor[data-drag]::after {
+  content: attr(data-drag); position: absolute; left: 18px; top: 10px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 4px 8px; background: var(--sheet); border: 1px solid var(--rule); font: 400 13px/1.2 var(--font-serif); color: var(--mocha-ink);
+}
 @media (pointer: coarse) {
   #cursor { display: none; }
-  /* brief fixes .box at 21px tall; widen the touch area without changing the look */
+  /* .box is 21px tall by the brief; widen the touch area without changing the look */
   button.box { position: relative; }
   button.box::after { content: ''; position: absolute; inset: -12px -2px; }
 }
-.c-ring { position: absolute; inset: 0; border: 1.5px solid var(--mocha-ink); border-radius: 50%; transition: transform .35s var(--ease), background-color .35s var(--ease), border-color .35s var(--ease); }
-.c-dot { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: var(--mocha-ink); transition: transform .25s var(--ease); }
-.c-lbl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--paper); font-size: 7.5px; line-height: 1.3; clip-path: circle(0% at 50% 50%); transition: clip-path .35s var(--ease); }
-#cursor.spine .c-ring { transform: scale(.72); }
-#cursor.btn .c-ring { transform: scale(.55); }
-#cursor.btn .c-dot, #cursor.open .c-dot { transform: scale(0); }
-#cursor.open .c-ring { transform: scale(1.75); background: var(--forest); border-color: var(--gold); }
-#cursor.open .c-lbl { clip-path: circle(70% at 50% 50%); }
 
 /* Scoped to the elements that move: a universal rule would also transition every element's
    inherited visibility, so a just-revealed input stays unfocusable for a frame. */
 @media (prefers-reduced-motion: reduce) {
-  .mi, .rl > span, .tabs .ind, .tabs button, #toast, .c-ring, .c-dot, .c-lbl, .cta, .act { transition-duration: 1ms !important; transition-delay: 0s !important; }
+  .mi, .rl > span, .pill, .pill-opts .ind, .pill-opts button, #sbox, #toast, #cursor i, .act, #tray, #voicePill, .mic, .st, .prism-card { transition-duration: 1ms !important; transition-delay: 0s !important; }
+  .wave i { animation: none !important; }
+  .nav-links { filter: none; opacity: 1; transform: none; }
 }
 </style>
 </head>
-<body data-view="landing" data-mode="landing">
+<body data-view="landing" data-mode="landing" data-mic="off" data-tray="0">
 <div class="grain" aria-hidden="true"></div>
 <div id="probe" aria-hidden="true"></div>
 
-<section id="landing" aria-label="Welcome">
-  <canvas id="meadow" aria-hidden="true"></canvas>
-  <div class="hero">
-    <h1><span class="m"><span class="mi">Every file you own,</span></span><span class="m"><span class="mi" style="--dl:.08s">indexed inside and out.</span></span></h1>
-    <p class="m"><span class="mi" style="--dl:.18s">Search by filename, date, category, or a single phrase buried inside a PDF or photo.</span></p>
-    <div class="m"><div class="mi acts" style="--dl:.28s">
-      <button class="cta primary lbl box" id="enterBtn">Enter file vault / 開く</button>
-      <button class="cta lbl box" id="voiceBtn">Voice / semantic search</button>
-    </div></div>
-  </div>
-  <div class="pills" id="pills"></div>
-  <button id="deskHit" aria-label="Open the archive binder"></button>
+<section id="hero" aria-label="Start" data-ring="loading" data-stage="0">
+  <canvas id="prism" aria-hidden="true"></canvas>
+  <header class="hero-nav" id="heroNav">
+    <div class="nav-left">
+      <button class="nav-back" id="storyBack" aria-label="Previous stage" disabled><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2L3.5 6l4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
+      <div class="hero-brand"><i class="mark" aria-hidden="true"></i><span>ARKHIVE</span></div>
+    </div>
+    <nav class="nav-links" aria-label="Start">
+      <button id="navPresets">Presets</button>
+      <button id="navHow">How it works</button>
+      <button id="archiveLink">Archive</button>
+    </nav>
+    <div class="nav-status" id="navStatus"></div>
+  </header>
+  <h1 class="stage-title" id="stageTitle" aria-live="polite"><span class="st on">Raw capture</span></h1>
+  <p class="stage-next" id="stageNext" aria-hidden="true">Optical grading</p>
+  <div class="hero-cards" id="heroCards"></div>
+  <div class="ruler" aria-hidden="true"><div class="ruler-track" id="rulerTrack"></div></div>
+  <p class="hero-hint" id="heroHint">Scroll to move through the story, or drag the ring. Choose a card to open its vault.</p>
 </section>
 
-<section id="vault" class="sheet" aria-label="Category shelf">
+<section id="vault" class="sheet" aria-label="Vault shelf">
   <div class="shelf" id="shelf1"><div class="stage t1"></div></div>
 </section>
 
 <section id="tier2" class="sheet" aria-label="File shelf">
   <div class="shelf" id="shelf2"><div class="stage t2"></div></div>
-  <div id="empty" role="status"><h2 id="emptyTitle"></h2><p class="lbl" id="emptyHint"></p></div>
+  <div id="empty" role="status"><h2 id="emptyTitle"></h2><p class="lbl" id="emptyHint"></p><button class="lbl box" id="emptyBtn" hidden>Choose folder</button></div>
 </section>
 
 <div id="chrome">
   <header class="top">
     <div class="m"><div class="mi"><button class="lbl box hit" id="back"><span class="rl" id="backLbl"></span></button></div></div>
-    <div class="m emblem"><div class="mi" style="--dl:.06s"><div class="cn">档案 <i>·</i> 索引</div><div class="en">ARCHIVE OS</div></div></div>
+    <div class="m"><div class="mi" style="--dl:.06s"><button class="brand hit" id="brand" aria-expanded="false" aria-controls="searchForm" aria-label="Arkhive: search files">ARKHIVE</button></div></div>
     <div class="right">
       <div class="m"><div class="mi lbl count" id="count" style="--dl:.12s"></div></div>
-      <div class="m"><div class="mi" style="--dl:.16s"><button class="lbl box hit" id="searchBtn">⌘K / Search inside files</button></div></div>
+      <div class="m"><div class="mi" style="--dl:.16s"><button class="lbl box hit" id="pickTop">Choose folder</button></div></div>
     </div>
   </header>
-  <div class="m search-wrap"><form class="search hit mi" id="searchForm" role="search" style="--dl:.1s">
-    <label class="tag lbl" for="q">Find</label>
-    <input id="q" type="search" autocomplete="off" spellcheck="false" maxlength="200" placeholder="blood related, invoice, hackathon deck…">
-    <span class="hint lbl"><span class="rl" id="qhint"><span>/ or ⌘K</span></span></span>
-  </form></div>
+  <div class="hit" id="sHit" aria-hidden="true"></div>
+  <div id="sbox">
+    <form id="searchForm" role="search">
+      <label class="sr" for="q">Search file names and the text inside files</label>
+      <input id="q" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" spellcheck="false" maxlength="200" placeholder="Search names, text in PDFs, or OCR: blood related…">
+      <button type="button" class="mic" id="micSearch" aria-pressed="false" aria-label="Voice search: turn the mic on and say “Hey Arkhive, find…”" title="Voice search (V): say “Hey Arkhive, find…”"><svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><rect x="4.5" y="1" width="5" height="9" rx="2.5" fill="currentColor"/><path d="M2 7.5a5 5 0 0010 0M7 12.5V15" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    </form>
+  </div>
   <div class="rows">
-    <div class="row" id="tabs1"><div class="m"><div class="mi tabs hit" data-group="tab" style="--dl:.18s">
-      <span class="ind"></span>
-      <button class="lbl box on" data-v="all">All / すべて</button>
-      <button class="lbl box" data-v="docs">Docs (PDF/PPT/DOCX)</button>
-      <button class="lbl box" data-v="media">Media (JPEG/MP4)</button>
-      <button class="lbl box" data-v="code">Code &amp; data</button>
-      <button class="lbl box" data-v="smart">Smart clusters</button>
-    </div></div></div>
-    <div class="row" id="tabs2">
-      <div class="m"><div class="mi tabs hit" data-group="sort">
-        <span class="ind"></span>
-        <button class="lbl box on" data-v="relevance">Sort: relevance</button>
-        <button class="lbl box" data-v="name">Name (A–Z)</button>
-        <button class="lbl box" data-v="newest">Date (newest)</button>
-        <button class="lbl box" data-v="oldest">Date (oldest)</button>
-        <button class="lbl box" data-v="largest">Size (largest)</button>
-      </div></div>
-      <div class="m"><div class="mi tabs hit" data-group="fmt" style="--dl:.06s">
-        <span class="ind"></span>
-        <button class="lbl box on" data-v="ALL">All</button>
-        <button class="lbl box" data-v="PDF">PDF</button>
-        <button class="lbl box" data-v="PPT">PPT</button>
-        <button class="lbl box" data-v="JPEG">JPEG</button>
-        <button class="lbl box" data-v="DOCX">DOCX</button>
-      </div></div>
+    <div class="m"><div class="mi lbl hit" style="--dl:.22s"><span class="rl" id="ctx"></span></div></div>
+    <div class="hit" id="pills">
+      <div class="pill" id="pillSort">
+        <button class="pill-label lbl" aria-expanded="false" aria-controls="sortOpts"></button>
+        <div class="pill-opts" id="sortOpts" role="group" aria-label="Sort by" data-group="sort">
+          <span class="ind"></span>
+          <button class="lbl" data-v="relevance">Relevance</button>
+          <button class="lbl" data-v="name">Name (A–Z)</button>
+          <button class="lbl" data-v="newest">Date (newest)</button>
+          <button class="lbl" data-v="oldest">Date (oldest)</button>
+          <button class="lbl" data-v="largest">Size</button>
+        </div>
+      </div>
+      <div class="pill" id="pillFiles">
+        <button class="pill-label lbl" aria-expanded="false" aria-controls="fileOpts"></button>
+        <div class="pill-opts" id="fileOpts" role="group" aria-label="Show"></div>
+      </div>
     </div>
-    <div class="m ctx-wrap"><div class="mi lbl" style="--dl:.22s"><span class="rl" id="ctx"></span></div></div>
   </div>
-  <div class="cap" aria-live="polite">
-    <div class="rl" id="cap1"></div>
-    <div class="rl lbl" id="cap2"></div>
-    <div class="rl" id="cap3"></div>
+  <div class="cap">
+    <div aria-live="polite">
+      <div class="rl" id="cap1"></div>
+      <div class="rl lbl" id="cap2"></div>
+      <div class="rl" id="cap3"></div>
+    </div>
+    <div class="hit" id="acts">
+      <button class="lbl box" id="inspectBtn">Inspect</button>
+      <button class="lbl box" id="plus">Add to export tray</button>
+    </div>
   </div>
-  <button id="ring" class="hit" aria-label="Open"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 1.5v11l9-5.5z" fill="currentColor"/></svg></button>
 </div>
 
 <section id="detail" class="sheet" aria-label="File inspector">
-  <button class="lbl box close" id="closeBtn">Close / 閉じる</button>
+  <button class="lbl box close" id="closeBtn">Close</button>
   <div class="d-left">
-    <div class="m"><div class="mi lbl" id="d-badge" style="--dl:.62s"></div></div>
-    <div class="m"><h2 class="mi" id="d-name" tabindex="-1" style="--dl:.695s"></h2></div>
+    <div class="m"><div class="mi" style="--dl:.62s">
+      <h2 id="d-name" tabindex="-1" title="Click to rename"></h2>
+      <form id="renameForm"><label class="sr" for="renameInput">New name</label><input id="renameInput" type="text" autocomplete="off" spellcheck="false" maxlength="255"></form>
+    </div></div>
+    <div class="m"><div class="mi lbl" id="d-badge" style="--dl:.695s"></div></div>
     <div class="m"><div class="mi lbl" id="d-meta" style="--dl:.77s"></div></div>
     <div class="m"><p class="mi" id="d-snippet" style="--dl:.845s"></p></div>
-    <div class="m"><p class="mi" id="d-path" style="--dl:.92s"></p></div>
+    <div class="m"><nav class="mi" id="d-path" aria-label="Folders above this file" style="--dl:.92s"></nav></div>
     <div class="m"><div class="mi d-acts" style="--dl:.995s">
-      <button class="lbl box act" data-act="open_file">Open in default app / 開く</button>
+      <button class="lbl box act" data-act="open_file">Open in default app</button>
       <button class="lbl box act" data-act="quick_look">Quick Look (space)</button>
       <button class="lbl box act" data-act="reveal_file">Reveal in Finder</button>
+      <button class="lbl box act" data-act="rename">Rename</button>
+      <button class="lbl box act" data-act="tray">Add to export tray</button>
+      <button class="lbl box act" data-act="trash">Move to Trash</button>
     </div></div>
   </div>
-  <div class="d-right">
-    <svg viewBox="0 0 474 900" role="img" aria-label="File preview">
+  <div class="d-right" id="d-prev">
+    <svg viewBox="0 0 474 900" role="img" aria-label="File preview. Drag it out to hand the file to another app.">
       <defs>
         <filter id="ink" x="-30%" y="-30%" width="160%" height="160%">
           <feTurbulence type="fractalNoise" baseFrequency="0.011" numOctaves="3" seed="7" result="noise"/>
@@ -309,6 +419,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
         <mask id="ink-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="474" height="900">
           <g filter="url(#ink)" fill="#fff" id="blobs"></g>
         </mask>
+        <clipPath id="prev-clip"><rect x="36" y="40" width="402" height="482"/></clipPath>
       </defs>
       <rect width="474" height="900" fill="#EDE6DA"/>
       <g mask="url(#ink-mask)" id="d-art"></g>
@@ -317,16 +428,29 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   </div>
 </section>
 
+<aside id="tray" aria-label="Export tray" inert>
+  <div class="tray-head">
+    <span class="lbl ttl">Export tray // <span id="trayN">0 files</span></span>
+    <button class="lbl box" data-tray="export">Export to Downloads</button>
+    <button class="lbl box" data-tray="copy">Copy paths</button>
+    <button class="lbl box" data-tray="reveal">Reveal all in Finder</button>
+    <button class="lbl box" data-tray="clear">Clear tray</button>
+  </div>
+  <ul id="trayList"></ul>
+</aside>
+<div id="voicePill" role="status" aria-live="polite"><span class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="lbl" id="voiceText"></span></div>
 <div id="toast" role="status" aria-live="polite"></div>
-<div id="cursor" aria-hidden="true"><div class="c-ring"></div><div class="c-dot"></div><div class="c-lbl lbl" id="cLbl"></div></div>
+<div id="cursor" aria-hidden="true"><i></i><i></i></div>
 
 <script src="core.js"></script>
+<script src="hero.js"></script>
 <script>
 (() => {
 'use strict';
-const C = window.ArchiveCore;
+const C = window.ArchiveCore, Hero = window.ArkhiveHero;
 const TAURI = window.__TAURI__ && window.__TAURI__.core;
 const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
 const body = document.body, rootStyle = document.documentElement.style;
 const esc = C.esc;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -334,11 +458,23 @@ const dur = (ms) => (reduce ? 1 : ms);
 const SHEET_EASE = 'cubic-bezier(.76, 0, .18, 1)';
 const INK = '#261A14', MID = '#5C463B', MUTED = '#8A7367', FOREST = '#234434', GOLD = '#B89658', PAPER = '#EDE6DA', SHEET = '#F5EFE6';
 const mod = (a, n) => ((a % n) + n) % n;
+const ROOT = { name: 'FOLDERS', path: null }; // first crumb of every folder trail
+const HERO_KEYS = ['PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'FOLDERS'];
+const TEXT_EXT = new Set(['txt', 'md', 'csv', 'json', 'rs', 'py', 'ts', 'tsx', 'js', 'sql', 'rtf', 'cpp', 'css', 'html', 'swift', 'toml', 'yaml', 'yml', 'sh']);
+const TEXT_LIMIT = 256 * 1024, WALK_LIMIT = 5000, MAX_DEPTH = 4; // browser folder reader: per-file text, items, levels
+const SORTS = { relevance: 'RELEVANCE', name: 'NAME', newest: 'NEWEST', oldest: 'OLDEST', largest: 'SIZE' };
+const GROUPS = [['all', 'All'], ['docs', 'Docs'], ['media', 'Media'], ['code', 'Code'], ['smart', 'Smart']];
+const FORMATS = [['ALL', 'All'], ['PDF', 'PDF'], ['PPTX', 'PPTX'], ['JPEG', 'JPEG'], ['DOCX', 'DOCX'], ['XLSX', 'XLSX'], ['CODE', 'Code'], ['FOLDERS', 'Folders']];
 
-const st = { mode: 'landing', busy: false, files: [], terms: null, sort: 'relevance', fmt: 'ALL', tab: 'all', ctx: '', detailFile: null };
-const els = { landing: $('#landing'), vault: $('#vault'), tier2: $('#tier2'), chrome: $('#chrome'), detail: $('#detail'), q: $('#q') };
+// kind: what the file shelf shows ('vault' | 'search' | 'folder' | 'dropped'); trail: the folder path bar; tray: files staged for export
+const st = { mode: 'landing', busy: false, files: [], terms: null, sort: 'relevance', fmt: 'ALL', tab: 'all', ctx: '', kind: 'vault', trail: [], note: '', tray: [], detailFile: null, from: 'PDF' };
+const els = { hero: $('#hero'), vault: $('#vault'), tier2: $('#tier2'), chrome: $('#chrome'), detail: $('#detail'), q: $('#q'), tray: $('#tray'), sbox: $('#sbox') };
+// Browser preview: the folder the owner chose. Held in memory for this visit only.
+const local = { name: '', root: '', records: [], capped: false };
+// Per vault: undefined while counting, { count, bytes, newest }, or { failed: true }.
+const summary = {};
 
-// ---------- geometry (brief §4) ----------
+// ---------- geometry (shelf math lives in core.js) ----------
 let H = 400, ws = 68, d = 210, gap = 12;
 function measure() {
   H = $('#probe').getBoundingClientRect().height;
@@ -348,27 +484,24 @@ function measure() {
 }
 
 // ---------- small helpers ----------
-function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.codePointAt(0), 16777619); return h >>> 0; }
-function rng(seed) {
-  return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
-function mix(a, b, t) {
-  const p = (h, i) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
-  return '#' + [0, 1, 2].map((i) => Math.round(p(a, i) + (p(b, i) - p(a, i)) * t).toString(16).padStart(2, '0')).join('');
-}
-const breakable = (name) => esc(name).replace(/([_.\-])/g, '$1<wbr>'); // wrap file names at _ . - not mid-word
+const isDir = (f) => !!f && f.kind === 'dir';
 const dirOf = (p) => p.slice(0, p.lastIndexOf('/')) || '/';
-const fmtOf = (f) => { const c = C.categoryOf(f.ext); return c === 'OTHER' ? (f.ext || 'file').toUpperCase() : c; };
+const breakable = (name) => esc(name).replace(/([_.\-])/g, '$1<wbr>'); // wrap file names at _ . - not mid-word
+const fmtOf = (f) => { if (isDir(f)) return 'FOLDER'; const c = C.categoryOf(f.ext); return c === 'OTHER' ? (f.ext || 'file').toUpperCase() : c; };
 const snippetOf = (f) => f.snippet || (st.terms && f.text ? C.snippetFor(f.text, st.terms) : null);
+const plural = (n, word) => `${n.toLocaleString('en-US')} ${word}${n === 1 ? '' : 's'}`;
+const hasFolder = () => !!TAURI || !!local.root;
+const catOf = (key) => C.CATEGORIES.find((c) => c.key === key);
 
 let toastTimer;
 function toast(msg) {
   const t = $('#toast');
   t.textContent = msg; t.classList.add('on');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 4200);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 4600);
 }
+const needsApp = (what) => toast(`${what} needs the desktop app. In the browser Arkhive can read a folder you choose, but it cannot open or change files.`);
 
-// Slide new content in through a mask; old content slides out the other way (brief §6).
+// Slide new content in through a mask; old content slides out the other way.
 function roll(el, html, dir = 1) {
   const old = [...el.children];
   const span = document.createElement('span');
@@ -385,6 +518,14 @@ function roll(el, html, dir = 1) {
 }
 
 // ---------- generated cover art (duotone mocha / forest / gold) ----------
+function hash(s) { let h = 2166136261; for (const c of s) h = Math.imul(h ^ c.codePointAt(0), 16777619); return h >>> 0; }
+function rng(seed) {
+  return () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function mix(a, b, t) {
+  const p = (h, i) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  return '#' + [0, 1, 2].map((i) => Math.round(p(a, i) + (p(b, i) - p(a, i)) * t).toString(16).padStart(2, '0')).join('');
+}
 const svg = (inner, vb = '0 0 200 240') => `<svg viewBox="${vb}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${inner}</svg>`;
 const R = (x, y, w, h, f, extra = '') => `<rect x="${x.toFixed ? x.toFixed(1) : x}" y="${y.toFixed ? y.toFixed(1) : y}" width="${w.toFixed ? w.toFixed(1) : w}" height="${h.toFixed ? h.toFixed(1) : h}" fill="${f}" ${extra}/>`;
 function textLines(r, x, y, w, n, step, color) {
@@ -408,7 +549,7 @@ function art(kind, seedName, text) {
       s = page(r, 34, 18, 132, 204, { head: kind === 'DOCX' ? MID : FOREST });
       if (kind === 'PDF') s += R(130, 26, 26, 12, GOLD) + `<text x="143" y="35" font-size="8" text-anchor="middle" font-family="Inter Tight" font-weight="600" fill="${INK}">PDF</text>`;
       break;
-    case 'PPT': {
+    case 'PPTX': {
       s = R(0, 0, 200, 240, mix(MID, PAPER, 0.75)) + R(18, 58, 164, 112, SHEET, `stroke="${INK}" stroke-width="1.2"`) + R(30, 70, 70 + r() * 40, 9, FOREST);
       for (let i = 0; i < 5; i++) { const h = 14 + r() * 50; s += R(36 + i * 26, 156 - h, 16, h, i % 2 ? GOLD : FOREST); }
       s += R(18, 178, 164, 3, INK) + R(60, 186, 80, 6, MUTED);
@@ -455,12 +596,16 @@ function art(kind, seedName, text) {
       s += R(88, 150, 24, 30, GOLD, `stroke="${INK}"`) + R(96, 170, 8, 6, INK);
       break;
     }
+    case 'FOLDERS': // a folder with one sheet showing
+      s = R(0, 0, 200, 240, mix(PAPER, SHEET, 0.5));
+      s += `<path d="M42 70h42l11 15h63v104H42z" fill="${mix(MID, INK, 0.3)}"/>`;
+      s += R(52, 80, 96, 70, SHEET, `stroke="${INK}" stroke-width="1"`) + R(60, 91, 36 + r() * 30, 5, FOREST);
+      s += `<path d="M42 104h116v85H42z" fill="${MID}" stroke="${INK}" stroke-width="1.2"/>`;
+      s += R(54, 166, 30 + r() * 36, 6, GOLD);
+      break;
     case 'MEDICAL':
       s = page(r, 30, 20, 140, 200) + R(118, 28, 40, 12, SHEET) + R(132, 26, 12, 30, FOREST) + R(122, 36, 32, 10, FOREST);
       s += `<polyline points="40,170 70,170 80,146 92,196 104,160 112,170 160,170" fill="none" stroke="${GOLD}" stroke-width="3"/>`;
-      break;
-    case 'FINANCE':
-      s = page(r, 30, 20, 140, 200, { head: MID }) + `<circle cx="134" cy="178" r="22" fill="${GOLD}"/><circle cx="134" cy="178" r="15" fill="none" stroke="${INK}" stroke-width="1.5"/>`;
       break;
     case 'PROJECTS':
       s = R(0, 0, 200, 240, mix(PAPER, SHEET, 0.5));
@@ -483,24 +628,148 @@ function vaultArt(cat) { // a format vault: two back pages behind a sample cover
     `<g transform="translate(22 30) scale(.82)">${art(cat.key, cat.key).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`);
 }
 
+// ---------- vault summaries: real counts, sizes and newest files ----------
+// What a vault's spine and the hero cards say about it. Never a made-up number.
+function countLabel(key) {
+  const s = summary[key];
+  if (!s) return hasFolder() ? 'Counting' : 'Choose a folder';
+  if (s.failed) return 'Count failed';
+  return plural(s.count, key === 'FOLDERS' ? 'folder' : 'file');
+}
+function countLine(key) { // for the caption: count, plus total size once known
+  const s = summary[key], label = countLabel(key);
+  return s && !s.failed && key !== 'FOLDERS' && s.count ? `${label}, ${C.formatSize(s.bytes)}` : label;
+}
+const queryOf = (c) => (c.exts ? { terms: [], exts: c.exts, days: null } : c.keywords ? { terms: c.keywords, exts: [], days: null } : { terms: [], exts: [], days: c.recentDays });
+const localFiles = () => local.records.filter((f) => f.kind === 'file'); // folders are listed, never counted or searched as files
+async function refreshSummaries() {
+  for (const c of C.CATEGORIES) delete summary[c.key];
+  redrawVaults();
+  if (!hasFolder()) return;
+  const cats = C.CATEGORIES.filter((c) => !c.folders);
+  try {
+    let rows;
+    if (TAURI) rows = await TAURI.invoke('vault_summary', { queries: cats.map(queryOf) });
+    else {
+      rows = cats.map((c) => {
+        const list = C.filesInCategory(localFiles(), c, Date.now());
+        return { count: list.length, bytes: list.reduce((n, f) => n + f.size, 0), newest: list.reduce((a, f) => (!a || f.modified > a.modified ? f : a), null) };
+      });
+    }
+    cats.forEach((c, i) => { summary[c.key] = rows[i]; });
+    summary.FOLDERS = { count: (await listDir(null)).entries.length, bytes: 0, newest: null };
+  } catch (err) {
+    for (const c of C.CATEGORIES) summary[c.key] = { failed: true };
+    toast(`Counting your files failed: ${err}`);
+  }
+  redrawVaults();
+  for (const key of HERO_KEYS) { const s = summary[key]; if (s && s.newest) cardPicture(key, s.newest); }
+}
+function redrawVaults() {
+  setItems(shelf1, C.categoriesForTab(st.tab), true);
+  Hero.refresh();
+  $('#navStatus').textContent = TAURI ? 'Spotlight index, this Mac' : local.root ? `Reading ${local.name}` : 'No folder chosen';
+}
+
+// ---------- previews: a real picture of a file, when one exists ----------
+const thumbs = new Map(), thumbUrl = new Map(); // key → promise of a blob: URL (or null); and the ones that have arrived
+const thumbKey = (f, size) => `${f.path}|${f.modified}|${size}`;
+async function loadThumb(f, size) {
+  if (TAURI) return URL.createObjectURL(new Blob([await TAURI.invoke('thumbnail', { path: f.path, size })], { type: 'image/png' }));
+  if (!f.handle || C.categoryOf(f.ext) !== 'JPEG') return null;
+  const url = URL.createObjectURL(await f.handle.getFile()); // the browser can show an image file itself
+  try { await loadImage(url); return url; } // some image types (HEIC) do not decode here; the drawn cover stays
+  catch (err) { URL.revokeObjectURL(url); throw err; }
+}
+function thumbFor(f, size = 480) {
+  if (!f || isDir(f)) return Promise.resolve(null);
+  const key = thumbKey(f, size);
+  if (!thumbs.has(key)) {
+    // A file with no preview is normal (the drawn cover stays), so this is logged, not shown.
+    thumbs.set(key, loadThumb(f, size).then((url) => { if (url) thumbUrl.set(key, url); return url; }, (err) => { console.info(`Arkhive: no preview for ${f.name}: ${err}`); return null; }));
+    if (thumbs.size > 240) { const old = thumbs.keys().next().value; thumbs.delete(old); const u = thumbUrl.get(old); if (u) { URL.revokeObjectURL(u); thumbUrl.delete(old); } }
+  }
+  return thumbs.get(key);
+}
+const thumbNow = (f, size = 480) => thumbUrl.get(thumbKey(f, size));
+const thumbImg = (url) => `<img src="${url}" alt="" draggable="false">`;
+// The pulled-out cover is the only cover face on show, so it is the only one that asks for a preview.
+let coverTimer;
+function previewActiveCover() {
+  clearTimeout(coverTimer);
+  const f = activeItem(shelf2), index = activeIndex(shelf2);
+  if (!f || isDir(f) || thumbNow(f)) return;
+  coverTimer = setTimeout(async () => {
+    const url = await thumbFor(f);
+    if (!url || shelf2.items[index] !== f) return;
+    for (const t of shelf2.tapes) if (Number(t.el.dataset.i) === index) { const art = t.el.querySelector('.art'); if (art) art.innerHTML = thumbImg(url); }
+  }, 160); // wait until the shelf has stopped on this file
+}
+
+// ---------- hero card faces: painted here, drawn by hero.js ----------
+const cardPic = {}; // vault key → an image to show on its card (generated art first, a real preview when one arrives)
+function loadImage(src) {
+  return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error('image did not load')); img.src = src; });
+}
+function paintCard(key, canvas) {
+  const c = catOf(key), g = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
+  g.fillStyle = SHEET; g.fillRect(0, 0, w, h);
+  g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3);
+  if ('letterSpacing' in g) g.letterSpacing = '2px';
+  g.textBaseline = 'alphabetic';
+  g.fillStyle = FOREST; g.font = '600 19px "Inter Tight", system-ui, sans-serif';
+  g.fillText(`VAULT // ${key}`, 30, 50);
+  const box = [30, 72, w - 60, 420], img = cardPic[key];
+  g.fillStyle = PAPER; g.fillRect(...box);
+  if (img) { // cover-fit, from the top of the page or picture
+    const scale = Math.max(box[2] / img.width, box[3] / img.height), sw = box[2] / scale, sh = box[3] / scale;
+    g.drawImage(img, (img.width - sw) / 2, 0, sw, sh, ...box);
+  }
+  g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(...box);
+  if ('letterSpacing' in g) g.letterSpacing = '-1px';
+  g.fillStyle = INK; g.font = '400 62px Newsreader, Georgia, serif';
+  g.fillText(c.label, 30, 568);
+  if ('letterSpacing' in g) g.letterSpacing = '2px';
+  g.fillStyle = MID; g.font = '600 19px "Inter Tight", system-ui, sans-serif';
+  g.fillText(countLabel(key).toUpperCase(), 30, 612);
+  g.fillStyle = GOLD; g.fillRect(30, 638, 64, 5);
+}
+async function cardArt(key) { // the vault's own drawn cover, until a real preview replaces it
+  const svgText = vaultArt(catOf(key)).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="452" height="542" ');
+  try { cardPic[key] = cardPic[key] || await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText)); Hero.refresh(key); }
+  catch (err) { console.info(`Arkhive: card art for ${key} did not draw: ${err.message}`); }
+}
+async function cardPicture(key, file) {
+  const url = await thumbFor(file);
+  if (!url) return;
+  try { cardPic[key] = await loadImage(url); Hero.refresh(key); }
+  catch (err) { console.info(`Arkhive: preview for the ${key} card did not draw: ${err.message}`); }
+}
+
 // ---------- shelf faces ----------
-const SPINE_CODE = { MEDICAL: 'MED', FINANCE: 'FIN', PROJECTS: 'PROJ', RECENT: 'WEEK' };
+const SPINE_CODE = { MEDICAL: 'MED', PROJECTS: 'PROJ', RECENT: 'WEEK', FOLDERS: 'DIR' };
 function catFaces(c) {
-  const code = SPINE_CODE[c.key] || c.key;
-  const n = TAURI ? null : C.filesInCategory(C.DEMO_FILES, c, Date.now()).length;
+  const code = SPINE_CODE[c.key] || c.key, s = summary[c.key];
   return `<div class="sp"><span class="ext lbl">${esc(code)}</span><span class="name">${esc(c.label)}</span>` +
-    `<span class="meta lbl">${n == null ? 'Spotlight' : n + ' files'}</span><span class="fmt lbl box">Vault</span></div>` +
-    `<div class="cv"><div class="hd lbl"><span>Vault // ${esc(c.key)}</span><span>${n == null ? '' : n}</span></div>` +
+    `<span class="meta lbl">${esc(countLabel(c.key))}</span><span class="fmt lbl box">Vault</span></div>` +
+    `<div class="cv"><div class="hd lbl"><span>Vault // ${esc(c.key)}</span><span>${s && !s.failed ? s.count.toLocaleString('en-US') : ''}</span></div>` +
     `<h3>${esc(c.label)}</h3><div class="art">${vaultArt(c)}</div>` +
     `<div class="ft"><span class="lbl">${esc(c.sub)}</span><span class="box lbl">${esc(code)}</span></div></div>`;
 }
 function fileFaces(f) {
-  const fmt = fmtOf(f), snip = snippetOf(f);
+  if (isDir(f)) {
+    return `<div class="sp"><span class="ext lbl">DIR</span><span class="name">${esc(f.name)}</span>` +
+      `<span class="meta lbl">Folder${f.modified > 1 ? ' · ' + C.formatDate(f.modified) : ''}</span><span class="fmt lbl box">Open</span></div>` +
+      `<div class="cv"><div class="hd lbl"><span>Folder // ${esc(C.tilde(dirOf(f.path)))}</span></div>` +
+      `<h3>${breakable(f.name)}</h3><div class="art">${art('FOLDERS', f.name)}</div>` +
+      `<div class="ft"><span class="lbl">Click to open</span><span class="box lbl">DIR</span></div></div>`;
+  }
+  const fmt = fmtOf(f), snip = snippetOf(f), pic = thumbNow(f);
   const short = snip && st.terms ? C.snippetFor(snip, st.terms, 30, 90) : snip;
   return `<div class="sp"><span class="ext lbl">${esc((f.ext || '—').slice(0, 5))}</span><span class="name">${esc(f.name)}</span>` +
     `<span class="meta lbl">${C.formatSize(f.size)} · ${C.formatDate(f.modified)}</span><span class="fmt lbl box">${esc(fmt.slice(0, 5))}</span></div>` +
     `<div class="cv"><div class="hd lbl"><span>Local file // ${esc((f.ext || 'file').toUpperCase())}</span></div>` +
-    `<h3>${breakable(f.name)}</h3><div class="art">${art(C.categoryOf(f.ext), f.name, f.text || f.snippet)}</div>` +
+    `<h3>${breakable(f.name)}</h3><div class="art">${pic ? thumbImg(pic) : art(C.categoryOf(f.ext), f.name, f.text || f.snippet)}</div>` +
     (short ? `<div class="snip"><b>Match</b>${C.highlight(short, st.terms || [])}</div>` : '') +
     `<div class="ft"><span class="lbl">${C.formatSize(f.size)}</span><span class="box lbl">${esc((f.ext || 'file').toUpperCase().slice(0, 5))}</span></div></div>`;
 }
@@ -515,7 +784,9 @@ const currentShelf = () => (st.mode === 'vault' ? shelf1 : st.mode === 'files' ?
 const activeIndex = (sh) => (sh.total ? mod(Math.round(sh.T), sh.total) % sh.items.length : -1);
 const activeItem = (sh) => sh.items[activeIndex(sh)];
 
-function setItems(sh, items) {
+// keep: redraw the same list where the owner left it (a count arrived, a file was renamed)
+function setItems(sh, items, keep = false) {
+  const at = keep && sh.total ? activeIndex(sh) : 0;
   sh.items = items;
   const n = items.length;
   sh.total = n ? n * Math.ceil(36 / n) : 0; // repeat to ≥36 virtual slots so wrapping happens off-screen
@@ -527,8 +798,10 @@ function setItems(sh, items) {
   }
   sh.stage.innerHTML = html;
   sh.tapes = [...sh.stage.children].map((el, v) => ({ el, v, lift: 0, hidden: false }));
-  sh.s = sh.total ? C.wrapRel(sh.s, 0, sh.total) : 0; // keep the glide short, then spring to the first item
-  sh.T = 0; sh.activeV = -1; sh.hover = null;
+  const to = n ? Math.min(at, n - 1) : 0;
+  sh.T = to;
+  sh.s = keep ? to : sh.total ? C.wrapRel(sh.s, 0, sh.total) : 0; // a new list glides in from where the shelf was
+  sh.activeV = -1; sh.hover = null;
   if (sh === currentShelf()) updateShelf(sh, 0);
 }
 
@@ -561,35 +834,49 @@ function updateShelf(sh, dt) {
   }
 }
 
+// Chrome does not hit-test the pulled-out cover (its parent plane is edge-on to the viewer), so the cover is found by
+// its on-screen rectangle. Spines hit-test normally.
+function coverAt(sh, e) {
+  const t = sh.tapes[sh.activeV];
+  if (!t) return null;
+  const b = t.el.querySelector('.cv').getBoundingClientRect();
+  return e.clientX >= b.left && e.clientX <= b.right && e.clientY >= b.top && e.clientY <= b.bottom ? b : null;
+}
+function spineAt(e) {
+  const tape = e.target.closest && e.target.closest('.tape');
+  return tape && !tape.classList.contains('is-active') ? tape : null;
+}
 function bindShelf(sh) {
   let down = null;
   sh.el.addEventListener('pointerdown', (e) => {
     if (st.busy || !sh.total || e.button > 0) return;
-    down = { x: e.clientX, T: Math.round(sh.T), moved: false, id: e.pointerId };
+    // hold: a mouse press on a file's pulled-out cover never scrolls the shelf; it either clicks or drags the file out
+    const f = sh.kind === 'file' && e.pointerType === 'mouse' && !spineAt(e) && coverAt(sh, e) ? activeItem(sh) : null;
+    const hold = !!f && !isDir(f);
+    if (hold) pressFile(e, f);
+    down = { x: e.clientX, y: e.clientY, T: Math.round(sh.T), moved: false, id: e.pointerId, hold };
   });
   sh.el.addEventListener('pointermove', (e) => {
-    sh.hover = e.target.closest('.tape');
-    const cv = e.target.closest('.tape.is-active .cv');
-    if (cv) {
-      const b = cv.getBoundingClientRect();
+    sh.hover = spineAt(e);
+    const b = !sh.hover && coverAt(sh, e);
+    if (b) {
       sh.tilt.ty = ((e.clientX - b.left) / b.width - 0.5) * 18;
       sh.tilt.tx = -((e.clientY - b.top) / b.height - 0.5) * 12;
     } else { sh.tilt.tx = sh.tilt.ty = 0; }
-    if (!down) return;
+    if (!down || down.hold) return;
     const dx = e.clientX - down.x;
     if (!down.moved && Math.abs(dx) > 6) { down.moved = true; sh.dragging = true; sh.el.setPointerCapture(down.id); }
     if (down.moved) sh.T = down.T - dx / (ws + gap);
   });
   sh.el.addEventListener('pointerup', (e) => {
     if (!down) return;
-    const dragged = down.moved;
+    const { moved, x, y } = down;
     down = null; sh.dragging = false;
-    if (dragged) { sh.T = Math.round(sh.T); return; }
-    const tape = e.target.closest('.tape');
-    if (!tape) return;
-    if (tape.classList.contains('is-active')) return openActive();
-    const t = sh.tapes.find((x) => x.el === tape);
-    sh.T = Math.round(sh.s + C.wrapRel(t.v, sh.s, sh.total));
+    if (moved) { sh.T = Math.round(sh.T); return; }
+    if (Math.hypot(e.clientX - x, e.clientY - y) > 6) return; // a file drag, not a click
+    const tape = spineAt(e);
+    if (tape) { const t = sh.tapes.find((k) => k.el === tape); sh.T = Math.round(sh.s + C.wrapRel(t.v, sh.s, sh.total)); }
+    else if (coverAt(sh, e)) clickCover(sh);
   });
   sh.el.addEventListener('pointercancel', () => { down = null; sh.dragging = false; sh.T = Math.round(sh.T); });
   sh.el.addEventListener('pointerleave', () => { sh.hover = null; sh.tilt.tx = sh.tilt.ty = 0; });
@@ -600,168 +887,245 @@ function captionFor(sh) {
   const it = activeItem(sh);
   if (!it) return ['', '', ''];
   if (sh.kind === 'cat') {
-    const n = TAURI ? null : C.filesInCategory(C.DEMO_FILES, it, Date.now()).length;
     return [
-      `${esc(it.label)} vault${n == null ? '' : ` — ${n} files`}`,
+      `${esc(it.label)} vault — ${esc(countLine(it.key))}`,
       esc(it.sub),
-      it.exts ? it.exts.map((e) => '.' + e).join('   ') : it.keywords ? 'Grouped by what’s inside the files' : 'Modified in the last 7 days',
+      it.exts ? it.exts.map((e) => '.' + e).join('   ') : it.keywords ? 'Grouped by what’s inside the files' : it.folders ? 'Browse by where files are kept' : 'Modified in the last 7 days',
     ];
   }
+  const where = esc(C.tilde(dirOf(it.path)));
+  if (isDir(it)) return [esc(it.name), 'Folder / click to open', `${it.modified > 1 ? `Modified ${C.formatDate(it.modified)} • ` : ''}${where}`];
   const snip = snippetOf(it);
   const short = snip && st.terms ? C.snippetFor(snip, st.terms, 24, 60) : null;
   return [
     esc(it.name),
     `${esc(fmtOf(it))} file / ${C.formatSize(it.size)}${short ? ` / Match: “${C.highlight(short, st.terms)}”` : ''}`,
-    `Modified ${C.formatDate(it.modified)} • ${esc(dirOf(it.path))}`,
+    `Modified ${C.formatDate(it.modified)} • ${where}`,
   ];
 }
 function clearCaption() {
   body.dataset.active = '';
   ['#cap1', '#cap2', '#cap3'].forEach((s) => roll($(s), ''));
+  $('#acts').classList.remove('has-file');
 }
 function onActive(sh, dir) {
   const it = activeItem(sh);
   body.dataset.active = it ? (sh.kind === 'cat' ? it.key : it.name) : '';
   const [a, b, c] = captionFor(sh);
   roll($('#cap1'), a, dir); roll($('#cap2'), b, dir); roll($('#cap3'), c, dir);
-  $('#ring').setAttribute('aria-label', it ? (sh.kind === 'cat' ? `Open ${it.label} vault` : `Inspect ${it.name}`) : 'Open');
+  $('#acts').classList.toggle('has-file', !!it && sh.kind === 'file' && !isDir(it));
+  if (sh.kind === 'file') previewActiveCover();
 }
 
-// ---------- data: Tauri backend or demo set ----------
-async function fetchFiles({ terms, cat }) {
-  if (!TAURI) {
-    if (terms) return C.searchDemo(C.DEMO_FILES, terms);
-    return C.filesInCategory(C.DEMO_FILES, cat, Date.now());
-  }
-  const args = terms ? { terms, exts: [], days: null }
-    : cat.exts ? { terms: [], exts: cat.exts, days: null }
-    : cat.keywords ? { terms: cat.keywords, exts: [], days: null }
-    : { terms: [], exts: [], days: cat.recentDays };
-  return TAURI.invoke('search_files', args);
+// ---------- data: the desktop backend, or the folder chosen in the browser ----------
+async function listDir(path) { // → { entries, total }; path null = where browsing starts
+  if (TAURI) return TAURI.invoke('list_dir', { path });
+  const entries = C.listChildren(local.records, path == null ? local.root : path);
+  return { entries, total: entries.length };
 }
-async function load(args, label) {
+async function fetchFiles({ terms, cat }) {
+  if (TAURI) return TAURI.invoke('search_files', terms ? { terms, exts: [], days: null } : queryOf(cat));
+  return terms ? C.searchLocal(localFiles(), terms) : C.sortFiles(C.filesInCategory(localFiles(), cat, Date.now()), 'newest');
+}
+// Runs a job with the shelf locked. A failure reaches the owner with its reason and leaves the shelf as it was.
+async function load(job, label, hint = '') {
   st.busy = true;
-  roll($('#ctx'), label + '…');
-  try { return await fetchFiles(args); }
-  catch (err) { toast(`Search failed: ${err}`); roll($('#ctx'), 'Search failed. Try again or check that Spotlight indexing is on.'); return null; }
+  roll($('#ctx'), esc(label) + '…');
+  try { return await job(); }
+  catch (err) { toast(`${label} failed: ${err}${hint}`); refreshContext(); return null; }
   finally { st.busy = false; }
+}
+const SPOTLIGHT_HINT = '. Check that Spotlight indexing is on.';
+
+// Browser preview: read the folder the owner chooses. Names, sizes and dates for everything; text for text files only.
+async function walk(dir, path, depth, out) {
+  for await (const [name, handle] of dir.entries()) {
+    if (out.length >= WALK_LIMIT) { local.capped = true; return; }
+    if (name.startsWith('.')) continue;
+    const p = path + '/' + name;
+    if (handle.kind === 'directory') {
+      out.push({ name, ext: '', path: p, size: 0, created: 0, modified: 0, text: '', kind: 'dir', mode: 0o755, score: 0, snippet: null });
+      if (depth < MAX_DEPTH) await walk(handle, p, depth + 1, out);
+    } else {
+      const file = await handle.getFile();
+      const ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+      const text = TEXT_EXT.has(ext) && file.size <= TEXT_LIMIT ? await file.text() : '';
+      out.push({ name, ext, path: p, size: file.size, created: 0, modified: file.lastModified, text, kind: 'file', mode: 0o644, score: 0, snippet: null, handle });
+    }
+  }
+}
+async function pickFolder() {
+  if (TAURI || st.busy) return;
+  if (!window.showDirectoryPicker) return toast('This browser cannot read folders. Open the page in Chrome or Edge, or use the desktop app.');
+  let handle;
+  try { handle = await window.showDirectoryPicker({ mode: 'read' }); }
+  catch (err) { if (err.name !== 'AbortError') toast(`That folder could not be opened: ${err.message}`); return; }
+  const records = [];
+  local.capped = false;
+  st.busy = true;
+  roll($('#ctx'), `Reading ${esc(handle.name)}…`);
+  try { await walk(handle, '/' + handle.name, 0, records); }
+  catch (err) { toast(`${handle.name} could not be read: ${err.message || err}`); return refreshContext(); }
+  finally { st.busy = false; }
+  Object.assign(local, { name: handle.name, root: '/' + handle.name, records });
+  const n = records.filter((r) => r.kind === 'file').length;
+  toast(`Read ${plural(n, 'file')} from ${handle.name}${local.capped ? ' (stopped at 5,000 items)' : ''}. Text inside PDFs and images is not read in the browser.`);
+  updateCount();
+  await refreshSummaries();
+  if (st.mode === 'files') await collapse(); // the shelf on show belonged to the folder before this one
+  refreshContext();
 }
 
 // ---------- modes, sheets and transitions ----------
+function refreshContext() {
+  if (st.mode === 'vault') roll($('#ctx'), hasFolder() ? 'Drag, scroll or use ← → to browse. Click a vault to open it.' : 'No folder chosen. <button data-pick>Choose folder</button>');
+  else if (st.mode === 'files') updateFilesContext();
+}
+function updateCount() {
+  $('#count').textContent = TAURI ? 'Spotlight // this Mac' : local.root ? `${local.name} // read in this browser` : 'No folder chosen';
+  $('#pickTop').textContent = local.root ? 'Change folder' : 'Choose folder';
+  $('#pickTop').hidden = !!TAURI;
+}
 function setMode(m) {
   st.mode = m; body.dataset.mode = m;
-  els.landing.inert = m !== 'landing';
+  els.hero.inert = m !== 'landing';
   els.vault.inert = m !== 'vault';
   els.tier2.inert = m !== 'files';
   els.detail.inert = m !== 'detail';
   els.chrome.inert = m === 'landing' || m === 'detail';
-  const back = m === 'files' || m === 'detail' ? '← All categories / カテゴリ' : 'Back to meadow / 戻る';
+  const back = m === 'files' || m === 'detail' ? '← All vaults' : '← Start';
   if ($('#backLbl').textContent !== back) roll($('#backLbl'), back, m === 'vault' ? -1 : 1);
   const sh = currentShelf();
   if (sh) { sh.activeV = -1; if (sh.total) updateShelf(sh, 0); else clearCaption(); }
-  if (m === 'vault') roll($('#ctx'), 'Drag, scroll or use ← → to browse. Enter opens a vault.');
-  if (m === 'files') updateFilesContext();
-  requestAnimationFrame(() => document.querySelectorAll('.tabs').forEach(moveInd));
+  drawPills();
+  refreshContext();
 }
 const setView = (v) => { body.dataset.view = v; };
 
-function insetOf(b) {
-  return `inset(${b.top.toFixed(1)}px ${(innerWidth - b.right).toFixed(1)}px ${(innerHeight - b.bottom).toFixed(1)}px ${b.left.toFixed(1)}px round 3px)`;
+function insetOf(b, radius) {
+  return `inset(${b.top.toFixed(1)}px ${(innerWidth - b.right).toFixed(1)}px ${(innerHeight - b.bottom).toFixed(1)}px ${b.left.toFixed(1)}px round ${radius}px)`;
 }
 function coverRect(sh) {
   const t = sh.tapes[sh.activeV];
   return t ? t.el.querySelector('.cv').getBoundingClientRect() : { top: innerHeight / 2, bottom: innerHeight / 2, left: innerWidth / 2, right: innerWidth / 2 };
 }
 // Expand/collapse a full-screen sheet from/to a rect (clip-path geometry + tilt; no opacity).
-async function sheet(el, rect, rot, ms, open, extra = '') {
+async function sheet(el, rect, rot, ms, open, radius = 3) {
   el.style.transformOrigin = `${(rect.left + rect.right) / 2}px ${(rect.top + rect.bottom) / 2}px`;
   el.style.visibility = 'visible';
-  const small = { clipPath: insetOf(rect), transform: `rotate(${rot}deg)${extra}` };
-  const full = { clipPath: 'inset(0px 0px 0px 0px round 0px)', transform: 'rotate(0deg) scale(1)' };
+  const small = { clipPath: insetOf(rect, radius), transform: `rotate(${rot}deg)` };
+  const full = { clipPath: 'inset(0px 0px 0px 0px round 0px)', transform: 'rotate(0deg)' };
   const a = el.animate(open ? [small, full] : [full, small], { duration: dur(ms), easing: SHEET_EASE, fill: 'forwards' });
   await a.finished;
   a.cancel();
   if (!open) el.style.visibility = 'hidden';
 }
 
-async function dive(thenSearch) {
+const canEnter = () => !st.busy && st.mode === 'landing';
+// The vault grows out of a hero card and the vault shelf rises into place with that card's vault pulled out.
+async function enterVault(key, cardEl, tab = 'all') {
   if (st.busy || st.mode !== 'landing') return;
   st.busy = true;
-  const rect = $('#deskHit').getBoundingClientRect();
+  st.from = key;
+  const rect = cardEl.getBoundingClientRect();
+  if (st.tab !== tab) { st.tab = tab; setItems(shelf1, C.categoriesForTab(tab)); }
+  const at = shelf1.items.findIndex((c) => c.key === key);
+  if (at >= 0) shelf1.T = shelf1.s = at;
   setMode('vault');
-  const rise = $('#shelf1').animate([{ transform: 'translateY(25%)' }, { transform: 'translateY(0)' }], { duration: dur(1100), delay: dur(520), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' });
-  await sheet(els.vault, rect, -3.5, 950, true, ' scale(.92)');
+  const rise = $('#shelf1').animate([{ transform: 'translateY(25%)' }, { transform: 'translateY(0)' }], { duration: dur(1050), delay: dur(440), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' });
+  await sheet(els.vault, rect, -4.5, 900, true, 4);
   body.dataset.chrome = 'on';
   await rise.finished;
   st.busy = false;
   setView('tier1');
-  if (thenSearch) { els.q.focus(); listen(); }
 }
-async function backToMeadow() {
-  if (st.busy) return;
+async function backToStart() {
+  if (st.busy || st.mode !== 'vault') return;
   st.busy = true;
   body.dataset.chrome = '';
+  closeSearch(true);
+  Hero.reset();
   setMode('landing');
-  await sheet(els.vault, $('#deskHit').getBoundingClientRect(), -3.5, 950, false, ' scale(.92)');
+  Hero.frame(0); // place the cards before measuring the one to fold back into
+  await sheet(els.vault, Hero.cardEl(st.from).getBoundingClientRect(), -4.5, 900, false, 4);
   st.busy = false;
   setView('landing');
 }
 
-function applyFiles() {
+function applyFiles(keep = false) {
   const items = C.filterFormat(C.sortFiles(st.files, st.sort), st.fmt);
-  setItems(shelf2, items);
+  setItems(shelf2, items, keep);
   const empty = !items.length;
   $('#empty').classList.toggle('on', empty);
+  $('#emptyBtn').hidden = !(empty && !hasFolder());
   if (empty) {
-    const searched = st.ctx.startsWith('Search');
-    $('#emptyTitle').textContent = !st.files.length
-      ? (searched ? `No files match ${st.ctx.slice(7)}` : 'This vault is empty')
-      : `No ${st.fmt} files here`;
-    $('#emptyHint').textContent = !st.files.length
-      ? (searched ? 'Try a broader word, or a related one: “lab” instead of “CBC”.' : 'Files you add will appear here.')
-      : 'Choose All to see every format.';
-    $('#emptyTitle').textContent = $('#emptyTitle').textContent.toUpperCase();
+    const [title, hint] = !hasFolder() ? ['No folder chosen', 'Choose a folder and its files appear here.']
+      : st.files.length ? [st.fmt === 'FOLDERS' ? 'No folders here' : `No ${st.fmt} files here`, 'Choose All to see everything.']
+      : st.kind === 'search' ? [`No files match ${st.ctx.slice(7)}`, 'Try a broader word, or a related one: “lab” instead of “CBC”.']
+      : st.kind === 'folder' ? ['This folder is empty', 'Files you add to it will appear here.']
+      : ['This vault is empty', 'Files you add will appear here.'];
+    $('#emptyTitle').textContent = title.toUpperCase();
+    $('#emptyHint').textContent = hint;
     if (st.mode === 'files') clearCaption();
   }
   if (st.mode === 'files') updateFilesContext();
+  drawPills();
 }
 function updateFilesContext() {
-  const n = shelf2.items.length;
-  roll($('#ctx'), `${esc(st.ctx)} — ${n} file${n === 1 ? '' : 's'}`);
+  const n = shelf2.items.length, note = st.note ? ` (${esc(st.note)})` : '';
+  if (st.kind !== 'folder') return roll($('#ctx'), `${esc(st.ctx)} — ${plural(n, 'file')}${note}`);
+  const last = st.trail.length - 1;
+  const crumbs = st.trail.map((t, i) => `<button class="crumb" data-crumb="${i}"${i === last ? ' aria-current="true"' : ''}>${esc(t.name)}</button>`).join(' › ');
+  roll($('#ctx'), `${crumbs} — ${plural(n, 'item')}${note}`);
 }
-function setFiles(files) {
-  st.files = files; st.sort = 'relevance'; st.fmt = 'ALL';
-  selectTab('sort', 'relevance'); selectTab('fmt', 'ALL');
+function setFiles(files, sort = 'relevance') {
+  st.files = files; st.sort = sort; st.fmt = 'ALL';
   applyFiles();
 }
-
-async function openFiles(files) {
+// Put a list on the file shelf: in place if it is already open, else by expanding the sheet from the pulled-out vault.
+async function showFiles(files, sort) {
+  if (st.mode === 'files') return setFiles(files, sort);
   const rect = coverRect(shelf1);
   st.busy = true;
-  setFiles(files);
+  setFiles(files, sort);
   setMode('files');
-  await sheet(els.tier2, rect, -4.5, 1050, true);
+  await sheet(els.tier2, rect, -4.5, 950, true);
   st.busy = false;
   setView('tier2');
 }
 async function openCategory() {
   const cat = activeItem(shelf1);
   if (!cat || st.busy) return;
-  const files = await load({ cat }, `Opening ${cat.label}`);
+  if (!hasFolder()) return toast('Choose a folder first. Every vault shows the files in it.');
+  if (cat.folders) return showFolder([ROOT]);
+  const files = await load(() => fetchFiles({ cat }), `Opening ${cat.label}`, SPOTLIGHT_HINT);
   if (!files) return;
-  st.terms = cat.keywords || null;
-  st.ctx = `${cat.label} vault`;
-  await openFiles(files);
+  const s = summary[cat.key], total = s && !s.failed ? s.count : files.length;
+  Object.assign(st, { terms: cat.keywords || null, kind: 'vault', trail: [], ctx: `${cat.label} vault`, note: total > files.length ? `showing ${files.length} of ${total.toLocaleString('en-US')}` : '' });
+  await showFiles(files);
 }
 async function runSearch(terms, raw) {
   if (st.busy) return;
+  if (!hasFolder()) return toast('Choose a folder first, then search it.');
   const exp = C.expandTerms(terms);
-  const files = await load({ terms: exp }, `Searching for “${esc(raw)}”`);
+  const files = await load(() => fetchFiles({ terms: exp }), `Searching for “${raw}”`, SPOTLIGHT_HINT);
   if (!files) return;
-  st.terms = exp;
-  st.ctx = `Search “${raw}”`;
-  if (st.mode === 'files') { setFiles(files); return; }
-  await openFiles(files);
+  Object.assign(st, { terms: exp, kind: 'search', trail: [], ctx: `Search “${raw}”`, note: '' });
+  await showFiles(files);
+}
+// Load the folder at the end of `trail` onto the file shelf.
+async function showFolder(trail) {
+  if (st.busy) return;
+  const at = trail[trail.length - 1];
+  const l = await load(() => listDir(at.path), `Opening ${at.name}`);
+  if (!l) return;
+  Object.assign(st, { terms: null, kind: 'folder', trail, note: l.total > l.entries.length ? `showing ${l.entries.length} of ${l.total.toLocaleString('en-US')}` : '' });
+  await showFiles(l.entries, 'name');
+}
+async function showDropped(files) {
+  if (st.busy) return;
+  Object.assign(st, { terms: null, kind: 'dropped', trail: [], ctx: 'Dropped onto Arkhive', note: '' });
+  await showFiles(files, 'name');
 }
 async function collapse() {
   if (st.busy || st.mode !== 'files') return;
@@ -771,6 +1135,19 @@ async function collapse() {
   $('#empty').classList.remove('on');
   st.busy = false;
   setView('tier1');
+}
+// Run a shelf job from wherever the owner is: the hero dives into the vault first, the inspector closes first.
+async function go(job) {
+  if (st.mode === 'landing') await enterVault(st.from, Hero.cardEl(st.from));
+  if (st.mode === 'detail') await closeDetail();
+  return job();
+}
+// Typed and spoken queries share this: false means there was nothing to search for.
+function submitQuery(raw) {
+  const terms = C.cleanQuery(raw);
+  if (!terms.length) return false;
+  go(() => runSearch(terms, raw));
+  return true;
 }
 
 // ---------- inspector ----------
@@ -786,34 +1163,42 @@ function wrapWords(text, max) {
   return out;
 }
 function bigArt(f) {
-  const text = f.text || f.snippet || '';
+  const text = f.text || f.snippet || '', pic = thumbNow(f, 900) || thumbNow(f);
   let s = `<rect width="474" height="900" fill="${SHEET}"/>`;
-  s += `<g transform="translate(36 40) scale(2.01)">${art(C.categoryOf(f.ext), f.name, text).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`;
+  s += pic ? `<image href="${pic}" x="36" y="40" width="402" height="482" preserveAspectRatio="xMidYMin slice" clip-path="url(#prev-clip)"/><rect x="36" y="40" width="402" height="482" fill="none" stroke="${INK}"/>`
+    : `<g transform="translate(36 40) scale(2.01)">${art(C.categoryOf(f.ext), f.name, text).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`;
   s += `<rect x="36" y="540" width="402" height="1.5" fill="${INK}"/>`;
   s += `<text x="36" y="580" font-family="Inter Tight" font-weight="600" font-size="13" letter-spacing="1.4" fill="${FOREST}">${esc(fmtOf(f))} // ${C.formatSize(f.size)}</text>`;
   const lines = wrapWords(text || 'No text preview for this file.', 46).slice(0, 11);
   lines.forEach((l, i) => { s += `<text x="36" y="${620 + i * 24}" font-family="Newsreader, Georgia, serif" font-size="17" fill="${INK}">${esc(l)}</text>`; });
   return s;
 }
+const KIND_NAME = { PDF: 'PDF document', PPTX: 'Presentation', JPEG: 'Image', DOCX: 'Text document', XLSX: 'Spreadsheet', CODE: 'Source file', MEDIA: 'Media file', ZIP: 'Archive' };
+const MATCH_NAME = { content: ' // text match inside the file', name: ' // name match' };
 function fillDetail(f) {
   st.detailFile = f;
+  cancelRename();
+  disarmTrash();
   const snip = snippetOf(f);
-  $('#d-badge').textContent = `${fmtOf(f)} file // ${snip && st.terms ? 'deep content match' : 'local file'}`;
   $('#d-name').innerHTML = breakable(f.name);
-  $('#d-meta').textContent = [C.formatSize(f.size), f.created ? `Created ${C.formatDate(f.created)}` : null, `Modified ${C.formatDate(f.modified)}`].filter(Boolean).join(' / ');
+  $('#d-badge').textContent = (KIND_NAME[C.categoryOf(f.ext)] || `${fmtOf(f)} file`) + (MATCH_NAME[C.matchKind(f, st.terms)] || '');
+  $('#d-meta').textContent = [C.formatSize(f.size), f.created ? `Created ${C.formatDate(f.created)}` : null, `Modified ${C.formatDate(f.modified)}`,
+    f.mode == null ? null : C.formatPerms(f.mode)].filter(Boolean).join(' / ');
   $('#d-snippet').innerHTML = snip ? C.highlight(snip, st.terms || [])
     : f.text ? esc(f.text.slice(0, 280)) + (f.text.length > 280 ? '…' : '')
     : 'No text preview for this file. Open it to see what’s inside.';
-  $('#d-path').textContent = TAURI ? `Stored at ${f.path}` : `Demo file at ${f.path}`;
+  // every folder above the file is a way to that folder's shelf
+  $('#d-path').innerHTML = C.pathCrumbs(f.path).map((c) => `<button data-dir="${esc(c.path)}">${esc(c.name)}</button>`).join('<span aria-hidden="true">/</span>');
   $('#d-art').innerHTML = bigArt(f);
-  document.querySelectorAll('#blobs circle').forEach((c) => c.setAttribute('r', 0));
+  thumbFor(f, 900).then((url) => { if (url && st.detailFile === f) $('#d-art').innerHTML = bigArt(f); });
 }
 async function openDetail() {
   const f = activeItem(shelf2);
-  if (!f || st.busy) return;
+  if (!f || st.busy || isDir(f)) return;
   st.busy = true;
   const rect = coverRect(shelf2);
   fillDetail(f);
+  $$('#blobs circle').forEach((c) => c.setAttribute('r', 0));
   setMode('detail');
   els.detail.classList.remove('in');
   void els.detail.offsetWidth;
@@ -827,90 +1212,380 @@ async function openDetail() {
 async function closeDetail() {
   if (st.busy || st.mode !== 'detail') return;
   st.busy = true;
+  cancelRename();
+  disarmTrash();
   els.detail.classList.remove('in');
   setMode('files');
   await sheet(els.detail, coverRect(shelf2), -4.5, 850, false);
   st.busy = false;
   setView('tier2');
 }
+const openFolderAt = (f) => showFolder([...(st.kind === 'folder' ? st.trail : [ROOT]), { name: f.name, path: f.path }]);
+// Enter and the Inspect button: a vault or folder opens, a file shows its inspector.
 function openActive() {
-  if (st.mode === 'vault') openCategory();
-  else if (st.mode === 'files') openDetail();
+  if (st.mode === 'vault') return openCategory();
+  if (st.mode !== 'files') return;
+  const f = activeItem(shelf2);
+  if (isDir(f)) openFolderAt(f); else openDetail();
+}
+// A click on the pulled-out cover is the direct route: a file opens in its app and shows its inspector.
+function clickCover(sh) {
+  if (st.busy) return;
+  if (sh.kind === 'cat') return openCategory();
+  const f = activeItem(sh);
+  if (!f) return;
+  if (isDir(f)) return openFolderAt(f);
+  openDetail();
+  if (TAURI) TAURI.invoke('open_file', { path: f.path }).then(() => toast(`Opened in its app: ${f.name}`), (err) => toast(`${f.name} could not be opened: ${err}`));
+  else needsApp('Opening files');
 }
 
 const ACT_DONE = { open_file: 'Opened in default app', quick_look: 'Showing Quick Look', reveal_file: 'Revealed in Finder' };
 async function act(cmd) {
   const f = st.detailFile;
   if (!f) return;
-  if (!TAURI) return toast('Opening files needs the desktop app. This browser preview only has demo files.');
+  if (cmd === 'tray') return trayAdd(f);
+  if (cmd === 'rename') return startRename();
+  if (cmd === 'trash') return pressTrash();
+  if (!TAURI) return needsApp('Opening files');
   try { await TAURI.invoke(cmd, { path: f.path }); toast(`${ACT_DONE[cmd]}: ${f.name}`); }
   catch (err) { toast(`${ACT_DONE[cmd].split(' ')[0]} failed: ${err}`); }
 }
 
-// ---------- tabs ----------
-function moveInd(row) {
-  const b = row.querySelector('button.on'), ind = row.querySelector('.ind');
-  if (!b || !ind) return;
-  ind.style.width = b.offsetWidth + 'px';
-  ind.style.transform = `translateX(${b.offsetLeft}px)`;
+// Rename in place. The backend refuses any name another file already has, so nothing is ever replaced.
+function startRename() {
+  const f = st.detailFile;
+  if (!f) return;
+  if (!TAURI) return needsApp('Renaming files');
+  const input = $('#renameInput'), dot = f.name.lastIndexOf('.');
+  els.detail.dataset.renaming = '';
+  input.value = f.name;
+  input.focus();
+  input.setSelectionRange(0, dot > 0 ? dot : f.name.length); // the part before the extension
+  input.scrollLeft = 0;
 }
-function selectTab(group, v) {
-  const row = document.querySelector(`.tabs[data-group="${group}"]`);
-  row.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
-  moveInd(row);
+function cancelRename() { delete els.detail.dataset.renaming; }
+async function commitRename() {
+  const f = st.detailFile, newName = $('#renameInput').value.trim();
+  if (!f || newName === f.name) return cancelRename();
+  try {
+    const was = f.name, rec = await TAURI.invoke('rename_file', { path: f.path, newName });
+    Object.assign(f, { name: rec.name, ext: rec.ext, path: rec.path, modified: rec.modified });
+    fillDetail(f);
+    $('#d-name').focus({ preventScroll: true });
+    applyFiles(true);  // the shelf and the tray hold this same record
+    renderTray();
+    toast(`Renamed ${was} to ${f.name}`);
+  } catch (err) { toast(`${f.name} was not renamed: ${err}`); $('#renameInput').focus(); }
 }
-document.querySelectorAll('.tabs').forEach((row) => row.addEventListener('click', (e) => {
-  const b = e.target.closest('button');
+$('#renameForm').addEventListener('submit', (e) => { e.preventDefault(); commitRename(); });
+$('#renameInput').addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); cancelRename(); $('#d-name').focus({ preventScroll: true }); } });
+$('#renameInput').addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== $('#renameInput')) cancelRename(); }, 0));
+$('#d-name').addEventListener('click', startRename);
+
+// Move to Trash takes two presses; the first only arms the button, and it disarms by itself.
+let trashTimer;
+const trashBtn = $('.act[data-act="trash"]');
+function disarmTrash() { clearTimeout(trashTimer); trashBtn.classList.remove('armed'); trashBtn.textContent = 'Move to Trash'; }
+async function pressTrash() {
+  const f = st.detailFile;
+  if (!TAURI) return needsApp('Moving files to the Trash');
+  if (!trashBtn.classList.contains('armed')) {
+    trashBtn.classList.add('armed');
+    trashBtn.textContent = 'Press again to move to Trash';
+    trashTimer = setTimeout(disarmTrash, 4500);
+    return;
+  }
+  disarmTrash();
+  try { await TAURI.invoke('trash_file', { path: f.path }); }
+  catch (err) { return toast(`${f.name} was not moved: ${err}`); }
+  st.files = st.files.filter((x) => x !== f);
+  st.tray = st.tray.filter((x) => x !== f);
+  renderTray();
+  await closeDetail();
+  applyFiles(true);
+  toast(`Moved to the Trash: ${f.name}. Use Put Back in the Trash to undo.`);
+  refreshSummaries();
+}
+$('#d-path').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-dir]');
   if (!b || st.busy) return;
-  const g = row.dataset.group, v = b.dataset.v;
-  selectTab(g, v);
-  if (g === 'tab') { st.tab = v; setItems(shelf1, C.categoriesForTab(v)); }
-  if (g === 'sort') { st.sort = v; applyFiles(); }
-  if (g === 'fmt') { st.fmt = v; applyFiles(); }
-}));
+  await closeDetail();
+  showFolder([ROOT, { name: b.textContent, path: b.dataset.dir }]);
+});
 
-// ---------- voice ----------
-function listen() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
-  const rec = new SR();
-  rec.lang = 'en-US';
-  rec.onresult = (e) => { els.q.value = e.results[0][0].transcript; $('#searchForm').requestSubmit(); };
-  rec.onerror = (e) => toast(`Voice input unavailable (${e.error}). Type your search instead.`);
-  try { rec.start(); roll($('#ctx'), 'Listening… say what’s inside the file you want.'); } catch (err) { toast(`Voice input unavailable (${err.message}). Type your search instead.`); }
+// ---------- export tray ----------
+let dragFile = null; // the file being dragged out of the shelf or the inspector
+function renderTray() {
+  const n = st.tray.length, open = n > 0 || !!dragFile;
+  body.dataset.tray = n;
+  $('#trayN').textContent = plural(n, 'file');
+  $('#trayList').innerHTML = st.tray.map((f) =>
+    `<li><span class="box lbl">${esc(fmtOf(f).slice(0, 5))}</span><b>${esc(f.name)}</b><span class="lbl sz">${C.formatSize(f.size)}</span></li>`).join('');
+  els.tray.classList.toggle('on', open);
+  els.tray.inert = !open;
+  if (!open) els.tray.classList.remove('over');
+}
+function trayAdd(f) {
+  if (!f) return;
+  if (isDir(f)) return toast(`The export tray holds files only. “${f.name}” is a folder.`);
+  const next = C.trayAdd(st.tray, f);
+  if (next === st.tray) toast(`Already in the tray: ${f.name}`);
+  st.tray = next;
+  renderTray();
+}
+const TRAY_ACTS = {
+  async export(paths) {
+    if (!TAURI) return needsApp('Exporting');
+    try { toast(`Exported ${plural(paths.length, 'file')} to ${C.tilde(await TAURI.invoke('export_files', { paths }))}`); }
+    catch (err) { toast(`Export failed: ${err}`); }
+  },
+  async copy(paths) {
+    try {
+      if (!navigator.clipboard) throw new Error('this window has no clipboard access');
+      await navigator.clipboard.writeText(paths.join('\n'));
+      toast(`Copied ${plural(paths.length, 'path')}`);
+    } catch (err) { toast(`Copy failed: ${err.message || err}`); }
+  },
+  async reveal(paths) {
+    if (!TAURI) return needsApp('Revealing files');
+    try { for (const path of paths) await TAURI.invoke('reveal_file', { path }); toast(`Revealed ${plural(paths.length, 'file')} in Finder`); }
+    catch (err) { toast(`Reveal failed: ${err}`); }
+  },
+  clear() { st.tray = []; renderTray(); },
+};
+els.tray.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tray]');
+  if (b) TRAY_ACTS[b.dataset.tray](st.tray.map((f) => f.path));
+});
+
+// ---------- drag out, drop in ----------
+// A mouse press on the pulled-out cover or the inspector preview that moves 6px becomes a file drag. In the desktop app the
+// system takes it over (start_native_drag) and any Mac app can receive the file; everywhere, releasing over the tray stages it.
+let press = null;
+function pressFile(e, f) {
+  if (e.pointerType === 'mouse' && e.button === 0 && f && !isDir(f)) press = { f, x: e.clientX, y: e.clientY };
+}
+const endDrag = () => { if (dragFile) { dragFile = null; delete cur.el.dataset.drag; renderTray(); } };
+// shortcut: a native drag reports no end to the page, so the next press in the window ends it; wire the drag crate's drop callback to an event if this misfires.
+addEventListener('pointerdown', endDrag, true);
+addEventListener('pointermove', (e) => {
+  if (!press || dragFile || Math.hypot(e.clientX - press.x, e.clientY - press.y) < 6) return;
+  dragFile = press.f;
+  cur.el.dataset.drag = dragFile.name;
+  renderTray(); // a drag in progress opens the tray as a drop target
+  if (TAURI) TAURI.invoke('start_native_drag', { path: dragFile.path }).catch((err) => toast(`Drag failed: ${err}`));
+});
+addEventListener('pointerup', (e) => {
+  press = null;
+  if (!dragFile) return;
+  const f = dragFile, overTray = e.clientY >= els.tray.getBoundingClientRect().top;
+  endDrag();
+  if (overTray) trayAdd(f);
+}, true);
+addEventListener('pointercancel', () => { press = null; }, true);
+$('#d-prev').addEventListener('pointerdown', (e) => pressFile(e, st.detailFile));
+
+// Files dropped on the window from Finder (or our own drag coming back to the tray).
+async function onNativeDrop({ paths, position }) {
+  if (!paths || !paths.length) return;
+  const own = dragFile && paths.length === 1 && paths[0] === dragFile.path;
+  const b = els.tray.getBoundingClientRect(), x = position.x / devicePixelRatio, y = position.y / devicePixelRatio;
+  const onTray = els.tray.classList.contains('on') && y >= b.top && x >= b.left && x <= b.right;
+  const mine = dragFile;
+  endDrag();
+  if (own) { // our own file came back: stage it if it landed on the tray (and pointerup did not already), else nothing to do
+    if (onTray && !st.tray.some((t) => t.path === mine.path)) trayAdd(mine);
+    return;
+  }
+  try {
+    const recs = await TAURI.invoke('stat_paths', { paths });
+    if (onTray) { recs.forEach(trayAdd); renderTray(); }
+    else if (recs.length === 1 && isDir(recs[0])) await go(() => showFolder([ROOT, { name: recs[0].name, path: recs[0].path }]));
+    else await go(() => showDropped(recs));
+  } catch (err) { toast(`Drop failed: ${err}`); renderTray(); }
+}
+if (TAURI && window.__TAURI__.event) {
+  window.__TAURI__.event.listen('tauri://drag-drop', (e) => onNativeDrop(e.payload)).catch((err) => toast(`Dropping files in is unavailable: ${err}`));
 }
 
-// ---------- input wiring ----------
-$('#enterBtn').addEventListener('click', () => dive(false));
-$('#deskHit').addEventListener('click', () => dive(false));
-$('#voiceBtn').addEventListener('click', () => dive(true));
-$('#back').addEventListener('click', () => (st.mode === 'vault' ? backToMeadow() : collapse()));
-$('#searchBtn').addEventListener('click', () => { els.q.focus(); els.q.select(); });
-$('#ring').addEventListener('click', openActive);
-$('#closeBtn').addEventListener('click', closeDetail);
-document.querySelectorAll('.act').forEach((b) => b.addEventListener('click', () => act(b.dataset.act)));
+// ---------- pills: SORT and FILES widen inline to show their options ----------
+const pillSort = $('#pillSort'), pillFiles = $('#pillFiles');
+function moveInd(pill) {
+  const on = pill.querySelector('[aria-pressed="true"]'), ind = pill.querySelector('.ind');
+  ind.style.width = (on ? on.offsetWidth : 0) + 'px';
+  ind.style.transform = `translateX(${on ? on.offsetLeft : 0}px)`;
+}
+function drawPills() {
+  const vault = st.mode === 'vault', folderish = st.kind === 'folder' || st.kind === 'dropped';
+  pillSort.hidden = vault;
+  // FILES filters vault groups on the vault shelf and formats on a file shelf; Folders only where folders are listed
+  const group = vault ? 'tab' : 'fmt', value = vault ? st.tab : st.fmt;
+  const opts = (vault ? GROUPS : FORMATS).filter(([v]) => v !== 'FOLDERS' || folderish);
+  const box = $('#fileOpts');
+  if (box.dataset.group !== group || box.dataset.n !== String(opts.length)) {
+    box.dataset.group = group; box.dataset.n = opts.length;
+    box.innerHTML = '<span class="ind"></span>' + opts.map(([v, label]) => `<button class="lbl" data-v="${v}">${label}</button>`).join('');
+  }
+  for (const b of box.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === value));
+  for (const b of pillSort.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === st.sort));
+  pillSort.querySelector('.pill-label').textContent = `SORT · ${SORTS[st.sort]}`;
+  pillFiles.querySelector('.pill-label').textContent = `FILES · ${(opts.find(([v]) => v === value) || opts[0])[1].toUpperCase()}`;
+  moveInd(pillSort); moveInd(pillFiles);
+}
+function choose(pill, b) {
+  if (st.busy) return;
+  const group = b.parentElement.dataset.group, v = b.dataset.v;
+  if (group === 'sort') { st.sort = v; applyFiles(); }
+  else if (group === 'fmt') { st.fmt = v; applyFiles(); }
+  else { st.tab = v; setItems(shelf1, C.categoriesForTab(v)); drawPills(); }
+  // fold the pill back to its label, even though the pointer is still on it
+  pill.removeAttribute('data-open');
+  pill.setAttribute('data-shut', '');
+  if (pill.contains(document.activeElement)) document.activeElement.blur();
+}
+for (const pill of [pillSort, pillFiles]) {
+  const label = pill.querySelector('.pill-label');
+  pill.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-v]');
+    if (b) return choose(pill, b);
+    if (e.target.closest('.pill-label')) { // tap or keyboard: the label toggles the pill
+      pill.removeAttribute('data-shut');
+      const open = pill.toggleAttribute('data-open');
+      label.setAttribute('aria-expanded', String(open));
+      for (const other of [pillSort, pillFiles]) if (other !== pill) other.removeAttribute('data-open');
+    }
+  });
+  pill.addEventListener('pointerleave', () => { pill.removeAttribute('data-shut'); });
+}
+document.addEventListener('pointerdown', (e) => { for (const pill of [pillSort, pillFiles]) if (!pill.contains(e.target)) pill.removeAttribute('data-open'); }, true);
+$('#ctx').addEventListener('click', (e) => {
+  const crumb = e.target.closest('[data-crumb]');
+  if (crumb && !crumb.hasAttribute('aria-current')) showFolder(st.trail.slice(0, Number(crumb.dataset.crumb) + 1));
+  if (e.target.closest('[data-pick]')) pickFolder();
+});
+$('#emptyBtn').addEventListener('click', pickFolder);
+$('#pickTop').addEventListener('click', pickFolder);
+
+// ---------- search: a hairline under the wordmark that pops out ----------
+const searchOpen = () => els.sbox.hasAttribute('data-open');
+function openSearch(focus) {
+  if (st.mode === 'landing' || st.mode === 'detail') return;
+  els.sbox.setAttribute('data-open', '');
+  $('#brand').setAttribute('aria-expanded', 'true');
+  if (focus) { els.q.focus(); els.q.select(); }
+}
+function closeSearch(force = false) { // folds back only when there is nothing typed, unless forced
+  if (!force && (els.q.value.trim() || document.activeElement === els.q)) return;
+  els.sbox.removeAttribute('data-open');
+  $('#brand').setAttribute('aria-expanded', 'false');
+}
+$('#brand').addEventListener('click', () => openSearch(true));
+$('#sHit').addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') openSearch(false); });
+els.sbox.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') openSearch(false); });
+els.sbox.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') closeSearch(); });
+document.addEventListener('pointerdown', (e) => {
+  if (!searchOpen() || els.sbox.contains(e.target) || $('#brand').contains(e.target)) return;
+  if (!els.q.value.trim()) { els.q.blur(); closeSearch(true); }
+}, true);
+els.q.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  e.stopPropagation(); // Escape here belongs to the field, not to the shelf behind it
+  if (els.q.value) els.q.value = ''; else { els.q.blur(); closeSearch(true); }
+});
 $('#searchForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const raw = els.q.value.trim();
-  const terms = C.cleanQuery(raw);
-  if (!terms.length) { roll($('#qhint'), raw ? 'Add a word' : '/ or ⌘K'); return; }
-  roll($('#qhint'), '/ or ⌘K');
-  els.q.blur();
-  runSearch(terms, raw);
+  if (submitQuery(raw)) els.q.blur();
+  else toast(raw ? 'Add a word to search for, like “blood” or “invoice”.' : 'Type what to look for, like “blood related”.');
 });
+
+// ---------- voice: listens only while the owner has the mic on ----------
+const voice = { rec: null, on: false, at: 0, quick: 0 }; // at: last start; quick: sessions in a row that ended within a second
+const VOICE_WHY = {
+  'not-allowed': 'microphone access was refused', 'service-not-allowed': 'speech recognition is not allowed in this app',
+  'audio-capture': 'no microphone was found', network: 'the speech service could not be reached', 'language-not-supported': 'English speech input is not installed',
+};
+const heard = (text) => { $('#voiceText').textContent = text ? `Listening: “${text}”` : 'Listening: say “Hey Arkhive, find…”'; };
+function showMic() {
+  body.dataset.mic = voice.on ? 'on' : 'off';
+  $$('.mic').forEach((b) => b.setAttribute('aria-pressed', String(voice.on)));
+}
+function voiceStop() {
+  const rec = voice.rec;
+  voice.rec = null; voice.on = false;
+  if (rec) { rec.onend = null; try { rec.stop(); } catch (_) { /* already stopped */ } }
+  showMic();
+}
+function voiceFail(reason) {
+  voiceStop();
+  toast(`Voice search is unavailable: ${reason}. Type your search instead.`);
+  if (st.mode === 'landing') go(() => openSearch(true)); else openSearch(true);
+}
+function voiceCommand(text) {
+  const q = C.parseVoice(text);
+  if (q == null) return; // no wake phrase: not meant for us
+  if (!submitQuery(q)) heard(`${text} … say what to find`);
+}
+function voiceStart() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return voiceFail('this device has no speech input');
+  const rec = new SR();
+  rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true;
+  rec.onresult = (e) => {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const text = e.results[i][0].transcript.trim();
+      heard(text);
+      if (e.results[i].isFinal) voiceCommand(text);
+    }
+  };
+  rec.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') voiceFail(VOICE_WHY[e.error] || e.error); };
+  // the service ends a session on silence; keep listening until the owner turns the mic off
+  rec.onend = () => {
+    if (voice.rec !== rec) return;
+    // App webviews expose the speech API but end every session at once with no error: report that, don't spin.
+    voice.quick = performance.now() - voice.at < 1000 ? voice.quick + 1 : 0;
+    if (voice.quick >= 3) return voiceFail('speech input stops as soon as it starts in this window');
+    try { voice.at = performance.now(); rec.start(); } catch (err) { voiceFail(`listening stopped (${err.message})`); }
+  };
+  try { rec.start(); } catch (err) { return voiceFail(err.message); }
+  voice.rec = rec; voice.on = true; voice.at = performance.now(); voice.quick = 0;
+  heard('');
+  showMic();
+}
+const voiceToggle = () => (voice.on ? voiceStop() : voiceStart());
+
+// ---------- input wiring ----------
+$('#back').addEventListener('click', () => (st.mode === 'vault' ? backToStart() : collapse()));
+$('#inspectBtn').addEventListener('click', openActive);
+$('#plus').addEventListener('click', () => trayAdd(activeItem(shelf2)));
+$('#closeBtn').addEventListener('click', closeDetail);
+$$('.act').forEach((b) => b.addEventListener('click', () => act(b.dataset.act)));
+$$('.mic').forEach((b) => b.addEventListener('click', voiceToggle));
+// After a mouse click on a chrome button, keys go back to the shelf (Enter must not press the button again).
+els.chrome.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b && e.detail) b.blur(); });
 bindShelf(shelf1);
 bindShelf(shelf2);
 
 addEventListener('keydown', (e) => {
-  if (e.target === els.q) { if (e.key === 'Escape') els.q.blur(); return; }
-  const inShelf = st.mode === 'vault' || st.mode === 'files';
-  if (inShelf && !st.busy && (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey)))) {
-    e.preventDefault(); els.q.focus(); els.q.select(); return;
-  }
+  if (e.target.matches && e.target.matches('input')) return; // typing: each field handles its own keys
+  const plain = !e.metaKey && !e.ctrlKey && !e.altKey;
+  if (e.key.toLowerCase() === 'v' && plain) { e.preventDefault(); voiceToggle(); return; }
   if (st.busy) return;
+  if (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) {
+    if (st.mode === 'detail') return;
+    e.preventDefault();
+    go(() => openSearch(true));
+    return;
+  }
   const onButton = e.target.closest && e.target.closest('button');
+  if (st.mode === 'landing') {
+    if (e.key === 'Enter' && !onButton) $('#archiveLink').click();
+    else if (plain && Hero.key(e)) e.preventDefault();
+    return;
+  }
   const sh = currentShelf();
-  if (e.key === 'Enter' && !onButton) { if (st.mode === 'landing') dive(false); else openActive(); }
+  if (e.key === 'Enter' && !onButton) openActive();
   else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && sh && sh.total) { e.preventDefault(); sh.T = Math.round(sh.T) + (e.key === 'ArrowRight' ? 1 : -1); }
   else if (e.key === 'Escape') { if (st.mode === 'detail') closeDetail(); else if (st.mode === 'files') collapse(); }
   else if (e.key === ' ' && st.mode === 'detail' && !onButton) { e.preventDefault(); act('quick_look'); }
@@ -923,189 +1598,29 @@ addEventListener('wheel', (e) => {
   while (Math.abs(wheelAcc) >= 60) { const s = Math.sign(wheelAcc); sh.T = Math.round(sh.T) + s; wheelAcc -= 60 * s; }
 }, { passive: true });
 
-// ---------- cursor ----------
-const cur = { el: $('#cursor'), x: innerWidth / 2, y: innerHeight / 2, tx: innerWidth / 2, ty: innerHeight / 2 };
+// ---------- double-dot cursor ----------
+const cur = { el: $('#cursor'), x: -40, y: -40, tx: -40, ty: -40 }; // off-screen until the pointer first moves
 addEventListener('pointermove', (e) => {
   cur.tx = e.clientX; cur.ty = e.clientY;
-  const t = e.target;
-  const open = t.closest && t.closest('.tape.is-active .cv') && (st.mode === 'vault' || st.mode === 'files');
-  const state = open ? 'open' : t.closest && t.closest('button, input, a, .hit .box') ? 'btn' : t.closest && t.closest('.tape') ? 'spine' : '';
-  if (cur.el.dataset.s !== state) {
-    cur.el.dataset.s = state;
-    cur.el.className = state;
-    if (open) $('#cLbl').innerHTML = st.mode === 'vault' ? 'Open<br>開く' : 'Inspect<br>詳細';
-  }
+  const sh = currentShelf();
+  cur.el.classList.toggle('on', !!(e.target.closest && e.target.closest('button, input, a, .tape, #d-prev, #sbox, #sHit')) || !!(sh && coverAt(sh, e)));
 });
-
-// ---------- Stage 0: pixel meadow ----------
-const md = { cv: $('#meadow'), ctx: null, s: 4, W: 0, Hc: 0, sky: null, fg: null, clouds: [], tufts: [], leaves: [], desk: null, acc: 0, t: 0 };
-md.ctx = md.cv.getContext('2d');
-function layer(W, Hc) { const c = document.createElement('canvas'); c.width = W; c.height = Hc; return c; }
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-function hexRgb(h) { return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); }
-function gradient(img, W, y0, y1, colors) { // ordered-dither vertical gradient through a palette
-  const cs = colors.map(hexRgb);
-  for (let y = y0; y < y1; y++) {
-    const t = ((y - y0) / Math.max(1, y1 - y0 - 1)) * (cs.length - 1);
-    const i = Math.min(cs.length - 2, Math.floor(t)), f = t - i;
-    for (let x = 0; x < W; x++) {
-      const c = f * 16 > BAYER[(y % 4) * 4 + (x % 4)] ? cs[i + 1] : cs[i];
-      const k = (y * W + x) * 4;
-      img.data[k] = c[0]; img.data[k + 1] = c[1]; img.data[k + 2] = c[2]; img.data[k + 3] = 255;
-    }
-  }
-}
-function blob(g, cx, cy, rad, color, r) {
-  g.fillStyle = color;
-  for (let y = -rad; y <= rad; y++) {
-    const w = Math.round(Math.sqrt(rad * rad - y * y) * (0.92 + r() * 0.16));
-    g.fillRect(Math.round(cx - w), Math.round(cy + y), w * 2, 1);
-  }
-}
-function buildMeadow() {
-  const narrow = innerWidth < 700;
-  const s = Math.max(2, Math.round((narrow ? Math.min(innerHeight, innerWidth * 1.3) : innerHeight) / 180));
-  const W = Math.ceil(innerWidth / s), Hc = Math.ceil(innerHeight / s);
-  Object.assign(md, { s, W, Hc });
-  md.cv.width = W; md.cv.height = Hc;
-  md.cv.style.width = W * s + 'px'; md.cv.style.height = Hc * s + 'px';
-  const r = rng(7), horizon = Math.round(Hc * 0.6);
-  md.horizon = horizon;
-
-  // sky
-  md.sky = layer(W, Hc);
-  let g = md.sky.getContext('2d'), img = g.createImageData(W, Hc);
-  gradient(img, W, 0, horizon, [SHEET, SHEET, PAPER, mix(PAPER, GOLD, 0.22), mix(PAPER, GOLD, 0.38)]);
-  g.putImageData(img, 0, 0);
-  const heroBottom = Math.round($('.hero').getBoundingClientRect().bottom / s);
-  const sunX = Math.round(W * (narrow ? 0.3 : 0.58)), sunY = narrow ? heroBottom + 16 : Math.round(Hc * 0.22);
-  blob(g, sunX, sunY, 13, mix(GOLD, SHEET, 0.55), r);
-  blob(g, sunX, sunY, 9, GOLD, r);
-
-  // foreground (transparent above the skyline)
-  md.fg = layer(W, Hc);
-  g = md.fg.getContext('2d');
-  // skyline
-  let x = Math.round(W * 0.04);
-  while (x < W * 0.78) {
-    const bw = 4 + Math.floor(r() * 9), bh = 5 + Math.floor(r() * (r() > 0.85 ? 26 : 15));
-    g.fillStyle = mix(MUTED, PAPER, 0.42 + r() * 0.12);
-    g.fillRect(x, horizon - bh, bw, bh);
-    if (r() > 0.8) g.fillRect(x + (bw >> 1), horizon - bh - 4, 1, 4);
-    g.fillStyle = mix(MUTED, SHEET, 0.7);
-    for (let wy = horizon - bh + 2; wy < horizon - 2; wy += 3) for (let wx = x + 1; wx < x + bw - 1; wx += 2) if (r() > 0.55) g.fillRect(wx, wy, 1, 1);
-    x += bw + (r() > 0.7 ? 2 : 0);
-  }
-  // hills + meadow
-  img = g.getImageData(0, 0, W, Hc);
-  gradient(img, W, horizon, Hc, [mix(FOREST, PAPER, 0.55), mix(FOREST, PAPER, 0.4), mix(FOREST, PAPER, 0.22), FOREST, mix(FOREST, INK, 0.25)]);
-  g.putImageData(img, 0, 0);
-  g.fillStyle = mix(FOREST, PAPER, 0.5);
-  for (let hx = 0; hx < W; hx++) { const hy = Math.round(3 + 2.5 * Math.sin(hx / 17) + 1.5 * Math.sin(hx / 7)); g.fillRect(hx, horizon - hy, 1, hy); }
-  // grass speckle + flowers
-  for (let i = 0; i < W * Hc * 0.02; i++) {
-    const gx = Math.floor(r() * W), gy = horizon + 3 + Math.floor(r() * (Hc - horizon - 3));
-    const depth = (gy - horizon) / (Hc - horizon);
-    g.fillStyle = r() > 0.94 ? (r() > 0.5 ? GOLD : SHEET) : mix(FOREST, PAPER, 0.15 + (1 - depth) * 0.35 + (r() - 0.5) * 0.1);
-    g.fillRect(gx, gy, 1, depth > 0.4 && r() > 0.5 ? 2 : 1);
-  }
-  // ancient tree (right)
-  const tx = Math.round(W - Math.max(narrow ? 14 : 26, W * 0.13)), ground = Math.round(Hc * 0.8);
-  const crown = narrow ? Math.max(Math.round(Hc * 0.3), heroBottom + 30) : Math.round(Hc * 0.3);
-  g.fillStyle = mix(FOREST, INK, 0.45);
-  for (let i = 0; i < 4; i++) g.fillRect(tx - 14 + i * 2, ground + i, 36 - i * 4, 1);
-  g.fillStyle = MID; g.fillRect(tx - 4, crown, 9, ground - crown);
-  g.fillStyle = mix(MID, INK, 0.45); g.fillRect(tx + 3, crown, 2, ground - crown);
-  g.fillStyle = MID; g.fillRect(tx - 7, ground - 3, 3, 3); g.fillRect(tx + 5, ground - 3, 3, 3);
-  for (let b = 0; b < 3; b++) { g.fillStyle = MID; for (let k = 0; k < 10; k++) g.fillRect(tx - 2 - (b % 2 ? -k : k), crown + 12 + b * 9 - k, 2, 2); }
-  const crownDark = mix(FOREST, INK, 0.35), crownLight = mix(FOREST, GOLD, 0.32);
-  const blobsC = [];
-  for (let i = 0; i < 9; i++) blobsC.push([tx + (r() - 0.5) * 56, crown + (r() - 0.6) * 26, 9 + r() * 10]);
-  blobsC.forEach(([cx, cy, rad]) => blob(g, cx, cy, rad, crownDark, r));
-  blobsC.forEach(([cx, cy, rad]) => blob(g, cx - 2, cy - 3, rad * 0.7, FOREST, r));
-  blobsC.slice(0, 5).forEach(([cx, cy, rad]) => blob(g, cx - 4, cy - 6, rad * 0.35, crownLight, r));
-  md.leaves = Array.from({ length: 40 }, () => { const [cx, cy, rad] = blobsC[Math.floor(r() * blobsC.length)]; return [Math.round(cx + (r() - 0.5) * rad), Math.round(cy + (r() - 0.5) * rad), r() * 6.28]; });
-
-  // workstation: open laptop + leather binder with gold clasp
-  const lx = Math.round(Math.min(W * 0.62, tx - 40)), ly = Math.round(Hc * 0.84);
-  g.fillStyle = mix(FOREST, INK, 0.4); g.fillRect(lx - 3, ly + 1, 50, 2);
-  g.fillStyle = INK; g.fillRect(lx + 1, ly - 18, 24, 16);
-  g.fillStyle = SHEET; g.fillRect(lx + 2, ly - 17, 22, 14);
-  g.fillStyle = FOREST; for (let i = 0; i < 5; i++) g.fillRect(lx + 4 + (i % 2) * 2, ly - 15 + i * 2.4, 6 + ((i * 7) % 9), 1);
-  g.fillStyle = MID; g.fillRect(lx - 1, ly - 2, 28, 2);
-  g.fillStyle = INK; g.fillRect(lx - 2, ly, 30, 1);
-  const bx = lx + 32;
-  g.fillStyle = MID; g.fillRect(bx, ly - 19, 13, 19);
-  g.fillStyle = mix(MID, INK, 0.45); g.fillRect(bx, ly - 19, 3, 19);
-  g.fillStyle = SHEET; g.fillRect(bx + 5, ly - 15, 6, 4);
-  g.fillStyle = GOLD; g.fillRect(bx + 10, ly - 9, 3, 4);
-  md.desk = { x: lx - 3, y: ly - 20, w: 50, h: 23, screen: [lx + 18, ly - 7] };
-  md.tufts = Array.from({ length: Math.round(W / 6) }, () => [Math.floor(r() * W), Math.round(Hc * (0.88 + r() * 0.1)), r() * 6.28]);
-  md.clouds = Array.from({ length: 5 }, (_, i) => {
-    // Sits where the sky is gold-tinted so the pale body reads against it.
-    const w = 20 + Math.round(r() * 20), h = Math.round(w * 0.45), c = layer(w + 4, h + 4), cg = c.getContext('2d');
-    const r1 = Math.round(h * 0.34), r2 = Math.round(h * 0.44);
-    blob(cg, Math.round(w * 0.34) + 2, Math.round(h * 0.6) + 2, r1, mix(PAPER, MUTED, 0.3), r);
-    blob(cg, Math.round(w * 0.62) + 2, Math.round(h * 0.52) + 2, r2, mix(PAPER, MUTED, 0.3), r);
-    blob(cg, Math.round(w * 0.34) + 2, Math.round(h * 0.6), r1, SHEET, r);
-    blob(cg, Math.round(w * 0.62) + 2, Math.round(h * 0.52), r2, SHEET, r);
-    cg.fillStyle = SHEET; cg.fillRect(Math.round(w * 0.14), Math.round(h * 0.62), Math.round(w * 0.78), 3);
-    return { x: r() * W, y: Math.round(Hc * (0.2 + i * 0.045) + r() * 4), w, sprite: c, v: 0.6 + r() * 1.1 };
-  });
-
-  // hit area, pills (CSS px)
-  const hit = $('#deskHit');
-  Object.assign(hit.style, { left: md.desk.x * s + 'px', top: md.desk.y * s + 'px', width: md.desk.w * s + 'px', height: md.desk.h * s + 'px' });
-  const pills = $('#pills');
-  const pillLeft = Math.min(md.desk.x * s, innerWidth - 360);
-  Object.assign(pills.style, { left: Math.max(12, pillLeft) + 'px', bottom: innerHeight - md.desk.y * s + 14 + 'px' });
-  drawMeadow(0);
-}
-function drawMeadow(dt) {
-  const { ctx, W, Hc } = md;
-  md.t += dt;
-  ctx.drawImage(md.sky, 0, 0);
-  for (const c of md.clouds) {
-    c.x += c.v * dt;
-    if (c.x > W + c.w) c.x = -c.w * 2;
-    ctx.drawImage(c.sprite, Math.round(c.x), Math.round(c.y));
-  }
-  ctx.drawImage(md.fg, 0, 0);
-  for (const [x, y, p] of md.tufts) { ctx.fillStyle = mix(FOREST, PAPER, 0.18); ctx.fillRect(x + Math.round(Math.sin(md.t * 1.6 + p)), y - 2, 1, 2); }
-  for (const [x, y, p] of md.leaves) if (Math.sin(md.t * 1.3 + p) > 0.55) { ctx.fillStyle = mix(FOREST, GOLD, 0.45); ctx.fillRect(x, y, 1, 1); }
-  if (Math.floor(md.t * 2) % 2) { ctx.fillStyle = GOLD; ctx.fillRect(md.desk.screen[0], md.desk.screen[1] - 2, 1, 2); }
-}
-function renderPills() {
-  const n = C.DEMO_FILES.length;
-  const lines = TAURI
-    ? ['Index: macOS Spotlight, always current', 'Text inside PDFs, slides and photos is searchable', 'Ask in plain words: “blood related”']
-    : [`Demo index: ${n} files (PDF, PPT, JPEG, DOCX…)`, 'Text inside PDFs and photo scans is searchable', 'Ask in plain words: “blood related”'];
-  $('#pills').innerHTML = lines.map((l, i) => `<div class="m"><div class="mi pill lbl" style="--dl:${0.45 + i * 0.12}s">${esc(l)}</div></div>`).join('');
-  $('#count').textContent = TAURI ? 'Index: Spotlight // this Mac' : `Indexed: ${n} demo files // browser preview`;
-}
 
 // ---------- the one rAF loop ----------
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
-  cur.x += (cur.tx - cur.x) * (1 - Math.exp(-16 * dt));
-  cur.y += (cur.ty - cur.y) * (1 - Math.exp(-16 * dt));
-  cur.el.style.transform = `translate3d(${cur.x}px, ${cur.y}px, 0)`;
-  if (st.mode === 'landing' || els.vault.style.visibility !== 'visible') {
-    md.acc += dt;
-    if (md.acc > 1 / 12) { drawMeadow(md.acc); md.acc = 0; }
-  }
+  const follow = 1 - Math.exp(-22 * dt);
+  cur.x += (cur.tx - cur.x) * follow;
+  cur.y += (cur.ty - cur.y) * follow;
+  cur.el.style.transform = `translate3d(${cur.x.toFixed(1)}px, ${cur.y.toFixed(1)}px, 0)`;
+  if (st.mode === 'landing' || els.vault.style.visibility !== 'visible') Hero.frame(dt); // the hero also shows behind the opening sheet
   if (els.vault.style.visibility === 'visible' && st.mode !== 'detail') updateShelf(shelf1, dt);
   if (els.tier2.style.visibility === 'visible' && st.mode !== 'detail') updateShelf(shelf2, dt);
-  const sh = currentShelf();
-  if (sh) {
-    const rs = sh.total ? C.smoothstep(Math.max(0, 1 - Math.abs(sh.T - sh.s) * 3)) : 0;
-    $('#ring').style.setProperty('--rs', rs.toFixed(3));
-  }
   if (ink) {
     let done = true;
-    document.querySelectorAll('#blobs circle').forEach((c, i) => {
+    $$('#blobs circle').forEach((c, i) => {
       const p = Math.max(0, Math.min(1, (now - ink.start - dur(BLOBS[i][2])) / dur(1250)));
       if (p < 1) done = false;
       c.setAttribute('r', (720 * (1 - Math.pow(1 - p, 3))).toFixed(1));
@@ -1117,13 +1632,21 @@ function frame(now) {
 
 // ---------- boot ----------
 measure();
-buildMeadow();
-renderPills();
 setItems(shelf1, C.categoriesForTab('all'));
+Hero.init({
+  keys: HERO_KEYS, reduce, storyAt: C.storyAt, paint: paintCard,
+  label: (key) => `Open the ${catOf(key).label} vault, ${countLabel(key).toLowerCase()}`,
+  onEnter: (key, el) => canEnter() && (enterVault(key, el), true),
+  onPresets: (el) => canEnter() && (enterVault('MEDICAL', el, 'smart'), true),
+});
+renderTray();
+showMic();
+updateCount();
 setMode('landing');
-addEventListener('resize', () => { measure(); buildMeadow(); document.querySelectorAll('.tabs').forEach(moveInd); });
-requestAnimationFrame(() => els.landing.classList.add('ready'));
-document.fonts.ready.then(() => document.querySelectorAll('.tabs').forEach(moveInd));
+HERO_KEYS.forEach(cardArt);
+refreshSummaries();
+addEventListener('resize', () => { measure(); drawPills(); });
+document.fonts.ready.then(() => { Hero.refresh(); drawPills(); }); // card faces and pill widths depend on the loaded fonts
 requestAnimationFrame(frame);
 })();
 </script>

@@ -13,3 +13,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = [] }
 serde = { version = "1", features = ["derive"] }
+
+# Mac-only: native file drag-out (FR-021). See specs/002-arkhive/plan.md Complexity Tracking.
+[target.'cfg(target_os = "macos")'.dependencies]
+drag = "2"
