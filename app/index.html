@@ -7,18 +7,17 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Inter+Tight:wght@500;600&family=Newsreader:opsz,wght@6..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
 <style>
 :root {
   --paper: #EDE6DA; --sheet: #F5EFE6;
   --mocha-ink: #261A14; --mocha-mid: #5C463B; --mocha-muted: #8A7367;
-  --forest: #234434; --gold: #B89658;
+  --forest: #234434; --forest-light: #3A634C; --gold: #B89658; --silver: #D8CFC0;
   --rule: rgba(38, 26, 20, .88);
   --ease: cubic-bezier(.2, .8, .2, 1);
   --H: min(46vh, 31vw);
   --font-serif: "Newsreader", Georgia, serif;
   --font-sans: "Inter Tight", system-ui, sans-serif;
-  --font-hero: "Inter", "Inter Tight", system-ui, sans-serif;
 }
 @media (max-width: 767px) { :root { --H: min(60vw, 40svh); } }
 
@@ -37,8 +36,11 @@ input { caret-color: var(--forest); }
 @media (pointer: fine) { body, body * { cursor: none !important; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-.lbl { font: 500 12px/1.2 var(--font-sans); }
-.box { display: inline-flex; align-items: center; height: 21px; padding: 0 8px; border: 1px solid var(--rule); white-space: nowrap; }
+.lbl { font: 700 11.5px/1.2 var(--font-sans); letter-spacing: .08em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
+.lbl .sn { font: 400 13px var(--font-serif); letter-spacing: 0; text-transform: none; } /* a quoted match keeps the file's own words */
+.box { display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border: 1px solid var(--rule); white-space: nowrap; }
+button.box:active { transform: scale(.98); }
+button:disabled { opacity: .4; pointer-events: none; }
 mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 
 /* masked line reveals: overflow mask + translate, never opacity */
@@ -52,58 +54,44 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   position: fixed; inset: 0; z-index: 40; pointer-events: none; mix-blend-mode: multiply; opacity: .55;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .38 0 0 0 0 .30 0 0 0 0 .24 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-[data-mode="landing"] .grain { visibility: hidden; } /* the hero is a clean black stage */
 #probe { position: fixed; left: -10px; top: 0; width: 1px; height: var(--H); visibility: hidden; }
 
-/* ---------- Stage 0: prism hero (black stage; its text may fade and blur, as the brief describes) ---------- */
-#hero { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #000; color: #F5F5F5; font-family: var(--font-hero); touch-action: none; }
-#hero ::selection { background: #F5F5F5; color: #000; }
-#prism { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.hero-nav {
-  position: absolute; z-index: 4; top: 16px; left: 50%; transform: translateX(-50%); width: min(1024px, calc(100vw - 32px)); height: 48px;
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 8px;
-  border: 1px solid rgba(255, 255, 255, .1); border-radius: 999px; background: rgba(255, 255, 255, .03);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+/* ---------- Stage 0: the workspace start screen ---------- */
+#hero { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: var(--paper); }
+#scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; }
+.hero-center { position: absolute; left: 50%; top: 44%; z-index: 2; width: min(92vw, 720px); transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; text-align: center; }
+.hero-center h1 { font: 800 clamp(3.5rem, 7vw, 6.5rem)/1 var(--font-sans); letter-spacing: .18em; padding-left: .18em; text-transform: uppercase; color: var(--mocha-ink); text-shadow: 0 3px 0 var(--sheet); }
+.hero-sub { margin-top: 16px; max-width: 48ch; font: 400 19px/1.45 var(--font-serif); color: var(--mocha-mid); text-wrap: balance; }
+.enter {
+  margin-top: 28px; display: inline-flex; align-items: center; gap: 12px; height: 50px; padding: 0 36px; white-space: nowrap;
+  background: var(--forest); color: var(--paper); border: 1.5px solid var(--mocha-ink); box-shadow: 4px 4px 0 var(--mocha-ink);
+  font: 700 13px/1 var(--font-sans); letter-spacing: .16em; text-transform: uppercase;
+  transition: background-color .15s var(--ease), transform .12s var(--ease), box-shadow .12s var(--ease);
 }
-.nav-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.nav-back { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .18); display: grid; place-items: center; transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease); }
-.nav-back:disabled { color: rgba(245, 245, 245, .3); border-color: rgba(255, 255, 255, .08); }
-.nav-back:not(:disabled):hover { background: #F5F5F5; color: #000; }
-.hero-brand { display: inline-flex; align-items: center; gap: 9px; font: 600 14px/1 var(--font-sans); letter-spacing: .2em; }
-.mark { flex: none; width: 18px; height: 18px; border-radius: 5px; background: #F5F5F5; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
-.mark::before, .mark::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #000; }
-.mark::after { background: var(--gold); }
-/* the links smear slightly while the ring is moving fast */
-.nav-links { display: flex; gap: 2px; filter: blur(calc(var(--v, 0) * 2.5px)); opacity: calc(1 - var(--v, 0) * .5); transform: skewX(calc(var(--v, 0) * -8deg)); }
-.nav-links button { height: 32px; padding: 0 14px; border-radius: 999px; font: 500 13px/1 var(--font-hero); letter-spacing: -.01em; color: rgba(245, 245, 245, .74); white-space: nowrap; transition: background-color .3s var(--ease), color .3s var(--ease); }
-.nav-links button:hover, .nav-links button:focus-visible { color: #F5F5F5; background: rgba(255, 255, 255, .09); }
-.nav-status { justify-self: end; max-width: 100%; padding-right: 12px; font: 500 12px/1 var(--font-hero); color: rgba(245, 245, 245, .62); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.stage-title { position: absolute; z-index: 3; left: clamp(20px, 5vw, 72px); top: clamp(92px, 15vh, 150px); display: grid; font: 500 clamp(3rem, 6vw, 5.5rem)/.95 var(--font-hero); letter-spacing: -.04em; pointer-events: none; }
-/* word-spacing wider than the line puts each word on its own line, as in the brief's two-line headline */
-.st { grid-area: 1 / 1; word-spacing: 100vw; opacity: 0; filter: blur(10px); transform: translateY(.12em); transition: opacity .5s var(--ease), filter .5s var(--ease), transform .5s var(--ease); }
-.st.on { opacity: 1; filter: none; transform: none; }
-.hero-cards { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
-.prism-card { position: absolute; left: 0; top: 0; pointer-events: auto; border-radius: 3px; }
-.prism-card canvas { display: none; }
-.ruler { position: absolute; z-index: 3; right: 14px; top: 50%; width: 14px; height: 60vh; transform: translateY(-50%); overflow: hidden; pointer-events: none; -webkit-mask: linear-gradient(transparent, #000 14%, #000 86%, transparent); mask: linear-gradient(transparent, #000 14%, #000 86%, transparent); }
-.ruler-track { display: flex; flex-direction: column; align-items: flex-end; transform: translateY(calc(var(--p, 0) * -42%)); }
-.ruler-track i { flex: none; width: 8px; height: 1px; margin-bottom: 5px; background: rgba(255, 255, 255, .2); }
-.ruler-track i:nth-child(5n) { width: 14px; background: rgba(255, 255, 255, .5); }
-.hero-hint { position: absolute; z-index: 3; left: clamp(20px, 5vw, 72px); bottom: 26px; max-width: 44ch; font: 500 13px/1.45 var(--font-hero); color: rgba(245, 245, 245, .64); pointer-events: none; }
-/* flat fallback: the same painted cards in a row */
-#hero[data-ring="flat"] #prism { display: none; }
-#hero[data-ring="flat"] .hero-cards { display: flex; flex-wrap: wrap; align-content: center; justify-content: center; gap: clamp(10px, 2vw, 22px); padding: 250px 24px 96px; pointer-events: auto; overflow-y: auto; }
-#hero[data-ring="flat"] .prism-card { position: static; width: min(164px, 40vw); aspect-ratio: 3 / 4; transition: transform .45s var(--ease); }
-#hero[data-ring="flat"] .prism-card:hover { transform: translateY(-6px) scale(1.04); }
-#hero[data-ring="flat"] .prism-card canvas { display: block; width: 100%; height: 100%; }
-@media (max-width: 767px) {
-  .hero-brand span { display: none; }
-  .nav-status, .ruler { display: none; }
-  .hero-nav { grid-template-columns: auto 1fr; }
-  .nav-links { justify-self: end; }
-  .nav-links button { padding: 0 10px; }
-  #hero[data-ring="flat"] .hero-cards { padding-top: 220px; }
+.enter .dot { width: 7px; height: 7px; background: var(--gold); border: 1px solid var(--mocha-ink); }
+.enter:hover { background: var(--forest-light); }
+.enter:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--mocha-ink); }
+.details-btn { margin-top: 16px; height: 32px; padding: 0 16px; background: var(--sheet); transition: background-color .15s var(--ease); }
+.details-btn:hover, .details-btn[aria-expanded="true"] { background: var(--gold); }
+.details {
+  margin-top: 12px; width: min(460px, 92vw); padding: 14px 16px; text-align: left; background: var(--sheet); border: 1px solid var(--rule);
+  clip-path: inset(0 0 100% 0); visibility: hidden; transition: clip-path .28s var(--ease), visibility 0s .28s;
 }
+.details.on { clip-path: inset(0); visibility: visible; transition-delay: 0s; }
+.details dl { display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; align-items: baseline; }
+.details dd { font: 400 15px/1.45 var(--font-serif); color: var(--mocha-ink); }
+.details dd button { font: 700 11.5px/1 var(--font-sans); letter-spacing: .08em; text-transform: uppercase; color: var(--forest); border-bottom: 1px solid var(--forest); padding-bottom: 2px; }
+.details dd button:hover { color: var(--mocha-ink); border-bottom-color: var(--gold); }
+.details dd .sn { font-style: italic; }
+#desk { position: absolute; right: 7vw; bottom: 8vh; z-index: 1; line-height: 0; }
+#deskArt { display: block; image-rendering: pixelated; }
+#hero[data-scene="flat"] #scene, #hero[data-scene="flat"] #desk { display: none; }
+@media (max-width: 640px) {
+  .hero-center { top: 15%; transform: translateX(-50%); }
+  .hero-sub { font-size: 17px; }
+  #desk { right: 50%; transform: translateX(50%); bottom: 3vh; }
+}
+@media (max-height: 760px) and (min-width: 641px) { .hero-center { top: 40%; } }
 
 /* ---------- sheets ---------- */
 .sheet { position: fixed; inset: 0; visibility: hidden; }
@@ -159,20 +147,25 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .mic { flex: none; width: 40px; display: grid; place-items: center; border-left: 1px solid var(--rule); color: var(--forest); transition: background-color .3s var(--ease), color .3s var(--ease); }
 .mic:hover { background: var(--gold); color: var(--mocha-ink); }
 [data-mic="on"] .mic { background: var(--forest); color: var(--paper); }
-/* two pills, centred just above the shelf; each widens inline to show its options */
-.rows { position: absolute; left: 0; right: 0; top: max(104px, calc(50% - var(--H) / 2 - 97px)); display: grid; justify-items: center; gap: 12px; }
-.rows > .m { height: 11px; overflow: visible; clip-path: inset(-4px 0); }
-#pills { display: flex; justify-content: center; gap: 10px; max-width: 100vw; }
-.pill { display: grid; grid-template-columns: auto 0fr; height: 25px; max-width: calc(100vw - 20px); border: 1px solid var(--rule); transition: grid-template-columns .45s var(--ease), background-color .45s var(--ease); }
-.pill:hover, .pill:focus-within, .pill[data-open] { grid-template-columns: auto 1fr; background: var(--sheet); }
-.pill[data-shut] { grid-template-columns: auto 0fr !important; } /* a choice folds the pill even while the pointer is still on it */
-.pill-label { display: flex; align-items: center; justify-content: center; min-width: 105px; padding: 0 10px; white-space: nowrap; }
-.pill-opts { position: relative; display: flex; min-width: 0; overflow: hidden; }
-.pill:hover .pill-opts, .pill:focus-within .pill-opts, .pill[data-open] .pill-opts { overflow-x: auto; scrollbar-width: none; }
-.pill-opts button { position: relative; z-index: 1; flex: none; padding: 0 10px; border-left: 1px solid var(--rule); white-space: nowrap; transition: color .45s var(--ease); }
+/* context line above the shelf */
+.rows { position: absolute; left: 0; right: 0; top: max(150px, calc(50% - var(--H) / 2 - 52px)); display: grid; justify-items: center; }
+.rows > .m { overflow: visible; clip-path: inset(-4px 0); }
+/* SORT and FILE TYPES: right under the wordmark's search line; they step down while the field is open */
+.tools { position: absolute; left: 0; right: 0; top: 78px; display: flex; justify-content: center; gap: 12px; pointer-events: none; transition: transform .28s var(--ease); }
+#sbox[data-open] ~ .tools { transform: translateY(44px); }
+.pill { pointer-events: auto; display: grid; grid-template-columns: auto 0fr; height: 28px; max-width: calc(100vw - 20px); background: var(--sheet); border: 1px solid var(--rule); transition: grid-template-columns .35s var(--ease); }
+.pill[data-open] { grid-template-columns: auto 1fr; }
+.pill-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; white-space: nowrap; transition: background-color .15s var(--ease), color .15s var(--ease); }
+.pill-label:hover { background: var(--paper); }
+.pill[data-open] .pill-label { background: var(--mocha-ink); color: var(--paper); }
+.pill-opts { position: relative; display: flex; min-width: 0; overflow: hidden; clip-path: inset(0); }
+.pill[data-open] .pill-opts { overflow-x: auto; scrollbar-width: none; }
+.pill-opts button { position: relative; z-index: 1; flex: none; display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; border-left: 1px solid var(--rule); white-space: nowrap; transition: color .15s var(--ease); }
 .pill-opts button:hover { color: var(--forest); }
 .pill-opts button[aria-pressed="true"] { color: var(--paper); }
-.pill-opts .ind { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .45s var(--ease), width .45s var(--ease); }
+.pill-opts .n { font-weight: 500; color: var(--mocha-muted); }
+.pill-opts button[aria-pressed="true"] .n { color: var(--gold); }
+.pill-opts .ind { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .35s var(--ease), width .35s var(--ease); }
 #ctx { max-width: 92vw; text-align: center; color: var(--mocha-mid); }
 #ctx button { text-transform: inherit; letter-spacing: inherit; color: var(--forest); padding-bottom: 2px; border-bottom: 1px solid var(--forest); }
 #ctx .crumb[aria-current] { color: inherit; border-bottom-color: transparent; }
@@ -230,8 +223,8 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 }
 @media (max-width: 640px) {
   .top .right { visibility: hidden; }
-  #pills { flex-direction: column; align-items: center; gap: 8px; }
-  .rows { top: max(100px, calc(50% - var(--H) / 2 - 130px)); }
+  .tools { flex-direction: column; align-items: center; gap: 8px; }
+  .rows { top: max(176px, calc(50% - var(--H) / 2 - 40px)); }
   #cap1 { font-size: 24px; }
 }
 
@@ -252,6 +245,14 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 #trayList li .box { height: 17px; padding: 0 5px; font-size: 8.5px; grid-row: span 2; background: var(--gold); border-color: var(--rule); }
 #trayList li b { font: 400 14px/1.2 var(--font-serif); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #trayList li .sz { color: var(--mocha-mid); font-size: 9px; }
+#trayList li { grid-template-columns: auto minmax(0, 1fr) auto; }
+#trayList li .rm { grid-row: span 2; width: 22px; height: 22px; display: grid; place-items: center; border: 1px solid transparent; color: var(--mocha-mid); transition: border-color .15s var(--ease), color .15s var(--ease); }
+#trayList li .rm:hover { border-color: var(--rule); color: var(--mocha-ink); }
+#batchForm { display: flex; height: 24px; }
+#batchForm[hidden] { display: none; }
+#batchName { width: 220px; border: 1px solid var(--rule); border-right: 0; background: var(--paper); padding: 0 8px; font: 400 14px var(--font-serif); color: var(--mocha-ink); outline: none; user-select: text; -webkit-user-select: text; }
+#batchName:focus-visible { border-color: var(--forest); }
+[data-tray="trashAll"].armed { background: var(--mocha-ink); color: var(--paper); }
 #voicePill {
   position: fixed; left: 50%; top: 112px; z-index: 80; max-width: min(92vw, 720px); display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 14px;
   background: var(--forest); color: var(--paper); border: 1px solid var(--gold); transform: translate(-50%, -200px); transition: transform .5s var(--ease);
@@ -271,14 +272,14 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   background: var(--mocha-ink); color: var(--paper); border: 1px solid var(--gold); padding: 12px 16px; font: 400 15px/1.4 var(--font-serif);
 }
 #toast.on { transform: none; }
+.toast-act { margin-left: 10px; color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 1px; }
+.toast-act:hover { color: var(--paper); border-bottom-color: var(--paper); }
 #tray.on ~ #toast { --b: 136px; } /* never cover the tray's own buttons */
 #cursor { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; display: inline-flex; gap: 4px; margin: -2.5px 0 0 -7px; }
 #cursor i { width: 5px; height: 5px; border-radius: 50%; background: var(--mocha-ink); box-shadow: 0 0 0 1px rgba(237, 230, 218, .85); transition: transform .25s var(--ease), background-color .25s var(--ease); }
 #cursor.on i { background: var(--forest); }
 #cursor.on i:first-child { transform: translateX(-2px); }
 #cursor.on i:last-child { transform: translateX(2px); background: var(--gold); }
-[data-mode="landing"] #cursor i { background: #F5F5F5; box-shadow: 0 0 0 1px rgba(0, 0, 0, .6); }
-[data-mode="landing"] #cursor.on i:last-child { background: var(--gold); }
 #cursor[data-drag]::after {
   content: attr(data-drag); position: absolute; left: 18px; top: 10px; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   padding: 4px 8px; background: var(--sheet); border: 1px solid var(--rule); font: 400 13px/1.2 var(--font-serif); color: var(--mocha-ink);
@@ -293,9 +294,8 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 /* Scoped to the elements that move: a universal rule would also transition every element's
    inherited visibility, so a just-revealed input stays unfocusable for a frame. */
 @media (prefers-reduced-motion: reduce) {
-  .mi, .rl > span, .pill, .pill-opts .ind, .pill-opts button, #sbox, #toast, #cursor i, .act, #tray, #voicePill, .mic, .st, .prism-card { transition-duration: 1ms !important; transition-delay: 0s !important; }
+  .mi, .rl > span, .pill, .tools, .pill-opts .ind, .pill-opts button, #sbox, #toast, #cursor i, .act, #tray, #voicePill, .mic, .enter, .details { transition-duration: 1ms !important; transition-delay: 0s !important; }
   .wave i { animation: none !important; }
-  .nav-links { filter: none; opacity: 1; transform: none; }
 }
 </style>
 </head>
@@ -303,24 +303,23 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 <div class="grain" aria-hidden="true"></div>
 <div id="probe" aria-hidden="true"></div>
 
-<section id="hero" aria-label="Start" data-ring="loading" data-stage="0">
-  <canvas id="prism" aria-hidden="true"></canvas>
-  <header class="hero-nav" id="heroNav">
-    <div class="nav-left">
-      <button class="nav-back" id="storyBack" aria-label="Previous stage" disabled><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M7.5 2L3.5 6l4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
-      <div class="hero-brand"><i class="mark" aria-hidden="true"></i><span>ARKHIVE</span></div>
+<section id="hero" aria-label="Start">
+  <canvas id="scene" aria-hidden="true"></canvas>
+  <div class="hero-center">
+    <h1>ARKHIVE</h1>
+    <p class="hero-sub">Every file on your Mac, indexed inside and out across PDF, PPTX, JPEG and folders.</p>
+    <button class="enter" id="enterBtn"><i class="dot" aria-hidden="true"></i>ENTER ARKHIVE</button>
+    <button class="lbl box details-btn" id="detailsBtn" aria-expanded="false" aria-controls="details">DETAILS</button>
+    <div class="details" id="details" role="region" aria-label="Details">
+      <dl>
+        <dt class="lbl">FILES</dt><dd id="dFiles"></dd>
+        <dt class="lbl">READS INSIDE</dt><dd id="dReads"></dd>
+        <dt class="lbl">ACCESS</dt><dd id="dAccess"></dd>
+        <dt class="lbl">TRY</dt><dd id="dTry"><button type="button">find the file which has blood related</button></dd>
+      </dl>
     </div>
-    <nav class="nav-links" aria-label="Start">
-      <button id="navPresets">Presets</button>
-      <button id="navHow">How it works</button>
-      <button id="archiveLink">Archive</button>
-    </nav>
-    <div class="nav-status" id="navStatus"></div>
-  </header>
-  <h1 class="stage-title" id="stageTitle" aria-live="polite"><span class="st on">Raw capture</span></h1>
-  <div class="hero-cards" id="heroCards"></div>
-  <div class="ruler" aria-hidden="true"><div class="ruler-track" id="rulerTrack"></div></div>
-  <p class="hero-hint" id="heroHint"></p>
+  </div>
+  <div id="desk" aria-hidden="true"><canvas id="deskArt"></canvas></div>
 </section>
 
 <section id="vault" class="sheet" aria-label="Vault shelf">
@@ -349,25 +348,28 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
       <button type="button" class="mic" id="micSearch" aria-pressed="false" aria-label="Voice search: turn the mic on and say “Hey Arkhive, find…”" title="Voice search (V): say “Hey Arkhive, find…”"><svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><rect x="4.5" y="1" width="5" height="9" rx="2.5" fill="currentColor"/><path d="M2 7.5a5 5 0 0010 0M7 12.5V15" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></button>
     </form>
   </div>
-  <div class="rows">
-    <div class="m"><div class="mi lbl hit" style="--dl:.22s"><span class="rl" id="ctx"></span></div></div>
-    <div class="hit" id="pills">
-      <div class="pill" id="pillSort">
-        <button class="pill-label lbl" aria-expanded="false" aria-controls="sortOpts"></button>
-        <div class="pill-opts" id="sortOpts" role="group" aria-label="Sort by" data-group="sort">
-          <span class="ind"></span>
-          <button class="lbl" data-v="relevance">Relevance</button>
-          <button class="lbl" data-v="name">Name (A–Z)</button>
-          <button class="lbl" data-v="newest">Date (newest)</button>
-          <button class="lbl" data-v="oldest">Date (oldest)</button>
-          <button class="lbl" data-v="largest">Size</button>
-        </div>
-      </div>
-      <div class="pill" id="pillFiles">
-        <button class="pill-label lbl" aria-expanded="false" aria-controls="fileOpts"></button>
-        <div class="pill-opts" id="fileOpts" role="group" aria-label="Show"></div>
+  <div class="tools" id="pills">
+    <div class="pill" id="pillSort">
+      <button class="pill-label lbl" aria-expanded="false" aria-controls="sortOpts"></button>
+      <div class="pill-opts" id="sortOpts" role="group" aria-label="Sort by" data-group="sort">
+        <span class="ind"></span>
+        <button class="lbl" data-v="relevance"><span class="o">RELEVANCE</span></button>
+        <button class="lbl" data-v="name"><span class="o">NAME (A–Z)</span></button>
+        <button class="lbl" data-v="nameDesc"><span class="o">NAME (Z–A)</span></button>
+        <button class="lbl" data-v="newest"><span class="o">DATE (NEWEST)</span></button>
+        <button class="lbl" data-v="oldest"><span class="o">DATE (OLDEST)</span></button>
+        <button class="lbl" data-v="largest"><span class="o">SIZE (LARGEST)</span></button>
       </div>
     </div>
+    <div class="pill" id="pillFiles">
+      <button class="pill-label lbl" aria-expanded="false" aria-controls="fileOpts"></button>
+      <div class="pill-opts" id="fileOpts" role="group" aria-label="File types" data-group="fmt">
+        <span class="ind"></span>
+      </div>
+    </div>
+  </div>
+  <div class="rows">
+    <div class="m"><div class="mi lbl hit" style="--dl:.22s"><span class="rl" id="ctx"></span></div></div>
   </div>
   <div class="cap">
     <div aria-live="polite">
@@ -398,6 +400,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
       <button class="lbl box act" data-act="quick_look">Quick Look (space)</button>
       <button class="lbl box act" data-act="reveal_file">Reveal in Finder</button>
       <button class="lbl box act" data-act="rename">Rename</button>
+      <button class="lbl box act" data-act="move">Move to folder</button>
       <button class="lbl box act" data-act="tray">Add to export tray</button>
       <button class="lbl box act" data-act="trash">Move to Trash</button>
     </div></div>
@@ -416,6 +419,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
       </defs>
       <rect width="474" height="900" fill="#EDE6DA"/>
       <g mask="url(#ink-mask)" id="d-art"></g>
+      <rect x=".5" y=".5" width="473" height="899" fill="none" stroke="rgba(38,26,20,.88)"/>
     </svg>
   </div>
 </section>
@@ -423,9 +427,13 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 <aside id="tray" aria-label="Export tray" inert>
   <div class="tray-head">
     <span class="lbl ttl">Export tray · <span id="trayN">0 files</span></span>
+    <form id="batchForm" hidden><label class="sr" for="batchName">New base name for every staged file</label><input id="batchName" maxlength="200" placeholder="Base name, e.g. Lab results" autocomplete="off" spellcheck="false"><button class="lbl box">RENAME</button></form>
     <button class="lbl box" data-tray="export">Export to Downloads</button>
+    <button class="lbl box" data-tray="exportTo">Export to…</button>
     <button class="lbl box" data-tray="copy">Copy paths</button>
     <button class="lbl box" data-tray="reveal">Reveal all in Finder</button>
+    <button class="lbl box" data-tray="renameAll">Rename all</button>
+    <button class="lbl box" data-tray="trashAll">Move all to Trash</button>
     <button class="lbl box" data-tray="clear">Clear tray</button>
   </div>
   <ul id="trayList"></ul>
@@ -435,11 +443,11 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 <div id="cursor" aria-hidden="true"><i></i><i></i></div>
 
 <script src="core.js"></script>
-<script src="hero.js"></script>
+<script src="landing.js"></script>
 <script>
 (() => {
 'use strict';
-const C = window.ArchiveCore, Hero = window.ArkhiveHero;
+const C = window.ArchiveCore, Landing = window.ArkhiveLanding;
 const TAURI = window.__TAURI__ && window.__TAURI__.core;
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
@@ -451,15 +459,13 @@ const SHEET_EASE = 'cubic-bezier(.76, 0, .18, 1)';
 const INK = '#261A14', MID = '#5C463B', MUTED = '#8A7367', FOREST = '#234434', GOLD = '#B89658', PAPER = '#EDE6DA', SHEET = '#F5EFE6';
 const mod = (a, n) => ((a % n) + n) % n;
 const ROOT = { name: 'FOLDERS', path: null }; // first crumb of every folder trail
-const HERO_KEYS = ['PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'FOLDERS'];
 const TEXT_EXT = new Set(['txt', 'md', 'csv', 'json', 'rs', 'py', 'ts', 'tsx', 'js', 'sql', 'rtf', 'cpp', 'css', 'html', 'swift', 'toml', 'yaml', 'yml', 'sh']);
 const TEXT_LIMIT = 256 * 1024, WALK_LIMIT = 5000, MAX_DEPTH = 4; // browser folder reader: per-file text, items, levels
-const SORTS = { relevance: 'Relevance', name: 'Name', newest: 'Newest', oldest: 'Oldest', largest: 'Size' };
-const GROUPS = [['all', 'All'], ['docs', 'Docs'], ['media', 'Media'], ['code', 'Code'], ['smart', 'Smart']];
-const FORMATS = [['ALL', 'All'], ['PDF', 'PDF'], ['PPTX', 'PPTX'], ['JPEG', 'JPEG'], ['DOCX', 'DOCX'], ['XLSX', 'XLSX'], ['CODE', 'Code'], ['FOLDERS', 'Folders']];
+const SORTS = { relevance: 'RELEVANCE', name: 'NAME (A–Z)', nameDesc: 'NAME (Z–A)', newest: 'DATE (NEWEST)', oldest: 'DATE (OLDEST)', largest: 'SIZE (LARGEST)' };
+const FORMATS = [['ALL', 'ALL FILES'], ['PDF', 'PDF'], ['PPTX', 'PPTX'], ['JPEG', 'JPEG / PNG'], ['DOCX', 'DOCX / TXT'], ['XLSX', 'XLSX / CSV'], ['CODE', 'CODE'], ['FOLDERS', 'FOLDERS']];
 
 // kind: what the file shelf shows ('vault' | 'search' | 'folder' | 'dropped'); trail: the folder path bar; tray: files staged for export
-const st = { mode: 'landing', busy: false, files: [], terms: null, sort: 'relevance', fmt: 'ALL', tab: 'all', ctx: '', kind: 'vault', trail: [], note: '', tray: [], detailFile: null, from: 'PDF' };
+const st = { mode: 'landing', busy: false, files: [], terms: null, sort: 'relevance', vsort: 'relevance', fmt: 'ALL', ctx: '', kind: 'vault', trail: [], note: '', tray: [], detailFile: null };
 const els = { hero: $('#hero'), vault: $('#vault'), tier2: $('#tier2'), chrome: $('#chrome'), detail: $('#detail'), q: $('#q'), tray: $('#tray'), sbox: $('#sbox') };
 // Browser preview: the folder the owner chose. Held in memory for this visit only.
 const local = { name: '', root: '', records: [], capped: false };
@@ -486,10 +492,16 @@ const hasFolder = () => !!TAURI || !!local.root;
 const catOf = (key) => C.CATEGORIES.find((c) => c.key === key);
 
 let toastTimer;
-function toast(msg) {
+function toast(msg, action) { // action: { label, run } adds one button, e.g. UNDO
   const t = $('#toast');
   t.textContent = msg; t.classList.add('on');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), 4600);
+  if (action) {
+    const b = document.createElement('button');
+    b.className = 'lbl toast-act'; b.textContent = action.label;
+    b.addEventListener('click', () => { t.classList.remove('on'); action.run(); });
+    t.append(' ', b);
+  }
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('on'), action ? 9000 : 4600);
 }
 const needsApp = (what) => toast(`${what} needs the desktop app. In the browser Arkhive can read a folder you choose, but it cannot open or change files.`);
 
@@ -537,6 +549,15 @@ function art(kind, seedName, text) {
   const r = rng(hash(seedName));
   let s = '';
   switch (kind) {
+    case 'ALL': { // every format at once: a wall of small files, one colour per kind
+      const tones = [FOREST, GOLD, MID, SHEET, MUTED];
+      s = R(0, 0, 200, 240, mix(PAPER, SHEET, 0.5));
+      for (let i = 0; i < 20; i++) {
+        const x = 18 + (i % 4) * 42, y = 18 + Math.floor(i / 4) * 42, c = tones[Math.floor(r() * tones.length)];
+        s += R(x, y, 32, 34, c, `stroke="${INK}"`) + R(x + 22, y, 10, 8, PAPER, `stroke="${INK}"`) + R(x + 5, y + 20, 14 + r() * 8, 3, c === SHEET ? MUTED : SHEET);
+      }
+      break;
+    }
     case 'PDF': case 'DOCX': case 'OTHER':
       s = page(r, 34, 18, 132, 204, { head: kind === 'DOCX' ? MID : FOREST });
       if (kind === 'PDF') s += R(130, 26, 26, 12, GOLD) + `<text x="143" y="35" font-size="8" text-anchor="middle" font-family="Inter Tight" font-weight="600" fill="${INK}">PDF</text>`;
@@ -615,7 +636,7 @@ function art(kind, seedName, text) {
   return svg(s);
 }
 function vaultArt(cat) { // a format vault: two back pages behind a sample cover
-  if (!cat.exts) return art(cat.key, cat.key);
+  if (!cat.exts || cat.key === 'ALL') return art(cat.key, cat.key);
   return svg(R(46, 12, 120, 190, mix(MID, PAPER, 0.5)) + R(40, 18, 120, 190, mix(MID, PAPER, 0.3)) +
     `<g transform="translate(22 30) scale(.82)">${art(cat.key, cat.key).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`);
 }
@@ -655,12 +676,10 @@ async function refreshSummaries() {
     toast(`Counting your files failed: ${err}`);
   }
   redrawVaults();
-  for (const key of HERO_KEYS) { const s = summary[key]; if (s && s.newest) cardPicture(key, s.newest); }
 }
 function redrawVaults() {
-  setItems(shelf1, C.categoriesForTab(st.tab), true);
-  Hero.refresh();
-  $('#navStatus').textContent = TAURI ? 'Spotlight index, this Mac' : local.root ? `Reading ${local.name}` : 'No folder chosen';
+  setItems(shelf1, C.sortVaults(C.CATEGORIES, summary, st.vsort), true);
+  renderDetails();
 }
 
 // ---------- previews: a real picture of a file, when one exists ----------
@@ -690,6 +709,7 @@ let coverTimer;
 function previewActiveCover() {
   clearTimeout(coverTimer);
   const f = activeItem(shelf2), index = activeIndex(shelf2);
+  if (f && !isDir(f)) setTimeout(() => { if (activeItem(shelf2) === f) fetchSnippet(f); }, 160);
   if (!f || isDir(f) || thumbNow(f)) return;
   coverTimer = setTimeout(async () => {
     const url = await thumbFor(f);
@@ -698,44 +718,56 @@ function previewActiveCover() {
   }, 160); // wait until the shelf has stopped on this file
 }
 
-// ---------- hero card faces: painted here, drawn by hero.js ----------
-const cardPic = {}; // vault key → an image to show on its card (generated art first, a real preview when one arrives)
+// Only the top few content matches arrive with a snippet; the rest ask for theirs when the shelf stops on them.
+async function fetchSnippet(f) {
+  if (!TAURI || f.snippet || f.snippetAsked || !st.terms || C.matchKind(f, st.terms) !== 'content') return;
+  f.snippetAsked = true;
+  try { f.snippet = await TAURI.invoke('snippet', { path: f.path, terms: st.terms }); }
+  catch (err) { console.info(`Arkhive: no snippet for ${f.name}: ${err}`); return; }
+  if (f.snippet && st.mode === 'files' && st.files.includes(f)) { applyFiles(true); if (activeItem(shelf2) === f) onActive(shelf2, 0); }
+}
+
 function loadImage(src) {
   return new Promise((resolve, reject) => { const img = new Image(); img.onload = () => resolve(img); img.onerror = () => reject(new Error('image did not load')); img.src = src; });
 }
-function paintCard(key, canvas) {
-  const c = catOf(key), g = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
-  g.fillStyle = SHEET; g.fillRect(0, 0, w, h);
-  g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3);
-  if ('letterSpacing' in g) g.letterSpacing = '0px';
-  g.textBaseline = 'alphabetic';
-  g.fillStyle = FOREST; g.font = '500 22px "Inter Tight", system-ui, sans-serif';
-  g.fillText('Vault', 30, 50);
-  const box = [30, 72, w - 60, 420], img = cardPic[key];
-  g.fillStyle = PAPER; g.fillRect(...box);
-  if (img) { // cover-fit, from the top of the page or picture
-    const scale = Math.max(box[2] / img.width, box[3] / img.height), sw = box[2] / scale, sh = box[3] / scale;
-    g.drawImage(img, (img.width - sw) / 2, 0, sw, sh, ...box);
+
+// ---------- DETAILS on the start screen: live facts only ----------
+const access = { state: null }; // null: not asked yet; 'asking'; { ... } from access_status; { error }
+async function checkAccess() {
+  if (!TAURI || access.state) return;
+  access.state = 'asking';
+  try { access.state = await TAURI.invoke('access_status'); }
+  catch (err) { access.state = { error: String(err) }; }
+  renderDetails();
+}
+function renderDetails() {
+  const all = summary.ALL;
+  let files;
+  if (!hasFolder()) files = 'No folder chosen. <button type="button" data-pick>CHOOSE FOLDER</button>';
+  else if (!all) files = 'Counting…';
+  else if (all.failed) files = 'Counting failed; open the vault to see why.';
+  else files = TAURI ? `${all.count.toLocaleString('en-US')} documents, images and code files found by Spotlight in Desktop, Documents, Downloads, Pictures and Movies.`
+    : `${all.count.toLocaleString('en-US')} documents, images and code files read from ${esc(local.name)}.`;
+  $('#dFiles').innerHTML = files;
+  $('#dReads').textContent = TAURI ? 'Names, dates and the text inside PDF, PPTX, DOCX, XLSX and code, plus text in images, through Spotlight.'
+    : 'Names, dates and the text of text files. Text inside PDFs and images needs the desktop app.';
+  const a = access.state;
+  let acc;
+  if (!TAURI) acc = 'Only the folder you choose, for this visit.';
+  else if (!a || a === 'asking') acc = 'Checking…';
+  else if (a.error) acc = `Unknown: ${esc(a.error)}`;
+  else {
+    const blocked = a.folders.filter((f) => !f.readable).map((f) => f.name);
+    acc = (blocked.length ? `Blocked: ${esc(blocked.join(', '))}.` : 'Desktop, Documents and Downloads are readable.') +
+      (a.full_disk ? ' Full Disk Access is on.' : ' Full Disk Access is off.') +
+      (blocked.length || !a.full_disk ? ' <button type="button" data-privacy>OPEN PRIVACY SETTINGS</button>' : '');
   }
-  g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(...box);
-  if ('letterSpacing' in g) g.letterSpacing = '-1px';
-  g.fillStyle = INK; g.font = '400 62px Newsreader, Georgia, serif';
-  g.fillText(c.label, 30, 568);
-  if ('letterSpacing' in g) g.letterSpacing = '0px';
-  g.fillStyle = MID; g.font = '500 22px "Inter Tight", system-ui, sans-serif';
-  g.fillText(countLabel(key), 30, 612);
-  g.fillStyle = GOLD; g.fillRect(30, 638, 64, 5);
+  $('#dAccess').innerHTML = acc;
 }
-async function cardArt(key) { // the vault's own drawn cover, until a real preview replaces it
-  const svgText = vaultArt(catOf(key)).replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="452" height="542" ');
-  try { cardPic[key] = cardPic[key] || await loadImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgText)); Hero.refresh(key); }
-  catch (err) { console.info(`Arkhive: card art for ${key} did not draw: ${err.message}`); }
-}
-async function cardPicture(key, file) {
-  const url = await thumbFor(file);
-  if (!url) return;
-  try { cardPic[key] = await loadImage(url); Hero.refresh(key); }
-  catch (err) { console.info(`Arkhive: preview for the ${key} card did not draw: ${err.message}`); }
+function toggleDetails(open = !$('#details').classList.contains('on')) {
+  $('#details').classList.toggle('on', open);
+  $('#detailsBtn').setAttribute('aria-expanded', String(open));
+  if (open) { renderDetails(); checkAccess(); }
 }
 
 // ---------- shelf faces ----------
@@ -892,7 +924,7 @@ function captionFor(sh) {
   const short = snip && st.terms ? C.snippetFor(snip, st.terms, 24, 60) : null;
   return [
     esc(it.name),
-    `${esc(KIND_NAME[C.categoryOf(it.ext)] || `${fmtOf(it)} file`)} · ${C.formatSize(it.size)}${short ? ` · match “${C.highlight(short, st.terms)}”` : ''}`,
+    `${esc(KIND_NAME[C.categoryOf(it.ext)] || `${fmtOf(it)} file`)} · ${C.formatSize(it.size)}${short ? ` · match <q class="sn">${C.highlight(short, st.terms)}</q>` : ''}`,
     `Modified ${C.formatDate(it.modified)} · ${where}`,
   ];
 }
@@ -1015,18 +1047,17 @@ async function sheet(el, rect, rot, ms, open, radius = 3) {
 }
 
 const canEnter = () => !st.busy && st.mode === 'landing';
-// The vault grows out of a hero card and the vault shelf rises into place with that card's vault pulled out.
-async function enterVault(key, cardEl, tab = 'all') {
-  if (st.busy || st.mode !== 'landing') return;
+// The vault grows out of the laptop screen and the vault shelf rises into place.
+async function enterVault() {
+  if (!canEnter()) return;
   st.busy = true;
-  st.from = key;
-  const rect = cardEl.getBoundingClientRect();
-  if (st.tab !== tab) { st.tab = tab; setItems(shelf1, C.categoriesForTab(tab)); }
-  const at = shelf1.items.findIndex((c) => c.key === key);
+  const rect = Landing.screenRect();
+  toggleDetails(false);
+  const at = shelf1.items.findIndex((c) => c.key === 'PDF'); // the vault opens on PDF; ALL FILES sits just before it
   if (at >= 0) shelf1.T = shelf1.s = at;
   setMode('vault');
   const rise = $('#shelf1').animate([{ transform: 'translateY(25%)' }, { transform: 'translateY(0)' }], { duration: dur(1050), delay: dur(440), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' });
-  await sheet(els.vault, rect, -4.5, 900, true, 4);
+  await sheet(els.vault, rect, -3.5, 950, true, 4);
   body.dataset.chrome = 'on';
   await rise.finished;
   st.busy = false;
@@ -1037,10 +1068,9 @@ async function backToStart() {
   st.busy = true;
   body.dataset.chrome = '';
   closeSearch(true);
-  Hero.reset();
+  closePills();
   setMode('landing');
-  Hero.frame(0); // place the cards before measuring the one to fold back into
-  await sheet(els.vault, Hero.cardEl(st.from).getBoundingClientRect(), -4.5, 900, false, 4);
+  await sheet(els.vault, Landing.screenRect(), -3.5, 950, false, 4);
   st.busy = false;
   setView('landing');
 }
@@ -1053,7 +1083,7 @@ function applyFiles(keep = false) {
   $('#emptyBtn').hidden = !(empty && !hasFolder());
   if (empty) {
     const [title, hint] = !hasFolder() ? ['No folder chosen', 'Choose a folder and its files appear here.']
-      : st.files.length ? [st.fmt === 'FOLDERS' ? 'No folders here' : `No ${(FORMATS.find(([v]) => v === st.fmt) || [, st.fmt])[1]} files here`, 'Choose All to see everything.']
+      : st.files.length ? [st.fmt === 'FOLDERS' ? 'No folders here' : `No ${(FORMATS.find(([v]) => v === st.fmt) || [, st.fmt])[1]} files here`, 'Choose ALL FILES to see everything.']
       : st.kind === 'search' ? [`No files match ${st.ctx.slice(7)}`, 'Try a broader word, or a related one: “lab” instead of “CBC”.']
       : st.kind === 'folder' ? ['This folder is empty', 'Files you add to it will appear here.']
       : ['This vault is empty', 'Files you add will appear here.'];
@@ -1131,7 +1161,7 @@ async function collapse() {
 }
 // Run a shelf job from wherever the owner is: the hero dives into the vault first, the inspector closes first.
 async function go(job) {
-  if (st.mode === 'landing') await enterVault(st.from, Hero.cardEl(st.from));
+  if (st.mode === 'landing') await enterVault();
   if (st.mode === 'detail') await closeDetail();
   return job();
 }
@@ -1238,6 +1268,7 @@ async function act(cmd) {
   if (cmd === 'tray') return trayAdd(f);
   if (cmd === 'rename') return startRename();
   if (cmd === 'trash') return pressTrash();
+  if (cmd === 'move') return moveToFolder(f);
   if (!TAURI) return needsApp('Opening files');
   try { await TAURI.invoke(cmd, { path: f.path }); toast(`${ACT_DONE[cmd]}: ${f.name}`); }
   catch (err) { toast(`${ACT_DONE[cmd].split(' ')[0]} failed: ${err}`); }
@@ -1256,17 +1287,29 @@ function startRename() {
   input.scrollLeft = 0;
 }
 function cancelRename() { delete els.detail.dataset.renaming; }
+// The shelf, the tray and the inspector hold the same record, so one update reaches all three.
+function applyRecord(f, rec) {
+  Object.assign(f, { name: rec.name, ext: rec.ext, path: rec.path, modified: rec.modified });
+  if (st.mode === 'detail' && st.detailFile === f) fillDetail(f);
+  applyFiles(true);
+  renderTray();
+}
+async function renameTo(f, newName) {
+  const was = f.name, wasPath = f.path;
+  applyRecord(f, await TAURI.invoke('rename_file', { path: f.path, newName }));
+  return { was, wasPath };
+}
 async function commitRename() {
   const f = st.detailFile, newName = $('#renameInput').value.trim();
   if (!f || newName === f.name) return cancelRename();
   try {
-    const was = f.name, rec = await TAURI.invoke('rename_file', { path: f.path, newName });
-    Object.assign(f, { name: rec.name, ext: rec.ext, path: rec.path, modified: rec.modified });
-    fillDetail(f);
+    const { was } = await renameTo(f, newName), now = f.name, at = f.path;
     $('#d-name').focus({ preventScroll: true });
-    applyFiles(true);  // the shelf and the tray hold this same record
-    renderTray();
-    toast(`Renamed ${was} to ${f.name}`);
+    toast(`Renamed ${was} to ${now}`, { label: 'UNDO', run: async () => {
+      // the backend checks the file is still there and that the old name is free again
+      if (f.path !== at) return toast(`${now} has changed since, so the rename was not undone.`);
+      try { await renameTo(f, was); toast(`Back to ${was}`); } catch (err) { toast(`Undo failed: ${err}`); }
+    } });
   } catch (err) { toast(`${f.name} was not renamed: ${err}`); $('#renameInput').focus(); }
 }
 $('#renameForm').addEventListener('submit', (e) => { e.preventDefault(); commitRename(); });
@@ -1298,6 +1341,18 @@ async function pressTrash() {
   toast(`Moved to the Trash: ${f.name}. Use Put Back in the Trash to undo.`);
   refreshSummaries();
 }
+async function moveToFolder(f) {
+  if (!TAURI) return needsApp('Moving files');
+  let dir;
+  try { dir = await TAURI.invoke('choose_folder', { prompt: 'move' }); }
+  catch (err) { return toast(`The folder dialog did not open: ${err}`); }
+  if (!dir) return; // cancelled
+  const from = dirOf(f.path);
+  try { applyRecord(f, await TAURI.invoke('move_file', { path: f.path, dir })); }
+  catch (err) { return toast(`${f.name} was not moved: ${err}`); }
+  if (st.kind === 'folder' && st.trail.length && st.trail[st.trail.length - 1].path === from) { st.files = st.files.filter((x) => x !== f); applyFiles(true); }
+  toast(`Moved ${f.name} to ${C.tilde(dir)}`);
+}
 $('#d-path').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-dir]');
   if (!b || st.busy) return;
@@ -1311,8 +1366,10 @@ function renderTray() {
   const n = st.tray.length, open = n > 0 || !!dragFile;
   body.dataset.tray = n;
   $('#trayN').textContent = plural(n, 'file');
-  $('#trayList').innerHTML = st.tray.map((f) =>
-    `<li><span class="box lbl">${esc(fmtOf(f).slice(0, 5))}</span><b>${esc(f.name)}</b><span class="lbl sz">${C.formatSize(f.size)}</span></li>`).join('');
+  $('#trayList').innerHTML = st.tray.map((f, i) =>
+    `<li><span class="box lbl">${esc(fmtOf(f).slice(0, 5))}</span><b>${esc(f.name)}</b>` +
+    `<button class="rm" data-rm="${i}" aria-label="Remove ${esc(f.name)} from the tray"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" stroke-width="1.4"/></svg></button>` +
+    `<span class="lbl sz">${C.formatSize(f.size)}</span></li>`).join('');
   els.tray.classList.toggle('on', open);
   els.tray.inert = !open;
   if (!open) els.tray.classList.remove('over');
@@ -1331,6 +1388,41 @@ const TRAY_ACTS = {
     try { toast(`Exported ${plural(paths.length, 'file')} to ${C.tilde(await TAURI.invoke('export_files', { paths }))}`); }
     catch (err) { toast(`Export failed: ${err}`); }
   },
+  async exportTo(paths) {
+    if (!TAURI) return needsApp('Exporting');
+    let dest;
+    try { dest = await TAURI.invoke('choose_folder', { prompt: 'export' }); }
+    catch (err) { return toast(`The folder dialog did not open: ${err}`); }
+    if (!dest) return;
+    try { toast(`Exported ${plural(paths.length, 'file')} to ${C.tilde(await TAURI.invoke('export_files', { paths, dest }))}`); }
+    catch (err) { toast(`Export failed: ${err}`); }
+  },
+  renameAll() {
+    if (!TAURI) return needsApp('Renaming files');
+    const form = $('#batchForm');
+    form.hidden = !form.hidden;
+    if (!form.hidden) $('#batchName').focus();
+  },
+  async trashAll() {
+    if (!TAURI) return needsApp('Moving files to the Trash');
+    const btn = $('[data-tray="trashAll"]');
+    if (!btn.classList.contains('armed')) {
+      btn.classList.add('armed'); btn.textContent = 'Press again to trash all';
+      clearTimeout(trayTrashTimer); trayTrashTimer = setTimeout(disarmTrayTrash, 4500);
+      return;
+    }
+    disarmTrayTrash();
+    const done = [], failed = [];
+    for (const f of [...st.tray]) {
+      try { await TAURI.invoke('trash_file', { path: f.path }); done.push(f); } catch (err) { failed.push(`${f.name} (${err})`); }
+    }
+    st.tray = st.tray.filter((f) => !done.includes(f));
+    st.files = st.files.filter((f) => !done.includes(f));
+    renderTray();
+    if (st.mode === 'files') applyFiles(true);
+    toast(`Moved ${plural(done.length, 'file')} to the Trash.` + (failed.length ? ` Not moved: ${failed.join('; ')}` : ' Use Put Back in the Trash to undo.'));
+    refreshSummaries();
+  },
   async copy(paths) {
     try {
       if (!navigator.clipboard) throw new Error('this window has no clipboard access');
@@ -1345,10 +1437,32 @@ const TRAY_ACTS = {
   },
   clear() { st.tray = []; renderTray(); },
 };
+let trayTrashTimer;
+function disarmTrayTrash() { clearTimeout(trayTrashTimer); const b = $('[data-tray="trashAll"]'); b.classList.remove('armed'); b.textContent = 'Move all to Trash'; }
 els.tray.addEventListener('click', (e) => {
+  const rm = e.target.closest('[data-rm]');
+  if (rm) { st.tray.splice(Number(rm.dataset.rm), 1); return renderTray(); }
   const b = e.target.closest('[data-tray]');
   if (b) TRAY_ACTS[b.dataset.tray](st.tray.map((f) => f.path));
 });
+// Rename all: "<base> 1.ext", "<base> 2.ext", … in tray order; a taken name moves on to the next number.
+$('#batchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const base = $('#batchName').value.trim();
+  if (!base) return toast('Type a base name first, like “Lab results”.');
+  let n = 1, renamed = 0;
+  const failed = [];
+  for (const f of [...st.tray]) {
+    const ext = f.name.includes('.') ? f.name.slice(f.name.lastIndexOf('.')) : '';
+    for (let tries = 0; ; tries++, n++) {
+      try { await renameTo(f, `${base} ${n}${ext}`); renamed++; n++; break; }
+      catch (err) { if (!/already exists/.test(String(err)) || tries >= 50) { failed.push(`${f.name} (${err})`); break; } }
+    }
+  }
+  $('#batchForm').hidden = true;
+  toast(`Renamed ${plural(renamed, 'file')}.` + (failed.length ? ` Not renamed: ${failed.join('; ')}` : ''));
+});
+$('#batchName').addEventListener('keydown', (e) => { if (e.key === 'Escape') { e.stopPropagation(); $('#batchForm').hidden = true; } });
 
 // ---------- drag out, drop in ----------
 // A mouse press on the pulled-out cover or the inspector preview that moves 6px becomes a file drag. In the desktop app the
@@ -1400,56 +1514,70 @@ if (TAURI && window.__TAURI__.event) {
   window.__TAURI__.event.listen('tauri://drag-drop', (e) => onNativeDrop(e.payload)).catch((err) => toast(`Dropping files in is unavailable: ${err}`));
 }
 
-// ---------- pills: SORT and FILES widen inline to show their options ----------
-const pillSort = $('#pillSort'), pillFiles = $('#pillFiles');
+// ---------- SORT and FILE TYPES: press to unfold, choose to fold ----------
+const pillSort = $('#pillSort'), pillFiles = $('#pillFiles'), PILLS = [pillSort, pillFiles];
 function moveInd(pill) {
   const on = pill.querySelector('[aria-pressed="true"]'), ind = pill.querySelector('.ind');
   ind.style.width = (on ? on.offsetWidth : 0) + 'px';
   ind.style.transform = `translateX(${on ? on.offsetLeft : 0}px)`;
 }
+// On the vault shelf FILE TYPES counts each type's vault; on a file shelf, the files on show.
+function typeCounts() {
+  if (st.mode !== 'vault') return C.formatCounts(st.files);
+  const out = {};
+  for (const [v] of FORMATS) { const s = summary[v]; out[v] = s && !s.failed ? s.count : null; }
+  return out;
+}
 function drawPills() {
-  const vault = st.mode === 'vault', folderish = st.kind === 'folder' || st.kind === 'dropped';
-  pillSort.hidden = vault;
-  // FILES filters vault groups on the vault shelf and formats on a file shelf; Folders only where folders are listed
-  const group = vault ? 'tab' : 'fmt', value = vault ? st.tab : st.fmt;
-  const opts = (vault ? GROUPS : FORMATS).filter(([v]) => v !== 'FOLDERS' || folderish);
+  const vault = st.mode === 'vault', sort = vault ? st.vsort : st.sort, fmt = vault ? 'ALL' : st.fmt, counts = typeCounts();
   const box = $('#fileOpts');
-  if (box.dataset.group !== group || box.dataset.n !== String(opts.length)) {
-    box.dataset.group = group; box.dataset.n = opts.length;
-    box.innerHTML = '<span class="ind"></span>' + opts.map(([v, label]) => `<button class="lbl" data-v="${v}">${label}</button>`).join('');
+  if (!box.querySelector('[data-v]')) box.insertAdjacentHTML('beforeend', FORMATS.map(([v, l]) => `<button class="lbl" data-v="${v}"><span class="o">${l}</span><span class="n"></span></button>`).join(''));
+  for (const b of box.querySelectorAll('[data-v]')) {
+    b.setAttribute('aria-pressed', String(b.dataset.v === fmt));
+    const n = counts[b.dataset.v];
+    b.querySelector('.n').textContent = n == null ? '' : n.toLocaleString('en-US');
   }
-  for (const b of box.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === value));
-  for (const b of pillSort.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === st.sort));
-  pillSort.querySelector('.pill-label').textContent = `Sort · ${SORTS[st.sort]}`;
-  pillFiles.querySelector('.pill-label').textContent = `Files · ${(opts.find(([v]) => v === value) || opts[0])[1]}`;
+  for (const b of pillSort.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === sort));
+  pillSort.querySelector('.pill-label').textContent = `SORT · ${SORTS[sort]}`;
+  pillFiles.querySelector('.pill-label').textContent = `FILE TYPES · ${FORMATS.find(([v]) => v === fmt)[1]}`;
   moveInd(pillSort); moveInd(pillFiles);
+}
+function closePills() {
+  let was = false;
+  for (const p of PILLS) if (p.hasAttribute('data-open')) { was = true; p.removeAttribute('data-open'); p.querySelector('.pill-label').setAttribute('aria-expanded', 'false'); }
+  return was;
+}
+// FILE TYPES on the vault shelf opens that type's vault.
+async function openType(key) {
+  const at = shelf1.items.findIndex((c) => c.key === key);
+  if (at < 0) return;
+  shelf1.T = shelf1.s = at;
+  updateShelf(shelf1, 0);
+  await openCategory();
 }
 function choose(pill, b) {
   if (st.busy) return;
   const group = b.parentElement.dataset.group, v = b.dataset.v;
-  if (group === 'sort') { st.sort = v; applyFiles(); }
-  else if (group === 'fmt') { st.fmt = v; applyFiles(); }
-  else { st.tab = v; setItems(shelf1, C.categoriesForTab(v)); drawPills(); }
-  // fold the pill back to its label, even though the pointer is still on it
-  pill.removeAttribute('data-open');
-  pill.setAttribute('data-shut', '');
+  closePills();
   if (pill.contains(document.activeElement)) document.activeElement.blur();
+  if (group === 'sort' && st.mode === 'vault') { st.vsort = v; setItems(shelf1, C.sortVaults(C.CATEGORIES, summary, v)); drawPills(); }
+  else if (group === 'sort') { st.sort = v; applyFiles(); }
+  else if (st.mode === 'vault') { drawPills(); openType(v); }
+  else { st.fmt = v; applyFiles(); }
 }
-for (const pill of [pillSort, pillFiles]) {
+for (const pill of PILLS) {
   const label = pill.querySelector('.pill-label');
   pill.addEventListener('click', (e) => {
     const b = e.target.closest('[data-v]');
     if (b) return choose(pill, b);
-    if (e.target.closest('.pill-label')) { // tap or keyboard: the label toggles the pill
-      pill.removeAttribute('data-shut');
-      const open = pill.toggleAttribute('data-open');
-      label.setAttribute('aria-expanded', String(open));
-      for (const other of [pillSort, pillFiles]) if (other !== pill) other.removeAttribute('data-open');
+    if (e.target.closest('.pill-label')) {
+      const open = !pill.hasAttribute('data-open');
+      closePills();
+      if (open) { pill.setAttribute('data-open', ''); label.setAttribute('aria-expanded', 'true'); moveInd(pill); }
     }
   });
-  pill.addEventListener('pointerleave', () => { pill.removeAttribute('data-shut'); });
 }
-document.addEventListener('pointerdown', (e) => { for (const pill of [pillSort, pillFiles]) if (!pill.contains(e.target)) pill.removeAttribute('data-open'); }, true);
+document.addEventListener('pointerdown', (e) => { if (!PILLS.some((p) => p.contains(e.target))) closePills(); }, true);
 $('#ctx').addEventListener('click', (e) => {
   const crumb = e.target.closest('[data-crumb]');
   if (crumb && !crumb.hasAttribute('aria-current')) showFolder(st.trail.slice(0, Number(crumb.dataset.crumb) + 1));
@@ -1571,10 +1699,11 @@ addEventListener('keydown', (e) => {
   }
   const onButton = e.target.closest && e.target.closest('button');
   if (st.mode === 'landing') {
-    if (e.key === 'Enter' && !onButton) $('#archiveLink').click();
-    else if (plain && Hero.key(e)) e.preventDefault();
+    if (e.key === 'Enter' && !onButton) enterVault();
+    else if (e.key === 'Escape') toggleDetails(false);
     return;
   }
+  if (e.key === 'Escape' && closePills()) return;
   const sh = currentShelf();
   if (e.key === 'Enter' && !onButton) openActive();
   else if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && sh && sh.total) { e.preventDefault(); sh.T = Math.round(sh.T) + (e.key === 'ArrowRight' ? 1 : -1); }
@@ -1606,7 +1735,7 @@ function frame(now) {
   cur.x += (cur.tx - cur.x) * follow;
   cur.y += (cur.ty - cur.y) * follow;
   cur.el.style.transform = `translate3d(${cur.x.toFixed(1)}px, ${cur.y.toFixed(1)}px, 0)`;
-  if (st.mode === 'landing' || els.vault.style.visibility !== 'visible') Hero.frame(dt); // the hero also shows behind the opening sheet
+  if (st.mode === 'landing' || els.vault.style.visibility !== 'visible') Landing.frame(dt); // the scene also shows behind the opening sheet
   if (els.vault.style.visibility === 'visible' && st.mode !== 'detail') updateShelf(shelf1, dt);
   if (els.tier2.style.visibility === 'visible' && st.mode !== 'detail') updateShelf(shelf2, dt);
   if (ink) {
@@ -1623,21 +1752,22 @@ function frame(now) {
 
 // ---------- boot ----------
 measure();
-setItems(shelf1, C.categoriesForTab('all'));
-Hero.init({
-  keys: HERO_KEYS, reduce, storyAt: C.storyAt, paint: paintCard,
-  label: (key) => `Open the ${catOf(key).label} vault` + (countLabel(key) ? `, ${countLabel(key).toLowerCase()}` : ''),
-  onEnter: (key, el) => canEnter() && (enterVault(key, el), true),
-  onPresets: (el) => canEnter() && (enterVault('MEDICAL', el, 'smart'), true),
+setItems(shelf1, C.CATEGORIES);
+Landing.init({ reduce, onEnter: enterVault });
+$('#enterBtn').addEventListener('click', enterVault);
+$('#detailsBtn').addEventListener('click', () => toggleDetails());
+$('#details').addEventListener('click', (e) => {
+  if (e.target.closest('[data-pick]')) pickFolder();
+  else if (e.target.closest('[data-privacy]')) TAURI.invoke('open_privacy_settings').catch((err) => toast(`Privacy settings did not open: ${err}`));
+  else if (e.target.closest('#dTry button')) submitQuery(e.target.textContent);
 });
 renderTray();
 showMic();
 updateCount();
 setMode('landing');
-HERO_KEYS.forEach(cardArt);
 refreshSummaries();
-addEventListener('resize', () => { measure(); drawPills(); });
-document.fonts.ready.then(() => { Hero.refresh(); drawPills(); }); // card faces and pill widths depend on the loaded fonts
+addEventListener('resize', () => { measure(); drawPills(); Landing.resize(); });
+document.fonts.ready.then(drawPills); // pill widths depend on the loaded fonts
 requestAnimationFrame(frame);
 })();
 </script>

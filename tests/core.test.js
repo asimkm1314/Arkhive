@@ -19,9 +19,9 @@ test('categoryOf maps extensions to format categories', () => {
   for (const [ext, cat] of Object.entries(cases)) assert.equal(C.categoryOf(ext), cat, ext);
 });
 
-test('there are 12 categories with unique keys', () => {
-  assert.equal(C.CATEGORIES.length, 12);
-  assert.equal(new Set(C.CATEGORIES.map((c) => c.key)).size, 12);
+test('there are 13 categories with unique keys', () => {
+  assert.equal(C.CATEGORIES.length, 13);
+  assert.equal(new Set(C.CATEGORIES.map((c) => c.key)).size, 13);
 });
 
 test('shelf smooth step B(r)', () => {
@@ -142,7 +142,7 @@ test('filesInCategory: format, smart cluster, recent', () => {
 
 test('categoriesForTab', () => {
   const keys = (t) => C.categoriesForTab(t).map((c) => c.key);
-  assert.equal(keys('all').length, 12);
+  assert.equal(keys('all').length, 13);
   assert.deepEqual(keys('docs'), ['PDF', 'PPTX', 'DOCX']);
   assert.deepEqual(keys('media'), ['JPEG', 'MEDIA']);
   assert.deepEqual(keys('code'), ['XLSX', 'CODE', 'ZIP']);
@@ -212,9 +212,9 @@ test('cleanQuery keeps combining marks and single CJK characters', () => {
 
 // ---------- 002 Arkhive: categories (T002) ----------
 
-test('category shelf holds the 12 Arkhive vaults in order', () => {
+test('category shelf holds the 13 Arkhive vaults in order, All files first', () => {
   assert.deepEqual(C.CATEGORIES.map((c) => c.key),
-    ['PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'CODE', 'FOLDERS', 'MEDICAL', 'MEDIA', 'ZIP', 'PROJECTS', 'RECENT']);
+    ['ALL', 'PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'CODE', 'FOLDERS', 'MEDICAL', 'MEDIA', 'ZIP', 'PROJECTS', 'RECENT']);
   const label = (k) => C.CATEGORIES.find((c) => c.key === k).label;
   assert.equal(label('ZIP'), 'ARCHIVES');
   assert.equal(label('MEDICAL'), 'MEDICAL / HEALTH');
@@ -355,11 +355,39 @@ test('pathCrumbs lists the folders above a file, with the home folder as ~', () 
   assert.deepEqual(C.pathCrumbs('/a.pdf'), []);
 });
 
-test('storyAt maps scroll position to one of four stages and the progress inside it', () => {
-  assert.deepEqual(C.storyAt(0), { stage: 0, t: 0 });
-  assert.deepEqual(C.storyAt(0.125), { stage: 0, t: 0.5 });
-  assert.deepEqual(C.storyAt(0.5), { stage: 2, t: 0 });
-  assert.deepEqual(C.storyAt(1), { stage: 3, t: 1 });
-  assert.deepEqual(C.storyAt(1.4), { stage: 3, t: 1 }, 'clamped above');
-  assert.deepEqual(C.storyAt(-1), { stage: 0, t: 0 }, 'clamped below');
+
+// ---------- 004 Sort / File types (T040) ----------
+
+test('ALL FILES vault covers every format extension and stays under the 40-extension limit', () => {
+  const all = C.CATEGORIES.find((c) => c.key === 'ALL');
+  assert.equal(all.label, 'ALL FILES');
+  for (const k of ['PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'CODE']) {
+    for (const e of C.CATEGORIES.find((c) => c.key === k).exts) assert.ok(all.exts.includes(e), e);
+  }
+  assert.ok(all.exts.length <= 40);
+  assert.equal(all.group, null);
+});
+
+test('sortFiles nameDesc is the reverse of name, folders still first', () => {
+  const files = [{ name: 'a9.jpg', modified: 3, size: 1 }, { name: 'b.pdf', modified: 2, size: 2 }, { name: 'a10.pdf', modified: 1, size: 3 }, { name: 'Zed', kind: 'dir', modified: 0, size: 0 }];
+  assert.deepEqual(C.sortFiles(files, 'nameDesc').map((f) => f.name), ['Zed', 'b.pdf', 'a10.pdf', 'a9.jpg']);
+});
+
+test('sortVaults orders vaults by label, newest file or total size; relevance keeps the standard order', () => {
+  const cats = C.CATEGORIES.filter((c) => ['PDF', 'JPEG', 'CODE'].includes(c.key));
+  const summary = { PDF: { count: 2, bytes: 50, newest: { modified: 10 } }, JPEG: { count: 9, bytes: 900, newest: { modified: 30 } }, CODE: undefined };
+  const keys = (by) => C.sortVaults(cats, summary, by).map((c) => c.key);
+  assert.deepEqual(keys('relevance'), ['PDF', 'JPEG', 'CODE']);
+  assert.deepEqual(keys('name'), ['CODE', 'JPEG', 'PDF']);
+  assert.deepEqual(keys('nameDesc'), ['PDF', 'JPEG', 'CODE']);
+  assert.deepEqual(keys('newest'), ['JPEG', 'PDF', 'CODE'], 'uncounted vaults go last');
+  assert.deepEqual(keys('oldest'), ['PDF', 'JPEG', 'CODE']);
+  assert.deepEqual(keys('largest'), ['JPEG', 'PDF', 'CODE']);
+  assert.notEqual(C.sortVaults(cats, summary, 'name'), cats, 'returns a new array');
+});
+
+test('formatCounts counts a shelf by file type, folders separately', () => {
+  const f = (name, ext, kind = 'file') => ({ name, ext, kind });
+  const counts = C.formatCounts([f('a', 'pdf'), f('b', 'png'), f('c', 'heic'), f('d', 'md'), f('e', 'csv'), f('g', 'rs'), f('h', 'mov'), f('Dir', '', 'dir')]);
+  assert.deepEqual(counts, { ALL: 8, PDF: 1, PPTX: 0, JPEG: 2, DOCX: 1, XLSX: 1, CODE: 1, FOLDERS: 1 });
 });

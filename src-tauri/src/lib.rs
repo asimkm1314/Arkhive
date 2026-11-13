@@ -71,7 +71,7 @@ fn valid_ext(e: &str) -> bool {
 }
 
 fn validate(terms: &[String], exts: &[String], days: Option<u32>) -> Result<(), String> {
-    if terms.len() > 16 || exts.len() > 20 {
+    if terms.len() > 16 || exts.len() > 40 {
         return Err("too many terms or extensions".into());
     }
     if let Some(t) = terms.iter().find(|t| !valid_term(t)) {
@@ -321,7 +321,6 @@ fn trash_args(path: &Path) -> Vec<String> {
 }
 
 /// First name in `dest` not taken: "a.txt", "a 2.txt", "a 3.txt", …
-#[cfg(any(target_os = "macos", test))]
 fn free_name(dest: &Path, src: &Path) -> PathBuf {
     let stem = src.file_stem().unwrap_or_default().to_string_lossy();
     let ext = src.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
@@ -363,6 +362,48 @@ fn export_into(parent: &Path, paths: &[String]) -> Result<PathBuf, String> {
     Ok(dest)
 }
 
+/// Moves a file into `dir`. Never replaces a file there ("x.txt" becomes "x 2.txt").
+fn move_into(path: &str, dir: &str) -> Result<PathBuf, String> {
+    let from = check_file(path)?;
+    let dest = check_dir(dir)?;
+    let same = |a: &Path, b: &Path| a.canonicalize().ok() == b.canonicalize().ok();
+    if from.parent().is_some_and(|p| same(p, &dest)) {
+        return Err("the file is already in that folder".into());
+    }
+    let to = free_name(&dest, &from);
+    match std::fs::rename(&from, &to) {
+        Ok(()) => Ok(to),
+        // another disk: copy, and remove the original only once the copy is complete
+        Err(e) if e.raw_os_error() == Some(18) => {
+            std::fs::copy(&from, &to).map_err(|e| format!("move failed while copying: {e}"))?;
+            std::fs::remove_file(&from).map_err(|e| format!("copied to {}, but the original could not be removed: {e}", to.display()))?;
+            Ok(to)
+        }
+        Err(e) => Err(format!("move failed: {e}")),
+    }
+}
+
+/// The text around the first matching word in one file, for a match that came back without a snippet.
+fn snippet_for(path: &str, terms: &[String]) -> Result<Option<String>, String> {
+    if terms.is_empty() {
+        return Err("no terms".into());
+    }
+    validate(terms, &[], None)?;
+    let file = check_file(path)?;
+    let terms: Vec<String> = terms.iter().map(|t| t.to_lowercase()).collect();
+    Ok(file_text(&file.to_string_lossy()).and_then(|t| snippet_around(&t, &terms)))
+}
+
+/// osascript arguments for the system folder dialog. The prompt is picked by key, never taken from the page.
+fn folder_dialog_args(key: &str) -> Result<Vec<String>, String> {
+    let prompt = match key {
+        "move" => "Move the file to this folder",
+        "export" => "Export copies into this folder",
+        _ => return Err("unknown folder prompt".into()),
+    };
+    Ok(vec!["-e".into(), format!("POSIX path of (choose folder with prompt \"{prompt}\")")])
+}
+
 /// Relevance desc, then newest first; keeps the top MAX_HITS. `bool` = matched by contents.
 fn rank(scores: HashMap<String, (u32, bool)>) -> Vec<(FileHit, bool)> {
     let mut hits: Vec<(FileHit, bool)> =
@@ -398,6 +439,15 @@ fn file_text(path: &str) -> Option<String> {
             None
         }
     }
+}
+
+/// Off macOS: the file's own text, when it is text.
+#[cfg(not(target_os = "macos"))]
+fn file_text(path: &str) -> Option<String> {
+    use std::io::Read;
+    let mut buf = Vec::new();
+    std::fs::File::open(path).ok()?.take(256 * 1024).read_to_end(&mut buf).ok()?;
+    String::from_utf8(buf).ok()
 }
 
 #[cfg(target_os = "macos")]
@@ -598,14 +648,18 @@ fn trash(path: &str) -> Result<(), String> {
 }
 
 #[cfg(target_os = "macos")]
-fn export(paths: &[String]) -> Result<String, String> {
-    let dest = export_into(&home()?.join("Downloads"), paths)?.to_string_lossy().to_string();
+fn export(paths: &[String], dest: Option<&str>) -> Result<String, String> {
+    let parent = match dest {
+        Some(d) => check_dir(d)?,
+        None => home()?.join("Downloads"),
+    };
+    let dest = export_into(&parent, paths)?.to_string_lossy().to_string();
     native("/usr/bin/open", &[], &dest, true).map_err(|e| format!("exported to {dest}, but could not show it: {e}"))?;
     Ok(dest)
 }
 
 #[cfg(not(target_os = "macos"))]
-fn export(_paths: &[String]) -> Result<String, String> {
+fn export(_paths: &[String], _dest: Option<&str>) -> Result<String, String> {
     Err("not available on iOS yet".into())
 }
 
@@ -705,8 +759,44 @@ async fn trash_file(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn export_files(paths: Vec<String>) -> Result<String, String> {
-    tauri::async_runtime::spawn_blocking(move || export(&paths)).await.map_err(|e| format!("export crashed: {e}"))?
+async fn export_files(paths: Vec<String>, dest: Option<String>) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || export(&paths, dest.as_deref())).await.map_err(|e| format!("export crashed: {e}"))?
+}
+
+#[tauri::command]
+fn move_file(path: String, dir: String) -> Result<FileHit, String> {
+    let to = move_into(&path, &dir)?;
+    record(&to, 0).ok_or_else(|| format!("moved, but could not read {}", to.display()))
+}
+
+#[tauri::command]
+async fn snippet(path: String, terms: Vec<String>) -> Result<Option<String>, String> {
+    tauri::async_runtime::spawn_blocking(move || snippet_for(&path, &terms)).await.map_err(|e| format!("snippet crashed: {e}"))?
+}
+
+/// The system folder dialog. `None` when the owner cancels.
+#[cfg(target_os = "macos")]
+#[tauri::command]
+async fn choose_folder(prompt: String) -> Result<Option<String>, String> {
+    let args = folder_dialog_args(&prompt)?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let out = Command::new("/usr/bin/osascript").args(&args).output().map_err(|e| format!("folder dialog failed: {e}"))?;
+        if out.status.success() {
+            let path = String::from_utf8_lossy(&out.stdout).trim().trim_end_matches('/').to_string();
+            return Ok(Some(if path.is_empty() { "/".into() } else { path }));
+        }
+        let err = String::from_utf8_lossy(&out.stderr);
+        if err.contains("-128") { Ok(None) } else { Err(format!("folder dialog failed: {}", err.trim())) }
+    })
+    .await
+    .map_err(|e| format!("folder dialog crashed: {e}"))?
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+async fn choose_folder(prompt: String) -> Result<Option<String>, String> {
+    folder_dialog_args(&prompt)?;
+    Err("not available on iOS yet".into())
 }
 
 /// async so it runs off the main thread: the drag itself must start on the main thread, and we wait for it.
@@ -738,7 +828,7 @@ pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             search_files, open_file, reveal_file, quick_look, list_dir, stat_paths, export_files, start_native_drag, vault_summary, thumbnail,
-            rename_file, trash_file
+            rename_file, trash_file, move_file, snippet, choose_folder
         ])
         .run(tauri::generate_context!())
         .expect("error while running Arkhive");
@@ -785,6 +875,11 @@ mod tests {
         assert!(validate(&many, &[], None).is_err());
         assert!(validate(&[], &[], Some(0)).is_err());
         assert!(validate(&[], &[], Some(4000)).is_err());
+        // the ALL FILES vault sends 25 extensions; 40 is the cap
+        let exts: Vec<String> = (0..40).map(|i| format!("e{i}")).collect();
+        assert!(validate(&[], &exts, None).is_ok());
+        let exts: Vec<String> = (0..41).map(|i| format!("e{i}")).collect();
+        assert!(validate(&[], &exts, None).is_err());
     }
 
     #[test]
@@ -1094,5 +1189,50 @@ mod tests {
         assert_eq!(check_path("relative/file.pdf"), Err("not an absolute path".into()));
         assert!(check_path("/definitely/not/here.pdf").unwrap_err().starts_with("file not found"));
         std::fs::remove_file(f).unwrap();
+    }
+
+    // ---------- 004 follow-ups (T047) ----------
+
+    #[test]
+    fn move_into_moves_and_never_replaces_a_file() {
+        let d = tmp("move");
+        std::fs::create_dir(d.join("a")).unwrap();
+        std::fs::create_dir(d.join("b")).unwrap();
+        std::fs::write(d.join("a/x.txt"), "moved").unwrap();
+        std::fs::write(d.join("b/x.txt"), "kept").unwrap();
+        let to = move_into(&p(&d.join("a/x.txt")), &p(&d.join("b"))).unwrap();
+        assert_eq!(to, d.join("b/x 2.txt"));
+        assert_eq!(std::fs::read_to_string(&to).unwrap(), "moved");
+        assert_eq!(std::fs::read_to_string(d.join("b/x.txt")).unwrap(), "kept");
+        assert!(!d.join("a/x.txt").exists());
+    }
+
+    #[test]
+    fn move_into_refuses_the_same_folder_a_missing_folder_and_a_folder_as_source() {
+        let d = tmp("move_refuse");
+        std::fs::write(d.join("x.txt"), "x").unwrap();
+        assert_eq!(move_into(&p(&d.join("x.txt")), &p(&d)), Err("the file is already in that folder".into()));
+        assert!(move_into(&p(&d.join("x.txt")), &p(&d.join("nope"))).unwrap_err().starts_with("file not found"));
+        std::fs::create_dir(d.join("sub")).unwrap();
+        assert!(move_into(&p(&d.join("sub")), &p(&d)).unwrap_err().starts_with("not a file"));
+        assert!(d.join("x.txt").exists());
+    }
+
+    #[test]
+    fn snippet_for_checks_terms_and_the_file_first() {
+        assert!(snippet_for("/no/such/file.txt", &s(&["blood"])).unwrap_err().starts_with("file not found"));
+        let d = tmp("snippet");
+        std::fs::write(d.join("a.txt"), "x").unwrap();
+        assert!(snippet_for(&p(&d.join("a.txt")), &s(&["bad\""])).unwrap_err().starts_with("invalid term"));
+        assert!(snippet_for(&p(&d.join("a.txt")), &[]).is_err());
+    }
+
+    #[test]
+    fn folder_dialog_prompts_are_fixed_text_chosen_by_key() {
+        let a = folder_dialog_args("move").unwrap();
+        assert_eq!(a[0], "-e");
+        assert!(a[1].contains("choose folder with prompt \"Move the file to this folder\""));
+        assert!(folder_dialog_args("export").unwrap()[1].contains("Export copies"));
+        assert!(folder_dialog_args("\" & do shell script \"x").is_err());
     }
 }

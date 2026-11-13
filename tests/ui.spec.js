@@ -1,4 +1,4 @@
-// Acceptance flows from specs/003-arkhive-prism/spec.md, run against app/index.html from file://.
+// Acceptance flows from specs/003-arkhive-prism and specs/004-arkhive-workspace, run against app/index.html from file://.
 // The app ships no file data, so each test supplies files one of two ways:
 //   - browser path: a stand-in for the folder picker, built from tests/fixtures;
 //   - desktop path: a stand-in for the Tauri backend, answering the same commands from the same fixture.
@@ -11,11 +11,6 @@ const BLOOD = 'Hey Arkhive, find the file which has blood related';
 const CBC = 'CBC_Blood_Panel_Report_Nov2026.pdf';
 const PIXEL_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
-const THREE = path.resolve(__dirname, '../app/vendor/three.module.min.js');
-// The page opened from file:// asks the CDN for the pinned library; answer from the vendored copy so tests run offline.
-test.beforeEach(async ({ page }) => {
-  await page.route('**/three.module.min.js', (route) => route.fulfill({ path: THREE, contentType: 'text/javascript', headers: { 'access-control-allow-origin': '*' } }));
-});
 
 const view = (page, v) => expect(page.locator('body')).toHaveAttribute('data-view', v, { timeout: 8000 });
 const active = (page, v) => expect(page.locator('body')).toHaveAttribute('data-active', v);
@@ -61,7 +56,7 @@ async function installDesktop(page, opts = {}) {
     const C = () => window.ArchiveCore;
     const gone = new Set();
     window.__calls = [];
-    const send = ({ text, ...rec }) => rec; // the real backend never sends a file's whole text
+    const send = ({ text, ...rec }) => (opts.noSnippets ? { ...rec, snippet: null } : rec); // the real backend never sends a file's whole text
     const match = ({ terms, exts, days }) => {
       let list = all().filter((f) => f.kind === 'file' && !gone.has(f.path));
       if (exts.length) list = list.filter((f) => exts.includes(f.ext));
@@ -90,7 +85,17 @@ async function installDesktop(page, opts = {}) {
         return send(f);
       },
       trash_file: ({ path }) => { gone.add(path); return null; },
+      snippet: ({ path, terms }) => C().snippetFor(all().find((f) => f.path === path).text, terms),
+      choose_folder: ({ prompt }) => (opts.pick ? opts.pick[prompt] ?? null : null),
+      move_file: ({ path, dir }) => {
+        const f = all().find((x) => x.path === path);
+        Object.assign(f, { path: dir + '/' + f.name });
+        return send(f);
+      },
     };
+    const rename = handlers.rename_file;
+    handlers.rename_file = (a) => { if ((opts.taken || []).includes(a.newName)) throw `a file named ${a.newName} already exists here`; return rename(a); };
+    handlers.export_files = ({ dest }) => (dest || '/Users/test/Downloads') + '/Arkhive Export';
     window.__TAURI__ = {
       core: { invoke: async (cmd, args) => { window.__calls.push([cmd, args]); if (!handlers[cmd]) throw `unknown command ${cmd}`; return handlers[cmd](args || {}); } },
       event: { listen: async () => () => {} },
@@ -100,7 +105,7 @@ async function installDesktop(page, opts = {}) {
 
 async function enterVault(page) {
   await page.goto(URL);
-  await page.locator('#archiveLink').click();
+  await page.locator('#enterBtn').click();
   await view(page, 'tier1');
 }
 // Browser path, on the vault shelf, with the stand-in folder read.
@@ -146,131 +151,146 @@ const wheel = async (page, dy) => { await page.mouse.move(640, 400); await page.
 test('identity: title, wordmark, English only, two-dot cursor', async ({ page }) => {
   await page.goto(URL);
   await expect(page).toHaveTitle('Arkhive');
-  await expect(page.locator('.hero-brand')).toHaveText('ARKHIVE');
+  await expect(page.locator('#hero h1')).toHaveText('ARKHIVE');
   await expect(page.locator('#cursor > i')).toHaveCount(2);
   const html = await page.evaluate(() => document.documentElement.outerHTML);
   expect(html).not.toMatch(/[぀-ヿ㐀-鿿豈-﫿]/);
   expect(html).not.toContain('Noto');
 });
 
-// ---------- US1 hero ----------
+// ---------- 004 US1 workspace start screen ----------
 
-test('hero: navigation bar, first stage, six cards and a drawn ring', async ({ page }) => {
-  await page.goto(URL);
-  await expect(page.locator('#storyBack')).toBeVisible();
-  await expect(page.locator('.hero-brand .mark')).toBeVisible();
-  await expect(page.locator('.nav-links button')).toHaveText(['Presets', 'How it works', 'Archive']);
-  await expect(page.locator('#stageTitle .on')).toHaveText('Raw capture');
-  await expect(page.locator('.prism-card')).toHaveCount(6);
-  await expect(page.locator('#hero')).toHaveAttribute('data-ring', 'webgl', { timeout: 10000 });
-  // one progress mechanism: the ruler. No blurred next-stage cue, no standing hint line.
-  await expect(page.locator('.ruler')).toBeVisible();
-  await expect(page.locator('#stageNext')).toHaveCount(0);
-  await expect(page.locator('#heroHint')).toHaveText('');
-  await expect(page.locator('#prism')).toBeVisible();
+const PALETTE = ['#EDE6DA', '#F5EFE6', '#D8CFC0', '#261A14', '#5C463B', '#8A7367', '#234434', '#3A634C', '#B89658'];
+// Every distinct colour on a canvas (the scene is drawn without smoothing, so only palette colours appear).
+const canvasColours = (page, sel) => page.$eval(sel, (c) => {
+  const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data, out = new Set();
+  for (let i = 0; i < d.length; i += 4) if (d[i + 3]) out.add('#' + [d[i], d[i + 1], d[i + 2]].map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase());
+  return [...out];
 });
 
-test('hero: scrolling steps the story and moves the ruler', async ({ page }) => {
+test('start: title, subtitle, ENTER ARKHIVE, DETAILS, and the laptop with the notebook bottom-right, all in the palette', async ({ page }) => {
   await page.goto(URL);
-  await expect(page.locator('#hero')).toHaveAttribute('data-ring', /webgl|flat/, { timeout: 10000 });
-  await wheel(page, 700);
-  await expect(page.locator('#hero')).toHaveAttribute('data-stage', '1');
-  await expect(page.locator('#stageTitle .on')).toHaveText('Optical grading');
-  await expect.poll(() => page.$eval('#rulerTrack', (el) => Number(el.style.getPropertyValue('--p')))).toBeGreaterThan(0);
-  await wheel(page, 700);
-  await expect(page.locator('#stageTitle .on')).toHaveText('Finished artwork');
-});
-
-test('hero: "How it works" moves the story on; the back button moves it back and rests at the start', async ({ page }) => {
-  await page.goto(URL);
-  await expect(page.locator('#storyBack')).toBeDisabled();
-  await page.locator('#navHow').click();
-  await expect(page.locator('#hero')).toHaveAttribute('data-stage', '1');
-  await expect(page.locator('#storyBack')).toBeEnabled();
-  await page.locator('#storyBack').click();
-  await expect(page.locator('#hero')).toHaveAttribute('data-stage', '0');
-  await expect(page.locator('#storyBack')).toBeDisabled();
-});
-
-test('hero: quick presses of "How it works" add up, ending on "Now"', async ({ page }) => {
-  await page.goto(URL);
-  for (let i = 0; i < 3; i++) await page.locator('#navHow').click();
-  await expect(page.locator('#hero')).toHaveAttribute('data-stage', '3');
-  await expect(page.locator('#stageTitle .on')).toHaveText('Now');
-});
-
-test('hero: scrolling past "Now" opens the vault', async ({ page }) => {
-  await page.goto(URL);
-  for (let i = 0; i < 24 && (await page.locator('body').getAttribute('data-view')) === 'landing'; i++) {
-    await wheel(page, 500);
-    await page.waitForTimeout(120);
+  await view(page, 'landing');
+  await expect(page.locator('#hero h1')).toHaveText('ARKHIVE');
+  await expect(page.locator('#hero .hero-sub')).toHaveText('Every file on your Mac, indexed inside and out across PDF, PPTX, JPEG and folders.');
+  await expect(page.locator('#enterBtn')).toHaveText('ENTER ARKHIVE');
+  await expect(page.locator('#detailsBtn')).toHaveText('DETAILS');
+  const enter = await page.locator('#enterBtn').boundingBox(), details = await page.locator('#detailsBtn').boundingBox();
+  expect(details.y).toBeGreaterThan(enter.y + enter.height);
+  expect(Math.abs(enter.x + enter.width / 2 - 720)).toBeLessThan(4);
+  const desk = await page.locator('#desk').boundingBox();
+  expect(desk.x).toBeGreaterThan(720);
+  expect(desk.y + desk.height).toBeGreaterThan(600);
+  expect(desk.x + desk.width).toBeLessThanOrEqual(1440);
+  for (const sel of ['#scene', '#deskArt']) {
+    const colours = await canvasColours(page, sel);
+    expect(colours.length).toBeGreaterThan(4);
+    expect(colours.filter((c) => !PALETTE.includes(c))).toEqual([]);
   }
-  await view(page, 'tier1');
 });
 
-test('hero: resting on a card stops the ring, and clicking it opens that vault', async ({ page }) => {
+test('start: ENTER ARKHIVE, the laptop, the notebook and the Enter key each open the vault', async ({ page }) => {
+  const ways = {
+    button: () => page.locator('#enterBtn').click(),
+    laptop: async () => { const b = await page.locator('#desk').boundingBox(); await page.mouse.click(b.x + b.width * 0.3, b.y + b.height * 0.45); },
+    notebook: async () => { const b = await page.locator('#desk').boundingBox(); await page.mouse.click(b.x + b.width * 0.86, b.y + b.height * 0.75); },
+    key: () => page.keyboard.press('Enter'),
+  };
+  for (const [name, act] of Object.entries(ways)) {
+    await page.goto(URL);
+    await view(page, 'landing');
+    await act();
+    await view(page, 'tier1');
+    await expect(page.locator('#vault'), name).toBeVisible();
+  }
+});
+
+test('start: the vault grows out of the laptop screen, tilted -3.5 degrees, and folds back into it', async ({ page }) => {
   await page.goto(URL);
-  await expect(page.locator('#hero')).toHaveAttribute('data-ring', 'webgl', { timeout: 10000 });
-  await page.waitForTimeout(400);
-  // a card that is wholly on screen and clear of the navigation bar
-  const pick = await page.$$eval('.prism-card', (els) => {
-    const el = els.find((e) => { const b = e.getBoundingClientRect(); return b.width > 40 && b.left > 20 && b.right < innerWidth - 20 && b.top > 90 && b.bottom < innerHeight - 20; });
-    const b = el.getBoundingClientRect();
-    return { key: el.dataset.key, x: b.left + b.width / 2, y: b.top + b.height / 2 };
-  });
-  await page.mouse.move(pick.x, pick.y);
-  await page.waitForTimeout(500);
-  const rect = () => page.locator(`.prism-card[data-key="${pick.key}"]`).boundingBox();
-  const a = await rect();
-  await page.waitForTimeout(400);
-  const b = await rect();
-  expect(Math.abs(a.x - b.x) + Math.abs(a.y - b.y)).toBeLessThan(1.5); // hovering holds the ring still
-  await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
+  await view(page, 'landing');
+  const screen = await page.evaluate(() => window.ArkhiveLanding.screenRect());
+  await page.locator('#enterBtn').click();
+  const first = await page.evaluate(() => document.querySelector('#vault').getAnimations()[0].effect.getKeyframes()[0]);
+  expect(first.transform).toBe('rotate(-3.5deg)');
+  const [top, right, bottom, left] = first.clipPath.match(/[\d.]+px/g).map(parseFloat);
+  expect(Math.abs(top - screen.top)).toBeLessThan(2);
+  expect(Math.abs(left - screen.left)).toBeLessThan(2);
+  expect(Math.abs(1440 - right - screen.right)).toBeLessThan(2);
+  expect(Math.abs(900 - bottom - screen.bottom)).toBeLessThan(2);
   await view(page, 'tier1');
-  await active(page, pick.key);
+  await page.locator('#back').click();
+  await view(page, 'landing');
+  await expect(page.locator('#vault')).toBeHidden();
 });
 
-test('hero: Presets opens the vault on the smart group', async ({ page }) => {
+test('start: DETAILS unfolds live facts under the button and folds again', async ({ page }) => {
+  await installDesktop(page);
   await page.goto(URL);
-  await page.locator('#navPresets').click();
-  await view(page, 'tier1');
-  await expect.poll(() => shelfItems(page, '#shelf1')).toEqual(['MEDICAL', 'PROJECTS']);
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · Smart');
+  const panel = page.locator('#details');
+  await expect(panel).toBeHidden();
+  await page.locator('#detailsBtn').click();
+  await expect(page.locator('#detailsBtn')).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).toBeVisible();
+  const all = await page.evaluate(() => window.ArchiveFixture.FILES.filter((f) => f.kind === 'file' && window.ArchiveCore.CATEGORIES[0].exts.includes(f.ext)).length);
+  await expect(page.locator('#dFiles')).toContainText(all.toLocaleString('en-US'));
+  await expect(page.locator('#dReads')).toContainText('PDF');
+  await expect(page.locator('#dTry')).toContainText('blood related');
+  const btn = await page.locator('#detailsBtn').boundingBox(), box = await panel.boundingBox();
+  expect(box.y).toBeGreaterThanOrEqual(btn.y + btn.height);
+  await page.locator('#detailsBtn').click();
+  await expect(panel).toBeHidden();
+  await expect(page.locator('#detailsBtn')).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('hero: without the 3D library the six cards are shown flat, painted, and still open the vault', async ({ page }) => {
-  await page.route('**/three.module.min.js', (route) => route.abort());
+test('start: in the browser DETAILS says no folder is chosen and offers to choose one', async ({ page }) => {
+  await installFolder(page);
   await page.goto(URL);
-  await expect(page.locator('#hero')).toHaveAttribute('data-ring', 'flat', { timeout: 10000 });
-  await expect(page.locator('.prism-card:visible')).toHaveCount(6);
-  await expect(page.locator('#heroHint')).toContainText(/flat/i);
-  const painted = await page.$$eval('.prism-card canvas', (cs) => cs.filter((c) => c.width > 100 && c.getBoundingClientRect().width > 40).length);
-  expect(painted).toBe(6);
-  await page.locator('.prism-card[data-key="FOLDERS"]').click();
-  await view(page, 'tier1');
-  await active(page, 'FOLDERS');
+  await page.locator('#detailsBtn').click();
+  await expect(page.locator('#dFiles')).toContainText('No folder chosen');
+  await page.locator('#details [data-pick]').click();
+  await expect(page.locator('#dFiles')).toContainText('Fixture', { timeout: 8000 });
 });
 
-test('hero: with reduced motion the ring holds still', async ({ page }) => {
+test('start: the example search in DETAILS enters the vault and runs it', async ({ page }) => {
+  await installDesktop(page);
+  await page.goto(URL);
+  await page.locator('#detailsBtn').click();
+  await page.locator('#dTry button').click();
+  await view(page, 'tier2');
+  expect(await shelfItems(page, '#shelf2')).toContain(CBC);
+});
+
+test('start: clouds drift, and with reduced motion the scene holds still', async ({ page }) => {
+  const snap = () => page.$eval('#scene', (c) => c.toDataURL());
+  await page.goto(URL);
+  await view(page, 'landing');
+  const a = await snap(); await page.waitForTimeout(1500);
+  expect(await snap()).not.toBe(a);
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(URL);
-  await expect(page.locator('#hero')).toHaveAttribute('data-ring', 'webgl', { timeout: 10000 });
-  const rect = () => page.locator('.prism-card[data-key="PDF"]').evaluate((el) => { const b = el.getBoundingClientRect(); return [b.left, b.top]; });
-  const a = await rect();
-  await page.waitForTimeout(700);
-  expect(await rect()).toEqual(a);
+  await view(page, 'landing');
+  const b = await snap(); await page.waitForTimeout(1500);
+  expect(await snap()).toBe(b);
 });
 
-test('hero: the ring draws at a steady rate in headless Chrome (median frame under 50 ms)', async ({ page }) => {
+test('start: without a canvas the words and buttons still work on a flat ground', async ({ page }) => {
+  await page.addInitScript(() => { HTMLCanvasElement.prototype.getContext = () => null; });
   await page.goto(URL);
-  await expect(page.locator('#hero')).toHaveAttribute('data-ring', 'webgl', { timeout: 10000 });
-  const median = await page.evaluate(() => new Promise((resolve) => {
-    const gaps = []; let last = performance.now(), n = 0;
-    const step = (t) => { gaps.push(t - last); last = t; if (++n < 120) requestAnimationFrame(step); else { gaps.sort((a, b) => a - b); resolve(gaps[gaps.length >> 1]); } };
-    requestAnimationFrame(step);
-  }));
-  console.log(`median frame interval: ${median.toFixed(1)} ms`);
-  expect(median).toBeLessThan(50);
+  await expect(page.locator('#hero')).toHaveAttribute('data-scene', 'flat');
+  await expect(page.locator('#enterBtn')).toBeVisible();
+  await page.locator('#enterBtn').click();
+  await view(page, 'tier1');
+});
+
+test('start: on a phone the laptop sits under the buttons and nothing overlaps', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(URL);
+  await view(page, 'landing');
+  const details = await page.locator('#detailsBtn').boundingBox(), desk = await page.locator('#desk').boundingBox();
+  expect(desk.y).toBeGreaterThanOrEqual(details.y + details.height);
+  expect(desk.x).toBeGreaterThanOrEqual(0);
+  expect(desk.x + desk.width).toBeLessThanOrEqual(390);
+  expect(desk.y + desk.height).toBeLessThanOrEqual(844);
 });
 
 // ---------- US2 real files: browser path ----------
@@ -345,7 +365,8 @@ test('desktop: each vault shows its real count and total size', async ({ page })
   expect(asked.length).toBe(1); // one request for every vault, not one each
   await page.locator('#back').click();
   await view(page, 'landing');
-  await expect(page.locator('.prism-card[data-key="PDF"]')).toHaveAttribute('aria-label', /9 files/);
+  await page.locator('#detailsBtn').click();
+  await expect(page.locator('#dFiles')).toContainText(/\d+ documents, images and code files found by Spotlight/);
 });
 
 test('desktop: the browser-only folder chooser is not offered', async ({ page }) => {
@@ -439,83 +460,112 @@ test('search: a query that matches nothing shows the empty state', async ({ page
   await expect(page.locator('#empty')).toContainText('No files match');
 });
 
-// ---------- US4 pills ----------
+// ---------- 004 US2 SORT and FILE TYPES ----------
 
-test('pills: SORT and FILES on a file shelf, FILES alone on the vault shelf', async ({ page }) => {
+const label = (page, id) => page.locator(`#${id} .pill-label`);
+const optTexts = (page, id) => page.$$eval(`#${id} [data-v]`, (bs) => bs.map((b) => b.querySelector('.o').textContent));
+
+test('tools: SORT and FILE TYPES show on the vault shelf and on a file shelf, right under the wordmark', async ({ page }) => {
   await start(page);
-  await expect(page.locator('#pillSort')).toBeHidden();
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · All');
-  await openVault(page);
-  await expect(page.locator('#pillSort .pill-label')).toHaveText('Sort · Relevance');
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · All');
-  await expect(page.locator('.pill:visible')).toHaveCount(2);
+  for (const where of ['vault', 'files']) {
+    if (where === 'files') await openVault(page);
+    await expect(label(page, 'pillSort')).toBeVisible();
+    await expect(label(page, 'pillFiles')).toBeVisible();
+    const line = await page.locator('#sbox').boundingBox(), sort = await page.locator('#pillSort').boundingBox();
+    expect(sort.y).toBeGreaterThan(line.y);
+    expect(sort.y - line.y).toBeLessThan(40);
+  }
+  await expect(label(page, 'pillSort')).toHaveText('SORT · RELEVANCE');
+  await expect(label(page, 'pillFiles')).toHaveText('FILE TYPES · ALL FILES');
 });
 
-test('pills: hover widens SORT with a marker behind the current option; a choice folds it back', async ({ page }) => {
+test('tools: hover alone does not open SORT; a press unfolds the six orders; a choice reorders and folds', async ({ page }) => {
   await start(page);
   await openVault(page);
   const pill = page.locator('#pillSort');
   const closed = (await pill.boundingBox()).width;
   await pill.hover();
+  await page.waitForTimeout(600);
+  expect((await pill.boundingBox()).width).toBeLessThan(closed + 4);
+  await label(page, 'pillSort').click();
+  await expect(pill).toHaveAttribute('data-open', '');
+  await expect(label(page, 'pillSort')).toHaveAttribute('aria-expanded', 'true');
+  expect(await optTexts(page, 'pillSort')).toEqual(['RELEVANCE', 'NAME (A–Z)', 'NAME (Z–A)', 'DATE (NEWEST)', 'DATE (OLDEST)', 'SIZE (LARGEST)']);
   await expect.poll(async () => (await pill.boundingBox()).width).toBeGreaterThan(closed + 200);
   const under = async (v) => {
     const o = await page.locator(`#pillSort [data-v="${v}"]`).boundingBox(), m = await page.locator('#pillSort .ind').boundingBox();
     return Math.abs(o.x - m.x) + Math.abs(o.width - m.width);
   };
   await expect.poll(() => under('relevance')).toBeLessThan(2);
-  await page.locator('#pillSort [data-v="name"]').click();
-  await expect(page.locator('#pillSort .pill-label')).toHaveText('Sort · Name');
-  // the pointer has not moved, yet the pill folds back
-  await expect.poll(async () => (await pill.boundingBox()).width).toBeLessThan(closed + 30);
+  await page.locator('#pillSort [data-v="nameDesc"]').click();
+  await expect(label(page, 'pillSort')).toHaveText('SORT · NAME (Z–A)');
+  await expect(pill).not.toHaveAttribute('data-open', '');
+  await expect.poll(async () => (await pill.boundingBox()).width).toBeLessThan(closed + 60);
   const sorted = await shelfItems(page, '#shelf2');
-  expect(sorted).toEqual([...sorted].sort((a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' })));
-  await page.mouse.move(640, 700);
-  await pill.hover();
-  await expect.poll(() => under('name')).toBeLessThan(2);
+  expect(sorted).toEqual([...sorted].sort((a, b) => b.localeCompare(a, 'en', { numeric: true, sensitivity: 'base' })));
 });
 
-test('pills: FILES filters the shelf and shows the choice; an empty format shows the empty state', async ({ page }) => {
+test('tools: FILE TYPES lists every type with its count on this shelf, filters, and says when a type is empty', async ({ page }) => {
   await start(page);
   await search(page, 'blood');
   await view(page, 'tier2');
-  await page.locator('#pillFiles').hover();
+  await label(page, 'pillFiles').click();
+  expect(await optTexts(page, 'pillFiles')).toEqual(['ALL FILES', 'PDF', 'PPTX', 'JPEG / PNG', 'DOCX / TXT', 'XLSX / CSV', 'CODE', 'FOLDERS']);
+  const all = await shelfItems(page, '#shelf2');
+  await expect(page.locator('#pillFiles [data-v="ALL"] .n')).toHaveText(String(all.length));
+  const pdfCount = all.filter((n) => /\.pdf$/i.test(n)).length;
+  await expect(page.locator('#pillFiles [data-v="PDF"] .n')).toHaveText(String(pdfCount));
   await page.locator('#pillFiles [data-v="PDF"]').click();
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · PDF');
+  await expect(label(page, 'pillFiles')).toHaveText('FILE TYPES · PDF');
   const pdfs = await shelfItems(page, '#shelf2');
-  expect(pdfs.length).toBeGreaterThan(0);
-  for (const n of pdfs) expect(n).toMatch(/\.pdf$/i);
-  await page.mouse.move(640, 700);
-  await page.locator('#pillFiles').hover();
+  expect(pdfs.length).toBe(pdfCount);
+  await label(page, 'pillFiles').click();
   await page.locator('#pillFiles [data-v="CODE"]').click();
   await expect(page.locator('#empty')).toBeVisible();
-  await expect(page.locator('#empty')).toContainText('No Code files here');
+  await expect(page.locator('#empty')).toContainText('No CODE files here');
 });
 
-test('pills: Folders is offered only where folders are listed', async ({ page }) => {
+test('tools: on the vault shelf FILE TYPES opens that type, and SORT reorders the vaults', async ({ page }) => {
   await start(page);
-  await openVault(page);
-  await page.locator('#pillFiles').hover();
-  await expect(page.locator('#pillFiles [data-v="PDF"]')).toBeVisible();
-  await expect(page.locator('#pillFiles [data-v="FOLDERS"]')).toBeHidden();
+  await label(page, 'pillFiles').click();
+  await page.locator('#pillFiles [data-v="PDF"]').click();
+  await view(page, 'tier2');
+  for (const n of await shelfItems(page, '#shelf2')) expect(n).toMatch(/\.pdf$/i);
   await page.keyboard.press('Escape');
   await view(page, 'tier1');
-  await activate(page, 'FOLDERS');
-  await openVault(page);
-  await page.mouse.move(640, 700);
-  await page.locator('#pillFiles').hover();
-  await expect(page.locator('#pillFiles [data-v="FOLDERS"]')).toBeVisible();
+  await expect(label(page, 'pillFiles')).toHaveText('FILE TYPES · ALL FILES');
+  await label(page, 'pillSort').click();
+  await page.locator('#pillSort [data-v="name"]').click();
+  await expect(label(page, 'pillSort')).toHaveText('SORT · NAME (A–Z)');
+  await expect.poll(() => shelfItems(page, '#shelf1')).toEqual(['ALL', 'ZIP', 'CODE', 'DOCX', 'FOLDERS', 'JPEG', 'MEDIA', 'MEDICAL', 'PDF', 'PPTX', 'PROJECTS', 'RECENT', 'XLSX']);
 });
 
-test('pills: on a phone an open pill stays inside the window', async ({ page }) => {
+test('tools: Escape or a press outside folds an open button; the open search field pushes both down', async ({ page }) => {
+  await start(page);
+  await label(page, 'pillSort').click();
+  await expect(page.locator('#pillSort')).toHaveAttribute('data-open', '');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#pillSort')).not.toHaveAttribute('data-open', '');
+  await view(page, 'tier1');
+  await label(page, 'pillFiles').click();
+  await page.mouse.click(640, 780);
+  await expect(page.locator('#pillFiles')).not.toHaveAttribute('data-open', '');
+  await page.keyboard.press('/');
+  await expect(page.locator('#q')).toBeFocused();
+  await page.waitForTimeout(600);
+  const field = await page.locator('#sbox').boundingBox(), sort = await page.locator('#pillSort').boundingBox();
+  expect(sort.y).toBeGreaterThanOrEqual(field.y + field.height + 4);
+});
+
+test('tools: on a phone an open button stays inside the window', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await start(page, { folder: false });
-  await page.locator('#pillFiles .pill-label').click();
+  await label(page, 'pillFiles').click();
   await expect(page.locator('#pillFiles')).toHaveAttribute('data-open', '');
   await page.waitForTimeout(600);
   const b = await page.locator('#pillFiles').boundingBox();
   expect(b.x).toBeGreaterThanOrEqual(0);
   expect(b.x + b.width).toBeLessThanOrEqual(390);
-  // the wordmark stays centred over its hairline
   const brand = await page.locator('#brand').boundingBox(), line = await page.locator('#sbox').boundingBox();
   expect(Math.abs(brand.x + brand.width / 2 - (line.x + line.width / 2))).toBeLessThan(12);
 });
@@ -780,18 +830,118 @@ test('reduced motion: the whole flow still completes', async ({ page }) => {
   await view(page, 'detail');
 });
 
-// ---------- labels: plain words, one separator; only the stamped spine tags are uppercase ----------
+// ---------- 004 US3 inspector and tray follow-ups ----------
 
-test('labels: chrome is sentence case with no "//", and a toast never covers the file actions', async ({ page }) => {
+const cardsIn = (page) => page.locator('#trayList li');
+async function stageTwo(page) {
+  await page.locator('#plus').click();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  await page.locator('#plus').click();
+  await expect(cardsIn(page)).toHaveCount(2);
+}
+
+test('snippet: a content match that came back without a snippet gets one when the shelf stops on it', async ({ page }) => {
+  await startDesktop(page, { noSnippets: true });
+  await search(page, 'blood');
+  await view(page, 'tier2');
+  await activate(page, 'Scan_Nov_10.pdf');
+  await expect.poll(async () => (await calls(page, 'snippet')).map((c) => c.path)).toContain('/Fixture/Downloads/Scan_Nov_10.pdf');
+  await expect(page.locator('#cap2')).toContainText('match');
+  await expect(page.locator('#cap2 mark').first()).toBeVisible();
+});
+
+test('move: MOVE TO FOLDER moves the file into the chosen folder; cancelling the dialog changes nothing', async ({ page }) => {
+  await inspectFirstPdf(page, { pick: { move: '/Fixture/Documents' } });
+  await page.locator('.act[data-act="move"]').click();
+  await expect(toast(page)).toContainText(`Moved ${CBC}`);
+  expect(await calls(page, 'move_file')).toEqual([{ path: '/Fixture/Documents/Medical/Labs/' + CBC, dir: '/Fixture/Documents' }]);
+  await expect(page.locator('#d-path')).not.toContainText('Labs');
+});
+
+test('move: a cancelled folder dialog moves nothing and says nothing', async ({ page }) => {
+  await inspectFirstPdf(page);
+  await page.locator('.act[data-act="move"]').click();
+  await expect.poll(async () => (await calls(page, 'choose_folder')).length).toBe(1);
+  await page.waitForTimeout(300);
+  expect(await calls(page, 'move_file')).toEqual([]);
+  await expect(toast(page)).not.toHaveClass(/on/);
+});
+
+test('rename: UNDO in the message gives the file its old name back', async ({ page }) => {
+  await inspectFirstPdf(page);
+  await page.locator('.act[data-act="rename"]').click();
+  await page.locator('#renameInput').fill('Blood_2026.pdf');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#d-name')).toHaveText('Blood_2026.pdf');
+  await toast(page).getByRole('button', { name: 'UNDO' }).click();
+  await expect(page.locator('#d-name')).toHaveText(CBC);
+  const r = await calls(page, 'rename_file');
+  expect(r[1]).toEqual({ path: '/Fixture/Documents/Medical/Labs/Blood_2026.pdf', newName: CBC });
+});
+
+test('tray: a card\'s remove button takes out only that card', async ({ page }) => {
+  await startDesktop(page);
+  await openVault(page);
+  await stageTwo(page);
+  const second = await cardsIn(page).nth(1).locator('b').textContent();
+  await cardsIn(page).first().getByRole('button', { name: /^remove/i }).click();
+  await expect(cardsIn(page)).toHaveCount(1);
+  await expect(cardsIn(page).first()).toContainText(second);
+});
+
+test('tray: RENAME ALL numbers the staged files in tray order and skips names already taken', async ({ page }) => {
+  await startDesktop(page, { taken: ['Lab 1.pdf'] });
+  await openVault(page);
+  await stageTwo(page);
+  await page.getByRole('button', { name: 'RENAME ALL' }).click();
+  await page.locator('#batchName').fill('Lab');
+  await page.keyboard.press('Enter');
+  await expect(toast(page)).toContainText('Renamed 2 files');
+  const names = (await calls(page, 'rename_file')).map((c) => c.newName);
+  expect(names).toEqual(['Lab 1.pdf', 'Lab 2.pdf', 'Lab 3.pdf']);
+  await expect(cardsIn(page).first()).toContainText('Lab 2.pdf');
+  await expect(cardsIn(page).nth(1)).toContainText('Lab 3.pdf');
+});
+
+test('tray: MOVE ALL TO TRASH needs a second press, then trashes every staged file', async ({ page }) => {
+  await startDesktop(page);
+  await openVault(page);
+  await stageTwo(page);
+  const btn = page.locator('[data-tray="trashAll"]');
+  await btn.click();
+  await expect(btn).toHaveText(/press again/i);
+  expect(await calls(page, 'trash_file')).toEqual([]);
+  await btn.click();
+  await expect(toast(page)).toContainText('Moved 2 files to the Trash');
+  expect((await calls(page, 'trash_file')).length).toBe(2);
+  await expect(cardsIn(page)).toHaveCount(0);
+});
+
+test('tray: EXPORT TO… copies into a new folder inside the chosen folder', async ({ page }) => {
+  await startDesktop(page, { pick: { export: '/Users/test/Desktop' } });
+  await openVault(page);
+  await page.locator('#plus').click();
+  await page.locator('[data-tray="exportTo"]').click();
+  await expect(toast(page)).toContainText('~/Desktop/Arkhive Export');
+  expect((await calls(page, 'export_files'))[0].dest).toBe('/Users/test/Desktop');
+});
+
+// ---------- labels: bold uppercase, boxed buttons, no brackets ----------
+
+test('labels: every chrome label is bold uppercase with no brackets, and a toast never covers the file actions', async ({ page }) => {
   await start(page);
   await openVault(page);
   await expect(page.locator('#acts')).toBeVisible();
   await expect(toast(page)).toHaveClass(/on/); // the "Read 43 files" note is still up
-  const tf = (sel) => page.$eval(sel, (el) => getComputedStyle(el).textTransform);
-  expect(await tf('#count')).toBe('none');
-  expect(await tf('#pickTop')).toBe('none');
-  expect(await tf('#shelf2 .tape .sp .ext')).toBe('uppercase');
-  expect(await page.evaluate(() => document.body.innerText)).not.toContain('//');
+  const bad = await page.$$eval('#chrome .lbl, #chrome button.box, .pill-label', (els) => els.filter((el) => {
+    const cs = getComputedStyle(el), t = el.textContent.trim();
+    return t && (t !== t.toUpperCase() && cs.textTransform !== 'uppercase' || Number(cs.fontWeight) < 600);
+  }).map((el) => el.id || el.className + ': ' + el.textContent.trim()));
+  expect(bad).toEqual([]);
+  const text = await page.evaluate(() => document.body.innerText);
+  expect(text).not.toContain('//');
+  expect(text).not.toMatch(/[\[\]]/);
   await page.waitForTimeout(600); // the toast has finished sliding in
   const t = await toast(page).boundingBox();
   for (const btn of await page.locator('#acts button').all()) {
