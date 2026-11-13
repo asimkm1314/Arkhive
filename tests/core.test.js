@@ -186,7 +186,7 @@ test('formatSize and formatDate', () => {
   assert.equal(C.formatSize(512), '512 B');
   assert.equal(C.formatSize(2.4 * 1024 * 1024), '2.4 MB');
   assert.equal(C.formatSize(1536), '1.5 KB');
-  assert.equal(C.formatDate(Date.UTC(2026, 10, 10, 12)), 'NOV 10, 2026');
+  assert.equal(C.formatDate(Date.UTC(2026, 10, 10, 12)), 'Nov 10, 2026');
 });
 
 // ---------- review fixes ----------

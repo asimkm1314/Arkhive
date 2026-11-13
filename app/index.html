@@ -7,7 +7,7 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Inter+Tight:wght@500;600;800&family=Newsreader:ital,opsz,wght@0,6..72,400;1,6..72,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@500&family=Inter+Tight:wght@500;600&family=Newsreader:opsz,wght@6..72,400&display=swap">
 <style>
 :root {
   --paper: #EDE6DA; --sheet: #F5EFE6;
@@ -37,7 +37,7 @@ input { caret-color: var(--forest); }
 @media (pointer: fine) { body, body * { cursor: none !important; } }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
-.lbl { font: 600 11px/1 var(--font-sans); letter-spacing: .09em; text-transform: uppercase; }
+.lbl { font: 500 12px/1.2 var(--font-sans); }
 .box { display: inline-flex; align-items: center; height: 21px; padding: 0 8px; border: 1px solid var(--rule); white-space: nowrap; }
 mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 
@@ -69,7 +69,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .nav-back { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, .18); display: grid; place-items: center; transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease); }
 .nav-back:disabled { color: rgba(245, 245, 245, .3); border-color: rgba(255, 255, 255, .08); }
 .nav-back:not(:disabled):hover { background: #F5F5F5; color: #000; }
-.hero-brand { display: inline-flex; align-items: center; gap: 9px; font: 800 14px/1 var(--font-sans); letter-spacing: .2em; }
+.hero-brand { display: inline-flex; align-items: center; gap: 9px; font: 600 14px/1 var(--font-sans); letter-spacing: .2em; }
 .mark { flex: none; width: 18px; height: 18px; border-radius: 5px; background: #F5F5F5; display: inline-flex; align-items: center; justify-content: center; gap: 2px; }
 .mark::before, .mark::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #000; }
 .mark::after { background: var(--gold); }
@@ -82,11 +82,6 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 /* word-spacing wider than the line puts each word on its own line, as in the brief's two-line headline */
 .st { grid-area: 1 / 1; word-spacing: 100vw; opacity: 0; filter: blur(10px); transform: translateY(.12em); transition: opacity .5s var(--ease), filter .5s var(--ease), transform .5s var(--ease); }
 .st.on { opacity: 1; filter: none; transform: none; }
-.stage-next {
-  position: absolute; z-index: 3; right: clamp(44px, 7vw, 110px); top: clamp(100px, 17vh, 170px); text-align: right; word-spacing: 100vw;
-  font: 500 clamp(2.5rem, 5vw, 4.5rem)/1 var(--font-hero); letter-spacing: -.04em; pointer-events: none;
-  color: rgba(245, 245, 245, calc(.25 + .75 * var(--t, 0))); filter: blur(calc((1 - var(--t, 0)) * 2px));
-}
 .hero-cards { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .prism-card { position: absolute; left: 0; top: 0; pointer-events: auto; border-radius: 3px; }
 .prism-card canvas { display: none; }
@@ -107,7 +102,6 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   .hero-nav { grid-template-columns: auto 1fr; }
   .nav-links { justify-self: end; }
   .nav-links button { padding: 0 10px; }
-  .stage-next { top: auto; bottom: 84px; right: 20px; font-size: 2rem; }
   #hero[data-ring="flat"] .hero-cards { padding-top: 220px; }
 }
 
@@ -125,21 +119,19 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .sp { --shade: calc(var(--o) * .55); width: var(--ws); left: calc(var(--ws) / -2); transform: translateZ(calc(var(--d) / 2)); background: var(--mocha-mid); display: flex; flex-direction: column; align-items: center; gap: calc(var(--H) * .022); padding: calc(var(--H) * .03) 0; }
 .t1 .sp { background: var(--forest); }
 .cv { --shade: calc((1 - var(--o)) * .5); width: var(--d); left: calc(var(--d) / -2); transform: rotateY(90deg) translateZ(calc(var(--ws) / 2)); background: var(--sheet); box-shadow: 0 30px 60px -28px rgba(38, 26, 20, .55); display: flex; flex-direction: column; gap: calc(var(--H) * .022); padding: calc(var(--H) * .036); }
-.sp .ext { background: var(--gold); color: var(--mocha-ink); padding: 3px 4px; font-size: 8.5px; letter-spacing: .06em; max-width: 86%; overflow: hidden; }
+.sp .ext { background: var(--gold); color: var(--mocha-ink); padding: 3px 4px; font: 600 8.5px/1 var(--font-sans); letter-spacing: .06em; text-transform: uppercase; max-width: 86%; overflow: hidden; }
 /* vertical-rl: line-height is the column width, so one line sits centred in the label */
 .sp .name { flex: 1; min-height: 0; width: 72%; background: var(--sheet); border: 1px solid var(--rule); writing-mode: vertical-rl; padding: calc(var(--H) * .025) 0; display: block; font: 400 calc(var(--H) * .044) var(--font-serif); line-height: calc(var(--ws) * .72 - 2px); letter-spacing: -.01em; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.sp .meta { writing-mode: vertical-rl; color: var(--paper); font-size: 8px; letter-spacing: .14em; white-space: nowrap; max-height: 34%; overflow: hidden; }
-.sp .fmt { color: var(--paper); border-color: rgba(237, 230, 218, .7); height: 17px; padding: 0 4px; font-size: 8px; }
-.cv .hd { display: flex; justify-content: space-between; gap: 6px; color: var(--forest); font-size: 8.5px; }
+.sp .meta { writing-mode: vertical-rl; color: var(--paper); font-size: 9px; letter-spacing: .02em; margin-top: auto; white-space: nowrap; max-height: 34%; overflow: hidden; }
+.cv .hd { display: flex; justify-content: space-between; gap: 6px; color: var(--forest); font-size: 9px; }
 .cv h3 { font: 400 calc(var(--H) * .05)/1.06 var(--font-serif); letter-spacing: -.01em; overflow-wrap: anywhere; max-height: 3.2em; overflow: hidden; }
 .cv .art { flex: 1; min-height: 0; border: 1px solid var(--rule); background: var(--paper); overflow: hidden; }
 .cv .art svg, .cv .art img { width: 100%; height: 100%; display: block; }
 .cv .art img { object-fit: cover; object-position: 50% 0; background: var(--sheet); } /* a real preview: the top of the page or picture */
 .cv .snip { background: var(--forest); color: var(--paper); font: 400 calc(var(--H) * .028)/1.32 var(--font-serif); padding: 6px 8px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; flex: none; }
-.cv .snip b { font: 600 8px/1 var(--font-sans); letter-spacing: .1em; color: var(--gold); margin-right: 4px; }
+.cv .snip b { font: 600 9px/1 var(--font-sans); color: var(--gold); margin-right: 4px; }
 .cv .snip mark { background: rgba(184, 150, 88, .45); }
-.cv .ft { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 8.5px; color: var(--mocha-mid); }
-.cv .ft .box { height: 18px; font-size: 8.5px; color: var(--mocha-ink); }
+.cv .ft { font-size: 9px; color: var(--mocha-mid); }
 
 /* ---------- chrome: top bar, hairline search, pills, caption ---------- */
 #chrome { position: fixed; inset: 0; z-index: 30; pointer-events: none; visibility: hidden; transition: visibility 0s .7s; }
@@ -151,7 +143,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .top .count { color: var(--mocha-mid); }
 .top .box { background: var(--paper); transition: background-color .3s var(--ease); }
 .top .box:hover { background: var(--gold); }
-.brand { display: block; font: 800 22px/1 var(--font-sans); letter-spacing: .2em; padding: 6px 0 6px .2em; text-transform: uppercase; color: var(--mocha-ink); white-space: nowrap; }
+.brand { display: block; font: 600 22px/1 var(--font-sans); letter-spacing: .2em; padding: 6px 0 6px .2em; text-transform: uppercase; color: var(--mocha-ink); white-space: nowrap; }
 /* The search field rests as a 48px hairline under the wordmark and pops out in place. */
 #sbox {
   position: absolute; left: 50%; top: 62px; width: 48px; height: 1px; transform: translateX(-50%); overflow: hidden; pointer-events: auto;
@@ -189,7 +181,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .cap .rl > span { max-width: 100%; }
 #cap1 { font: 400 31px/1.2 var(--font-serif); letter-spacing: -.01em; }
 #cap2 { color: var(--forest); margin-top: 10px; line-height: 1.25; }
-#cap3 { font: 500 11px/1.3 var(--font-sans); color: var(--mocha-mid); letter-spacing: .06em; margin-top: 8px; text-transform: uppercase; }
+#cap3 { font: 500 12px/1.3 var(--font-sans); color: var(--mocha-mid); margin-top: 8px; }
 #acts { display: flex; justify-content: center; gap: 10px; margin-top: 16px; visibility: hidden; }
 [data-mode="files"] #acts.has-file { visibility: visible; }
 #acts .box { height: 27px; padding: 0 12px; border-color: var(--forest); color: var(--forest); background: var(--sheet); transition: background-color .3s var(--ease), color .3s var(--ease); }
@@ -221,12 +213,14 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 #d-badge { color: var(--forest); line-height: 1.5; }
 #d-meta { color: var(--mocha-mid); line-height: 1.5; }
 #d-snippet { font: 400 17px/1.6 var(--font-serif); max-width: 62ch; user-select: text; -webkit-user-select: text; }
-#d-path { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; font: italic 400 15px/1.5 var(--font-serif); color: var(--mocha-mid); }
-#d-path button { color: var(--forest); border-bottom: 1px solid var(--forest); font-style: italic; }
+#d-path { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 7px; font: 400 15px/1.5 var(--font-serif); color: var(--mocha-mid); }
+#d-path button { color: var(--forest); border-bottom: 1px solid var(--forest); }
 #d-path button:hover { color: var(--mocha-ink); border-bottom-color: var(--gold); }
-.d-acts { display: flex; flex-wrap: wrap; gap: 10px; }
-.act { height: 44px; padding: 0 16px; border-color: var(--forest); color: var(--forest); background: transparent; transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease); }
-.act:hover { background: var(--gold); color: var(--mocha-ink); }
+.d-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.act { height: 40px; padding: 0 12px; border-color: transparent; color: var(--forest); background: transparent; transition: background-color .3s var(--ease), color .3s var(--ease), border-color .3s var(--ease); }
+.act:hover { border-color: var(--rule); }
+.act.primary { padding: 0 20px; margin-right: 8px; background: var(--forest); border-color: var(--forest); color: var(--paper); }
+.act.primary:hover { background: var(--mocha-ink); border-color: var(--mocha-ink); }
 .act.armed, .act.armed:hover { background: var(--mocha-ink); border-color: var(--mocha-ink); color: var(--paper); }
 .d-right svg { display: block; height: min(80vh, 900px); width: auto; aspect-ratio: 474 / 900; }
 @media (max-width: 1100px) { .top .count { display: none; } }
@@ -272,11 +266,11 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .wave i:nth-child(4) { animation-delay: .18s; } .wave i:nth-child(5) { animation-delay: .42s; }
 @keyframes wave { to { transform: scaleY(1); } }
 #toast {
-  --b: 28px; position: fixed; left: 50%; bottom: var(--b); z-index: 90; max-width: min(560px, 90vw);
-  transform: translate(-50%, calc(100% + var(--b) + 12px)); transition: transform .5s var(--ease);
+  --b: 28px; position: fixed; left: clamp(14px, 3vw, 40px); bottom: var(--b); z-index: 90; max-width: min(380px, calc(100vw - 28px));
+  transform: translateY(calc(100% + var(--b) + 12px)); transition: transform .5s var(--ease);
   background: var(--mocha-ink); color: var(--paper); border: 1px solid var(--gold); padding: 12px 16px; font: 400 15px/1.4 var(--font-serif);
 }
-#toast.on { transform: translate(-50%, 0); }
+#toast.on { transform: none; }
 #tray.on ~ #toast { --b: 136px; } /* never cover the tray's own buttons */
 #cursor { position: fixed; left: 0; top: 0; z-index: 9999; pointer-events: none; display: inline-flex; gap: 4px; margin: -2.5px 0 0 -7px; }
 #cursor i { width: 5px; height: 5px; border-radius: 50%; background: var(--mocha-ink); box-shadow: 0 0 0 1px rgba(237, 230, 218, .85); transition: transform .25s var(--ease), background-color .25s var(--ease); }
@@ -324,10 +318,9 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
     <div class="nav-status" id="navStatus"></div>
   </header>
   <h1 class="stage-title" id="stageTitle" aria-live="polite"><span class="st on">Raw capture</span></h1>
-  <p class="stage-next" id="stageNext" aria-hidden="true">Optical grading</p>
   <div class="hero-cards" id="heroCards"></div>
   <div class="ruler" aria-hidden="true"><div class="ruler-track" id="rulerTrack"></div></div>
-  <p class="hero-hint" id="heroHint">Scroll to move through the story, or drag the ring. Choose a card to open its vault.</p>
+  <p class="hero-hint" id="heroHint"></p>
 </section>
 
 <section id="vault" class="sheet" aria-label="Vault shelf">
@@ -401,7 +394,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
     <div class="m"><p class="mi" id="d-snippet" style="--dl:.845s"></p></div>
     <div class="m"><nav class="mi" id="d-path" aria-label="Folders above this file" style="--dl:.92s"></nav></div>
     <div class="m"><div class="mi d-acts" style="--dl:.995s">
-      <button class="lbl box act" data-act="open_file">Open in default app</button>
+      <button class="lbl box act primary" data-act="open_file">Open in default app</button>
       <button class="lbl box act" data-act="quick_look">Quick Look (space)</button>
       <button class="lbl box act" data-act="reveal_file">Reveal in Finder</button>
       <button class="lbl box act" data-act="rename">Rename</button>
@@ -423,14 +416,13 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
       </defs>
       <rect width="474" height="900" fill="#EDE6DA"/>
       <g mask="url(#ink-mask)" id="d-art"></g>
-      <rect x=".5" y=".5" width="473" height="899" fill="none" stroke="rgba(38,26,20,.88)"/>
     </svg>
   </div>
 </section>
 
 <aside id="tray" aria-label="Export tray" inert>
   <div class="tray-head">
-    <span class="lbl ttl">Export tray // <span id="trayN">0 files</span></span>
+    <span class="lbl ttl">Export tray · <span id="trayN">0 files</span></span>
     <button class="lbl box" data-tray="export">Export to Downloads</button>
     <button class="lbl box" data-tray="copy">Copy paths</button>
     <button class="lbl box" data-tray="reveal">Reveal all in Finder</button>
@@ -462,7 +454,7 @@ const ROOT = { name: 'FOLDERS', path: null }; // first crumb of every folder tra
 const HERO_KEYS = ['PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'FOLDERS'];
 const TEXT_EXT = new Set(['txt', 'md', 'csv', 'json', 'rs', 'py', 'ts', 'tsx', 'js', 'sql', 'rtf', 'cpp', 'css', 'html', 'swift', 'toml', 'yaml', 'yml', 'sh']);
 const TEXT_LIMIT = 256 * 1024, WALK_LIMIT = 5000, MAX_DEPTH = 4; // browser folder reader: per-file text, items, levels
-const SORTS = { relevance: 'RELEVANCE', name: 'NAME', newest: 'NEWEST', oldest: 'OLDEST', largest: 'SIZE' };
+const SORTS = { relevance: 'Relevance', name: 'Name', newest: 'Newest', oldest: 'Oldest', largest: 'Size' };
 const GROUPS = [['all', 'All'], ['docs', 'Docs'], ['media', 'Media'], ['code', 'Code'], ['smart', 'Smart']];
 const FORMATS = [['ALL', 'All'], ['PDF', 'PDF'], ['PPTX', 'PPTX'], ['JPEG', 'JPEG'], ['DOCX', 'DOCX'], ['XLSX', 'XLSX'], ['CODE', 'Code'], ['FOLDERS', 'Folders']];
 
@@ -632,7 +624,7 @@ function vaultArt(cat) { // a format vault: two back pages behind a sample cover
 // What a vault's spine and the hero cards say about it. Never a made-up number.
 function countLabel(key) {
   const s = summary[key];
-  if (!s) return hasFolder() ? 'Counting' : 'Choose a folder';
+  if (!s) return hasFolder() ? 'Counting' : '';
   if (s.failed) return 'Count failed';
   return plural(s.count, key === 'FOLDERS' ? 'folder' : 'file');
 }
@@ -715,10 +707,10 @@ function paintCard(key, canvas) {
   const c = catOf(key), g = canvas.getContext('2d'), w = canvas.width, h = canvas.height;
   g.fillStyle = SHEET; g.fillRect(0, 0, w, h);
   g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, w - 3, h - 3);
-  if ('letterSpacing' in g) g.letterSpacing = '2px';
+  if ('letterSpacing' in g) g.letterSpacing = '0px';
   g.textBaseline = 'alphabetic';
-  g.fillStyle = FOREST; g.font = '600 19px "Inter Tight", system-ui, sans-serif';
-  g.fillText(`VAULT // ${key}`, 30, 50);
+  g.fillStyle = FOREST; g.font = '500 22px "Inter Tight", system-ui, sans-serif';
+  g.fillText('Vault', 30, 50);
   const box = [30, 72, w - 60, 420], img = cardPic[key];
   g.fillStyle = PAPER; g.fillRect(...box);
   if (img) { // cover-fit, from the top of the page or picture
@@ -729,9 +721,9 @@ function paintCard(key, canvas) {
   if ('letterSpacing' in g) g.letterSpacing = '-1px';
   g.fillStyle = INK; g.font = '400 62px Newsreader, Georgia, serif';
   g.fillText(c.label, 30, 568);
-  if ('letterSpacing' in g) g.letterSpacing = '2px';
-  g.fillStyle = MID; g.font = '600 19px "Inter Tight", system-ui, sans-serif';
-  g.fillText(countLabel(key).toUpperCase(), 30, 612);
+  if ('letterSpacing' in g) g.letterSpacing = '0px';
+  g.fillStyle = MID; g.font = '500 22px "Inter Tight", system-ui, sans-serif';
+  g.fillText(countLabel(key), 30, 612);
   g.fillStyle = GOLD; g.fillRect(30, 638, 64, 5);
 }
 async function cardArt(key) { // the vault's own drawn cover, until a real preview replaces it
@@ -751,27 +743,27 @@ const SPINE_CODE = { MEDICAL: 'MED', PROJECTS: 'PROJ', RECENT: 'WEEK', FOLDERS: 
 function catFaces(c) {
   const code = SPINE_CODE[c.key] || c.key, s = summary[c.key];
   return `<div class="sp"><span class="ext lbl">${esc(code)}</span><span class="name">${esc(c.label)}</span>` +
-    `<span class="meta lbl">${esc(countLabel(c.key))}</span><span class="fmt lbl box">Vault</span></div>` +
-    `<div class="cv"><div class="hd lbl"><span>Vault // ${esc(c.key)}</span><span>${s && !s.failed ? s.count.toLocaleString('en-US') : ''}</span></div>` +
+    `<span class="meta lbl">${esc(countLabel(c.key))}</span></div>` +
+    `<div class="cv"><div class="hd lbl"><span>Vault</span><span>${s && !s.failed ? s.count.toLocaleString('en-US') : ''}</span></div>` +
     `<h3>${esc(c.label)}</h3><div class="art">${vaultArt(c)}</div>` +
-    `<div class="ft"><span class="lbl">${esc(c.sub)}</span><span class="box lbl">${esc(code)}</span></div></div>`;
+    `<div class="ft lbl">${esc(c.sub)}</div></div>`;
 }
 function fileFaces(f) {
   if (isDir(f)) {
     return `<div class="sp"><span class="ext lbl">DIR</span><span class="name">${esc(f.name)}</span>` +
-      `<span class="meta lbl">Folder${f.modified > 1 ? ' · ' + C.formatDate(f.modified) : ''}</span><span class="fmt lbl box">Open</span></div>` +
-      `<div class="cv"><div class="hd lbl"><span>Folder // ${esc(C.tilde(dirOf(f.path)))}</span></div>` +
+      `<span class="meta lbl">${f.modified > 1 ? C.formatDate(f.modified) : ''}</span></div>` +
+      `<div class="cv"><div class="hd lbl"><span>In ${esc(C.tilde(dirOf(f.path)))}</span></div>` +
       `<h3>${breakable(f.name)}</h3><div class="art">${art('FOLDERS', f.name)}</div>` +
-      `<div class="ft"><span class="lbl">Click to open</span><span class="box lbl">DIR</span></div></div>`;
+      `<div class="ft lbl">Click to open</div></div>`;
   }
   const fmt = fmtOf(f), snip = snippetOf(f), pic = thumbNow(f);
   const short = snip && st.terms ? C.snippetFor(snip, st.terms, 30, 90) : snip;
   return `<div class="sp"><span class="ext lbl">${esc((f.ext || '—').slice(0, 5))}</span><span class="name">${esc(f.name)}</span>` +
-    `<span class="meta lbl">${C.formatSize(f.size)} · ${C.formatDate(f.modified)}</span><span class="fmt lbl box">${esc(fmt.slice(0, 5))}</span></div>` +
-    `<div class="cv"><div class="hd lbl"><span>Local file // ${esc((f.ext || 'file').toUpperCase())}</span></div>` +
+    `<span class="meta lbl">${C.formatSize(f.size)} · ${C.formatDate(f.modified)}</span></div>` +
+    `<div class="cv">` +
     `<h3>${breakable(f.name)}</h3><div class="art">${pic ? thumbImg(pic) : art(C.categoryOf(f.ext), f.name, f.text || f.snippet)}</div>` +
     (short ? `<div class="snip"><b>Match</b>${C.highlight(short, st.terms || [])}</div>` : '') +
-    `<div class="ft"><span class="lbl">${C.formatSize(f.size)}</span><span class="box lbl">${esc((f.ext || 'file').toUpperCase().slice(0, 5))}</span></div></div>`;
+    `<div class="ft lbl">${C.formatSize(f.size)}</div></div>`;
 }
 
 // ---------- shelf engine (one rAF loop drives everything) ----------
@@ -887,20 +879,21 @@ function captionFor(sh) {
   const it = activeItem(sh);
   if (!it) return ['', '', ''];
   if (sh.kind === 'cat') {
+    const line = countLine(it.key);
     return [
-      `${esc(it.label)} vault — ${esc(countLine(it.key))}`,
-      esc(it.sub),
+      `${esc(it.label)} vault${line ? ' · ' + esc(line) : ''}`,
+      '', // the cover already names what the vault holds
       it.exts ? it.exts.map((e) => '.' + e).join('   ') : it.keywords ? 'Grouped by what’s inside the files' : it.folders ? 'Browse by where files are kept' : 'Modified in the last 7 days',
     ];
   }
   const where = esc(C.tilde(dirOf(it.path)));
-  if (isDir(it)) return [esc(it.name), 'Folder / click to open', `${it.modified > 1 ? `Modified ${C.formatDate(it.modified)} • ` : ''}${where}`];
+  if (isDir(it)) return [esc(it.name), 'Folder · click to open', `${it.modified > 1 ? `Modified ${C.formatDate(it.modified)} · ` : ''}${where}`];
   const snip = snippetOf(it);
   const short = snip && st.terms ? C.snippetFor(snip, st.terms, 24, 60) : null;
   return [
     esc(it.name),
-    `${esc(fmtOf(it))} file / ${C.formatSize(it.size)}${short ? ` / Match: “${C.highlight(short, st.terms)}”` : ''}`,
-    `Modified ${C.formatDate(it.modified)} • ${where}`,
+    `${esc(KIND_NAME[C.categoryOf(it.ext)] || `${fmtOf(it)} file`)} · ${C.formatSize(it.size)}${short ? ` · match “${C.highlight(short, st.terms)}”` : ''}`,
+    `Modified ${C.formatDate(it.modified)} · ${where}`,
   ];
 }
 function clearCaption() {
@@ -978,11 +971,11 @@ async function pickFolder() {
 
 // ---------- modes, sheets and transitions ----------
 function refreshContext() {
-  if (st.mode === 'vault') roll($('#ctx'), hasFolder() ? 'Drag, scroll or use ← → to browse. Click a vault to open it.' : 'No folder chosen. <button data-pick>Choose folder</button>');
+  if (st.mode === 'vault') roll($('#ctx'), hasFolder() ? '' : 'No folder chosen · <button data-pick>Choose folder</button>');
   else if (st.mode === 'files') updateFilesContext();
 }
 function updateCount() {
-  $('#count').textContent = TAURI ? 'Spotlight // this Mac' : local.root ? `${local.name} // read in this browser` : 'No folder chosen';
+  $('#count').textContent = TAURI ? 'Spotlight · this Mac' : local.root ? `${local.name} · read in this browser` : '';
   $('#pickTop').textContent = local.root ? 'Change folder' : 'Choose folder';
   $('#pickTop').hidden = !!TAURI;
 }
@@ -1060,11 +1053,11 @@ function applyFiles(keep = false) {
   $('#emptyBtn').hidden = !(empty && !hasFolder());
   if (empty) {
     const [title, hint] = !hasFolder() ? ['No folder chosen', 'Choose a folder and its files appear here.']
-      : st.files.length ? [st.fmt === 'FOLDERS' ? 'No folders here' : `No ${st.fmt} files here`, 'Choose All to see everything.']
+      : st.files.length ? [st.fmt === 'FOLDERS' ? 'No folders here' : `No ${(FORMATS.find(([v]) => v === st.fmt) || [, st.fmt])[1]} files here`, 'Choose All to see everything.']
       : st.kind === 'search' ? [`No files match ${st.ctx.slice(7)}`, 'Try a broader word, or a related one: “lab” instead of “CBC”.']
       : st.kind === 'folder' ? ['This folder is empty', 'Files you add to it will appear here.']
       : ['This vault is empty', 'Files you add will appear here.'];
-    $('#emptyTitle').textContent = title.toUpperCase();
+    $('#emptyTitle').textContent = title;
     $('#emptyHint').textContent = hint;
     if (st.mode === 'files') clearCaption();
   }
@@ -1073,10 +1066,10 @@ function applyFiles(keep = false) {
 }
 function updateFilesContext() {
   const n = shelf2.items.length, note = st.note ? ` (${esc(st.note)})` : '';
-  if (st.kind !== 'folder') return roll($('#ctx'), `${esc(st.ctx)} — ${plural(n, 'file')}${note}`);
+  if (st.kind !== 'folder') return roll($('#ctx'), `${esc(st.ctx)} · ${plural(n, 'file')}${note}`);
   const last = st.trail.length - 1;
   const crumbs = st.trail.map((t, i) => `<button class="crumb" data-crumb="${i}"${i === last ? ' aria-current="true"' : ''}>${esc(t.name)}</button>`).join(' › ');
-  roll($('#ctx'), `${crumbs} — ${plural(n, 'item')}${note}`);
+  roll($('#ctx'), `${crumbs} · ${plural(n, 'item')}${note}`);
 }
 function setFiles(files, sort = 'relevance') {
   st.files = files; st.sort = sort; st.fmt = 'ALL';
@@ -1167,14 +1160,12 @@ function bigArt(f) {
   let s = `<rect width="474" height="900" fill="${SHEET}"/>`;
   s += pic ? `<image href="${pic}" x="36" y="40" width="402" height="482" preserveAspectRatio="xMidYMin slice" clip-path="url(#prev-clip)"/><rect x="36" y="40" width="402" height="482" fill="none" stroke="${INK}"/>`
     : `<g transform="translate(36 40) scale(2.01)">${art(C.categoryOf(f.ext), f.name, text).replace(/^<svg[^>]*>|<\/svg>$/g, '')}</g>`;
-  s += `<rect x="36" y="540" width="402" height="1.5" fill="${INK}"/>`;
-  s += `<text x="36" y="580" font-family="Inter Tight" font-weight="600" font-size="13" letter-spacing="1.4" fill="${FOREST}">${esc(fmtOf(f))} // ${C.formatSize(f.size)}</text>`;
-  const lines = wrapWords(text || 'No text preview for this file.', 46).slice(0, 11);
-  lines.forEach((l, i) => { s += `<text x="36" y="${620 + i * 24}" font-family="Newsreader, Georgia, serif" font-size="17" fill="${INK}">${esc(l)}</text>`; });
+  const lines = text ? wrapWords(text, 46).slice(0, 12) : [];
+  lines.forEach((l, i) => { s += `<text x="36" y="${580 + i * 24}" font-family="Newsreader, Georgia, serif" font-size="17" fill="${INK}">${esc(l)}</text>`; });
   return s;
 }
 const KIND_NAME = { PDF: 'PDF document', PPTX: 'Presentation', JPEG: 'Image', DOCX: 'Text document', XLSX: 'Spreadsheet', CODE: 'Source file', MEDIA: 'Media file', ZIP: 'Archive' };
-const MATCH_NAME = { content: ' // text match inside the file', name: ' // name match' };
+const MATCH_NAME = { content: ' · text match inside the file', name: ' · name match' };
 function fillDetail(f) {
   st.detailFile = f;
   cancelRename();
@@ -1183,7 +1174,7 @@ function fillDetail(f) {
   $('#d-name').innerHTML = breakable(f.name);
   $('#d-badge').textContent = (KIND_NAME[C.categoryOf(f.ext)] || `${fmtOf(f)} file`) + (MATCH_NAME[C.matchKind(f, st.terms)] || '');
   $('#d-meta').textContent = [C.formatSize(f.size), f.created ? `Created ${C.formatDate(f.created)}` : null, `Modified ${C.formatDate(f.modified)}`,
-    f.mode == null ? null : C.formatPerms(f.mode)].filter(Boolean).join(' / ');
+    f.mode == null ? null : C.formatPerms(f.mode)].filter(Boolean).join(' · ');
   $('#d-snippet').innerHTML = snip ? C.highlight(snip, st.terms || [])
     : f.text ? esc(f.text.slice(0, 280)) + (f.text.length > 280 ? '…' : '')
     : 'No text preview for this file. Open it to see what’s inside.';
@@ -1429,8 +1420,8 @@ function drawPills() {
   }
   for (const b of box.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === value));
   for (const b of pillSort.querySelectorAll('[data-v]')) b.setAttribute('aria-pressed', String(b.dataset.v === st.sort));
-  pillSort.querySelector('.pill-label').textContent = `SORT · ${SORTS[st.sort]}`;
-  pillFiles.querySelector('.pill-label').textContent = `FILES · ${(opts.find(([v]) => v === value) || opts[0])[1].toUpperCase()}`;
+  pillSort.querySelector('.pill-label').textContent = `Sort · ${SORTS[st.sort]}`;
+  pillFiles.querySelector('.pill-label').textContent = `Files · ${(opts.find(([v]) => v === value) || opts[0])[1]}`;
   moveInd(pillSort); moveInd(pillFiles);
 }
 function choose(pill, b) {
@@ -1635,7 +1626,7 @@ measure();
 setItems(shelf1, C.categoriesForTab('all'));
 Hero.init({
   keys: HERO_KEYS, reduce, storyAt: C.storyAt, paint: paintCard,
-  label: (key) => `Open the ${catOf(key).label} vault, ${countLabel(key).toLowerCase()}`,
+  label: (key) => `Open the ${catOf(key).label} vault` + (countLabel(key) ? `, ${countLabel(key).toLowerCase()}` : ''),
   onEnter: (key, el) => canEnter() && (enterVault(key, el), true),
   onPresets: (el) => canEnter() && (enterVault('MEDICAL', el, 'smart'), true),
 });

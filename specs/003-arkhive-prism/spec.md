@@ -14,7 +14,7 @@ Builds on `specs/001-archiveos` and `specs/002-arkhive`. Where this spec changes
 
 ### User Story 1 - Open on a prism scroll story (Priority: P1)
 
-On launch the owner sees a black stage: a floating navigation bar, a large headline top-left, the next stage's name dim and blurred top-right, a tick ruler on the right edge, and a tilted ring of six file cards turning slowly. Scrolling moves through four stages (Raw capture, Optical grading, Finished artwork, Now). The ring turns with the scroll, and the faster it turns the further each card smears into a spectrum: amber behind, green in the middle, cyan and blue ahead. Resting the pointer on a card stops the ring and shows that card sharp and slightly larger. A card click, the Archive link, or scrolling past the last stage grows that card to fill the window and opens the vault.
+On launch the owner sees a black stage: a floating navigation bar, a large headline top-left, a tick ruler on the right edge that shows how far the story has moved, and a tilted ring of six file cards turning slowly. Scrolling moves through four stages (Raw capture, Optical grading, Finished artwork, Now). The ring turns with the scroll, and the faster it turns the further each card smears into a spectrum: amber behind, green in the middle, cyan and blue ahead. Resting the pointer on a card stops the ring and shows that card sharp and slightly larger. A card click, the Archive link, or scrolling past the last stage grows that card to fill the window and opens the vault.
 
 **Why this priority**: It is the first impression and the way into everything else.
 
@@ -22,8 +22,8 @@ On launch the owner sees a black stage: a floating navigation bar, a large headl
 
 **Acceptance Scenarios**:
 
-1. **Given** the app launches, **When** the hero renders, **Then** it shows the navigation bar (back button, ARKHIVE with its mark, links Presets, How it works, Archive), the headline "Raw capture", the cue "Optical grading", the ruler, and six cards in a ring that turns without input.
-2. **Given** the hero, **When** the owner scrolls, **Then** the headline steps through the four stages, the cue always names the stage after the current one, and the ring turns with the scroll.
+1. **Given** the app launches, **When** the hero renders, **Then** it shows the navigation bar (back button, ARKHIVE with its mark, links Presets, How it works, Archive), the headline "Raw capture", the ruler, and six cards in a ring that turns without input.
+2. **Given** the hero, **When** the owner scrolls, **Then** the headline steps through the four stages, the ruler moves with the progress, and the ring turns with the scroll.
 3. **Given** the ring is turning quickly, **When** it is drawn, **Then** each card is smeared along its direction of travel with warm colours trailing and cool colours leading; at rest the cards are sharp.
 4. **Given** the hero, **When** the pointer rests on a card, **Then** the ring stops and that card is drawn sharp at 1.08 times its size.
 5. **Given** the hero, **When** the owner clicks a card, **Then** the card expands to fill the window and the category shelf opens with that card's vault pulled out.
@@ -154,10 +154,10 @@ Voice search, the export tray, dragging a file out and dropping files in behave 
 
 **Hero**
 
-- **FR-001**: The hero MUST show a black stage with the navigation bar, stage headline, next-stage cue, right-edge ruler and six cards (PDF, PPTX, JPEG, DOCX, XLSX, Folders) arranged around a tilted ring.
+- **FR-001**: The hero MUST show a black stage with the navigation bar, stage headline, right-edge ruler and six cards (PDF, PPTX, JPEG, DOCX, XLSX, Folders) arranged around a tilted ring.
 - **FR-002**: The ring MUST turn slowly when idle, turn with scroll and with a sideways drag, and stop while a card is hovered.
 - **FR-003**: Each card MUST be drawn by sampling its image at 16 offsets along its direction of travel, colouring the samples from amber (trailing) through green to cyan and blue (leading), with the offset length following the ring's speed and the card's edges feathering out at speed.
-- **FR-004**: The story MUST have four stages bound to scroll; the headline MUST show the current stage, the cue the next one, and the ruler the progress.
+- **FR-004**: The story MUST have four stages bound to scroll; the headline MUST show the current stage and the ruler the progress. The hint line stays empty unless the ring falls back to flat cards, when it gives the reason.
 - **FR-005**: The vault MUST open from a card, from Archive, from Enter, and from scrolling past the last stage, by a clip-path expansion from the card's on-screen rectangle.
 - **FR-006**: Card faces MUST be drawn at run time from the vault's name, real count and, when one exists, a real preview of its newest file. No image or file data may be stored in the source.
 - **FR-007**: The 3D library MUST be a pinned release (three 0.160.0), loaded from the app's own files, with the same version from a CDN only when the page is opened straight from disk. If neither loads, the flat row MUST be used.
@@ -190,6 +190,7 @@ Voice search, the export tray, dragging a file out and dropping files in behave 
 
 - **FR-023**: Every failure MUST be shown with its reason. A missing preview is not a failure.
 - **FR-024**: All text MUST be English; the two-dot cursor from 002 stays; inside the vault, motion uses transforms, clip-path and masks, never opacity fades. The hero may fade and blur its text, as the brief describes.
+- **FR-025**: Labels in the vault are sentence case and use one separator (`·`); only the stamped spine tags (PDF, CODE, DIR…) are uppercase. Each fact is said once per screen: "no folder chosen" lives in the line above the shelf, and the inspector says "no text preview" only on the left. The inspector has one primary action (Open); the rest are plain text buttons, all on screen. A toast never covers the file actions.
 
 ### Key Entities
 

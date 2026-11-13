@@ -6,7 +6,6 @@
 
   const TAU = Math.PI * 2;
   const STAGES = ['Raw capture', 'Optical grading', 'Finished artwork', 'Now'];
-  const AFTER = 'Archive';               // what the cue names once the last stage is showing
   const RADIUS = 2.4, CARD_W = 1.2, CARD_H = 1.6;
   const PAD = 2.6;                       // each plane is this many times its card, so the smear has room to leave it
   const TEX = [512, 683];                // card texture, 3:4
@@ -16,7 +15,6 @@
 
   const $ = (s) => document.querySelector(s);
   const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-  const smooth = (x) => x * x * (3 - 2 * x);
 
   const H = {
     opts: null, hero: null, cards: [], gl: null,
@@ -168,9 +166,9 @@ void main() {
     }
   }
 
-  // ---------- story: headline, cue, ruler, navigation ----------
+  // ---------- story: headline, ruler, navigation ----------
   function story() {
-    const { stage, t } = H.opts.storyAt(H.p), s = H.shown;
+    const { stage } = H.opts.storyAt(H.p), s = H.shown;
     if (stage !== s.stage) {
       s.stage = stage;
       H.hero.dataset.stage = stage;
@@ -181,12 +179,8 @@ void main() {
       title.appendChild(next);
       void next.offsetWidth; // so the new line fades in from its resting-off state
       next.classList.add('on');
-      $('#stageNext').textContent = STAGES[stage + 1] || AFTER;
       $('#storyBack').disabled = stage === 0;
     }
-    // the cue sharpens as its stage approaches; at the last stage it follows the overscroll toward the vault
-    const cue = Math.round(smooth(stage === STAGES.length - 1 ? clamp((H.p - 1) / (ENTER_AT - 1), 0, 1) : t) * 50);
-    if (cue !== s.cue) { s.cue = cue; $('#stageNext').style.setProperty('--t', (cue / 50).toFixed(2)); }
     const ruler = Math.round(clamp(H.p, 0, 1) * 500);
     if (ruler !== s.ruler) { s.ruler = ruler; $('#rulerTrack').style.setProperty('--p', (ruler / 500).toFixed(3)); }
     const nav = H.opts.reduce ? 0 : Math.round(clamp(Math.abs(H.vel) / 3, 0, 1) * 20);

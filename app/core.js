@@ -5,17 +5,17 @@
   const DAY = 864e5;
 
   const CATEGORIES = [
-    { key: 'PDF', label: 'PDF', sub: 'Portable Documents & Reports', group: 'docs', exts: ['pdf'] },
-    { key: 'PPTX', label: 'PPTX', sub: 'Presentations & Pitch Decks', group: 'docs', exts: ['ppt', 'pptx', 'key'] },
-    { key: 'JPEG', label: 'JPEG', sub: 'Photos, Scans & Screenshots', group: 'media', exts: ['jpg', 'jpeg', 'png', 'heic', 'webp'] },
-    { key: 'DOCX', label: 'DOCX', sub: 'Word Docs, Notes & Markdown', group: 'docs', exts: ['docx', 'doc', 'md', 'txt', 'rtf'] },
-    { key: 'XLSX', label: 'XLSX', sub: 'Spreadsheets & CSV Ledgers', group: 'code', exts: ['xlsx', 'csv', 'numbers'] },
-    { key: 'CODE', label: 'CODE', sub: 'Source Code & Configs', group: 'code', exts: ['py', 'rs', 'ts', 'tsx', 'js', 'cpp', 'json', 'sql'] },
+    { key: 'PDF', label: 'PDF', sub: 'Portable documents & reports', group: 'docs', exts: ['pdf'] },
+    { key: 'PPTX', label: 'PPTX', sub: 'Presentations & pitch decks', group: 'docs', exts: ['ppt', 'pptx', 'key'] },
+    { key: 'JPEG', label: 'JPEG', sub: 'Photos, scans & screenshots', group: 'media', exts: ['jpg', 'jpeg', 'png', 'heic', 'webp'] },
+    { key: 'DOCX', label: 'DOCX', sub: 'Word docs, notes & Markdown', group: 'docs', exts: ['docx', 'doc', 'md', 'txt', 'rtf'] },
+    { key: 'XLSX', label: 'XLSX', sub: 'Spreadsheets & CSV ledgers', group: 'code', exts: ['xlsx', 'csv', 'numbers'] },
+    { key: 'CODE', label: 'CODE', sub: 'Source code & configs', group: 'code', exts: ['py', 'rs', 'ts', 'tsx', 'js', 'cpp', 'json', 'sql'] },
     { key: 'FOLDERS', label: 'FOLDERS', sub: 'Desktop, Documents & Downloads', group: null, folders: true },
     { key: 'MEDICAL', label: 'MEDICAL / HEALTH', sub: 'Lab results, prescriptions, bloodwork, imaging', group: 'smart',
       keywords: ['blood', 'hemoglobin', 'haemoglobin', 'hematology', 'cbc', 'prescription', 'mri', 'pathology', 'clinic', 'hospital', 'patient', 'diagnosis', 'lipid', 'glucose', 'platelet', 'serum'] },
-    { key: 'MEDIA', label: 'MEDIA', sub: 'Audio & Video Recordings', group: 'media', exts: ['mp4', 'mov', 'wav', 'mp3'] },
-    { key: 'ZIP', label: 'ARCHIVES', sub: 'Compressed Archives & Disk Images', group: 'code', exts: ['zip', 'tar', 'dmg', '7z'] },
+    { key: 'MEDIA', label: 'MEDIA', sub: 'Audio & video recordings', group: 'media', exts: ['mp4', 'mov', 'wav', 'mp3'] },
+    { key: 'ZIP', label: 'ARCHIVES', sub: 'Compressed archives & disk images', group: 'code', exts: ['zip', 'tar', 'dmg', '7z'] },
     // keywords match as word prefixes, so none may be the start of an unrelated common word ("repo" → "report")
     { key: 'PROJECTS', label: 'PROJECTS', sub: 'Hackathons, decks, repositories', group: 'smart',
       keywords: ['hackathon', 'project', 'pitch', 'repository', 'roadmap', 'sprint', 'prototype'] },
@@ -171,7 +171,7 @@
 
   const trayAdd = (tray, f) => (f.kind === 'dir' || tray.some((t) => t.path === f.path) ? tray : [...tray, f]);
 
-  const formatDate = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).toUpperCase();
+  const formatDate = (ms) => new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   // ---- shelf math (brief §4) ----
   const B = (r) => (Math.abs(r) < 1 ? (r + Math.sin(Math.PI * r) / Math.PI) / 2 : Math.sign(r) * 0.5);

@@ -161,22 +161,24 @@ test('hero: navigation bar, first stage, six cards and a drawn ring', async ({ p
   await expect(page.locator('.hero-brand .mark')).toBeVisible();
   await expect(page.locator('.nav-links button')).toHaveText(['Presets', 'How it works', 'Archive']);
   await expect(page.locator('#stageTitle .on')).toHaveText('Raw capture');
-  await expect(page.locator('#stageNext')).toHaveText('Optical grading');
   await expect(page.locator('.prism-card')).toHaveCount(6);
   await expect(page.locator('#hero')).toHaveAttribute('data-ring', 'webgl', { timeout: 10000 });
+  // one progress mechanism: the ruler. No blurred next-stage cue, no standing hint line.
+  await expect(page.locator('.ruler')).toBeVisible();
+  await expect(page.locator('#stageNext')).toHaveCount(0);
+  await expect(page.locator('#heroHint')).toHaveText('');
   await expect(page.locator('#prism')).toBeVisible();
 });
 
-test('hero: scrolling steps the story, and the cue names the next stage', async ({ page }) => {
+test('hero: scrolling steps the story and moves the ruler', async ({ page }) => {
   await page.goto(URL);
   await expect(page.locator('#hero')).toHaveAttribute('data-ring', /webgl|flat/, { timeout: 10000 });
   await wheel(page, 700);
   await expect(page.locator('#hero')).toHaveAttribute('data-stage', '1');
   await expect(page.locator('#stageTitle .on')).toHaveText('Optical grading');
-  await expect(page.locator('#stageNext')).toHaveText('Finished artwork');
+  await expect.poll(() => page.$eval('#rulerTrack', (el) => Number(el.style.getPropertyValue('--p')))).toBeGreaterThan(0);
   await wheel(page, 700);
   await expect(page.locator('#stageTitle .on')).toHaveText('Finished artwork');
-  await expect(page.locator('#stageNext')).toHaveText('Now');
 });
 
 test('hero: "How it works" moves the story on; the back button moves it back and rests at the start', async ({ page }) => {
@@ -190,12 +192,11 @@ test('hero: "How it works" moves the story on; the back button moves it back and
   await expect(page.locator('#storyBack')).toBeDisabled();
 });
 
-test('hero: quick presses of "How it works" add up, ending on "Now" with the archive as the cue', async ({ page }) => {
+test('hero: quick presses of "How it works" add up, ending on "Now"', async ({ page }) => {
   await page.goto(URL);
   for (let i = 0; i < 3; i++) await page.locator('#navHow').click();
   await expect(page.locator('#hero')).toHaveAttribute('data-stage', '3');
   await expect(page.locator('#stageTitle .on')).toHaveText('Now');
-  await expect(page.locator('#stageNext')).toHaveText('Archive');
 });
 
 test('hero: scrolling past "Now" opens the vault', async ({ page }) => {
@@ -234,7 +235,7 @@ test('hero: Presets opens the vault on the smart group', async ({ page }) => {
   await page.locator('#navPresets').click();
   await view(page, 'tier1');
   await expect.poll(() => shelfItems(page, '#shelf1')).toEqual(['MEDICAL', 'PROJECTS']);
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('FILES · SMART');
+  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · Smart');
 });
 
 test('hero: without the 3D library the six cards are shown flat, painted, and still open the vault', async ({ page }) => {
@@ -278,7 +279,8 @@ test('files: with no folder chosen the vault says so and names no files', async 
   await start(page, { folder: false });
   await expect(page.locator('#ctx')).toContainText('No folder chosen');
   await expect(page.locator('#ctx [data-pick]')).toBeVisible();
-  await expect(page.locator('#count')).toContainText(/no folder chosen/i);
+  await expect(page.locator('#count')).toHaveText(''); // said once, in the line above the shelf
+  await expect(page.locator('#shelf1 .tape.is-active .sp .meta')).toHaveText('');
   expect(await page.evaluate(() => document.body.textContent)).not.toContain('CBC_Blood_Panel');
 });
 
@@ -304,7 +306,7 @@ test('files: a refused folder is reported with its reason', async ({ page }) => 
   await page.evaluate(() => { window.showDirectoryPicker = async () => { throw new Error('permission denied'); }; });
   await page.locator('#pickTop').click();
   await expect(toast(page)).toContainText('permission denied');
-  await expect(page.locator('#count')).toContainText(/no folder chosen/i);
+  await expect(page.locator('#count')).toHaveText('');
 });
 
 test('files: the folders vault drills down through the chosen folder', async ({ page }) => {
@@ -434,7 +436,7 @@ test('search: a query that matches nothing shows the empty state', async ({ page
   await search(page, 'zzqx');
   await view(page, 'tier2');
   await expect(page.locator('#empty')).toBeVisible();
-  await expect(page.locator('#empty')).toContainText('NO FILES MATCH');
+  await expect(page.locator('#empty')).toContainText('No files match');
 });
 
 // ---------- US4 pills ----------
@@ -442,10 +444,10 @@ test('search: a query that matches nothing shows the empty state', async ({ page
 test('pills: SORT and FILES on a file shelf, FILES alone on the vault shelf', async ({ page }) => {
   await start(page);
   await expect(page.locator('#pillSort')).toBeHidden();
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('FILES · ALL');
+  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · All');
   await openVault(page);
-  await expect(page.locator('#pillSort .pill-label')).toHaveText('SORT · RELEVANCE');
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('FILES · ALL');
+  await expect(page.locator('#pillSort .pill-label')).toHaveText('Sort · Relevance');
+  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · All');
   await expect(page.locator('.pill:visible')).toHaveCount(2);
 });
 
@@ -462,7 +464,7 @@ test('pills: hover widens SORT with a marker behind the current option; a choice
   };
   await expect.poll(() => under('relevance')).toBeLessThan(2);
   await page.locator('#pillSort [data-v="name"]').click();
-  await expect(page.locator('#pillSort .pill-label')).toHaveText('SORT · NAME');
+  await expect(page.locator('#pillSort .pill-label')).toHaveText('Sort · Name');
   // the pointer has not moved, yet the pill folds back
   await expect.poll(async () => (await pill.boundingBox()).width).toBeLessThan(closed + 30);
   const sorted = await shelfItems(page, '#shelf2');
@@ -478,7 +480,7 @@ test('pills: FILES filters the shelf and shows the choice; an empty format shows
   await view(page, 'tier2');
   await page.locator('#pillFiles').hover();
   await page.locator('#pillFiles [data-v="PDF"]').click();
-  await expect(page.locator('#pillFiles .pill-label')).toHaveText('FILES · PDF');
+  await expect(page.locator('#pillFiles .pill-label')).toHaveText('Files · PDF');
   const pdfs = await shelfItems(page, '#shelf2');
   expect(pdfs.length).toBeGreaterThan(0);
   for (const n of pdfs) expect(n).toMatch(/\.pdf$/i);
@@ -486,7 +488,7 @@ test('pills: FILES filters the shelf and shows the choice; an empty format shows
   await page.locator('#pillFiles').hover();
   await page.locator('#pillFiles [data-v="CODE"]').click();
   await expect(page.locator('#empty')).toBeVisible();
-  await expect(page.locator('#empty')).toContainText('NO CODE FILES HERE');
+  await expect(page.locator('#empty')).toContainText('No Code files here');
 });
 
 test('pills: Folders is offered only where folders are listed', async ({ page }) => {
@@ -574,6 +576,14 @@ test('inspector: details, permissions, and a path whose folders open on the shel
   await view(page, 'detail');
   await expect(page.locator('#d-badge')).toContainText(/pdf document/i);
   await expect(page.locator('#d-meta')).toContainText('rw-r--r--');
+  await expect(page.locator('.act.primary')).toHaveText(['Open in default app']);
+  await page.waitForTimeout(2200); // let the reveal finish (last line starts at ~1s, runs .9s)
+  const vh = page.viewportSize().height;
+  for (const b of await page.locator('.act').all()) {
+    const r = await b.boundingBox();
+    expect(r.y + r.height).toBeLessThanOrEqual(vh); // no action clipped off the bottom
+  }
+  expect(await page.locator('#d-art').textContent()).not.toContain('No text preview'); // said once, on the left
   await expect(page.locator('#d-path [data-dir]')).toHaveText(['Fixture', 'Documents', 'Medical', 'Labs']);
   await page.locator('#d-path [data-dir]', { hasText: 'Medical' }).click();
   await view(page, 'tier2');
@@ -768,4 +778,25 @@ test('reduced motion: the whole flow still completes', async ({ page }) => {
   await expect(page.locator('#tray')).toHaveClass(/on/);
   await page.keyboard.press('Enter');
   await view(page, 'detail');
+});
+
+// ---------- labels: plain words, one separator; only the stamped spine tags are uppercase ----------
+
+test('labels: chrome is sentence case with no "//", and a toast never covers the file actions', async ({ page }) => {
+  await start(page);
+  await openVault(page);
+  await expect(page.locator('#acts')).toBeVisible();
+  await expect(toast(page)).toHaveClass(/on/); // the "Read 43 files" note is still up
+  const tf = (sel) => page.$eval(sel, (el) => getComputedStyle(el).textTransform);
+  expect(await tf('#count')).toBe('none');
+  expect(await tf('#pickTop')).toBe('none');
+  expect(await tf('#shelf2 .tape .sp .ext')).toBe('uppercase');
+  expect(await page.evaluate(() => document.body.innerText)).not.toContain('//');
+  await page.waitForTimeout(600); // the toast has finished sliding in
+  const t = await toast(page).boundingBox();
+  for (const btn of await page.locator('#acts button').all()) {
+    const a = await btn.boundingBox();
+    const overlap = a.x < t.x + t.width && t.x < a.x + a.width && a.y < t.y + t.height && t.y < a.y + a.height;
+    expect(overlap).toBe(false);
+  }
 });
