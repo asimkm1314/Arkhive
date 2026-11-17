@@ -19,6 +19,7 @@
 		BCE76740E09504A76751F460 /* assets in Resources */ = {isa = PBXBuildFile; fileRef = 292F0E3EDE608B7B8334CFAF /* assets */; };
 		C4695ED8C720052D41290E32 /* MetalKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CE8911B929739A0BFB7E955 /* MetalKit.framework */; };
 		CBA34C67E3A3F96E6302213F /* libapp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F3AA4BA8E25E631E2CDFF244 /* libapp.a */; };
+		CE0A203E98EB0DFD97449CE8 /* FolderPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CB24A5EAB5ADA8E5B0D87D4 /* FolderPicker.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		292F0E3EDE608B7B8334CFAF /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; path = assets; sourceTree = SOURCE_ROOT; };
 		4CE8911B929739A0BFB7E955 /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		5AE878C39D32927C9663DB9D /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		5CB24A5EAB5ADA8E5B0D87D4 /* FolderPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FolderPicker.swift; sourceTree = "<group>"; };
 		9F13E6CCAC2CBA6D1B1D495E /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		9F25A537D591F7C31FCD4271 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		B01A747BB8B3EB92EC4982D6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -110,6 +112,7 @@
 		52D2D0D3DBB6412DE45A1D04 /* archiveos */ = {
 			isa = PBXGroup;
 			children = (
+				5CB24A5EAB5ADA8E5B0D87D4 /* FolderPicker.swift */,
 				E2742F9DC89254A5CD27F80C /* main.mm */,
 				4956737C16C78333ED535EFC /* bindings */,
 			);
@@ -148,6 +151,20 @@
 			);
 			name = src;
 			path = ../../src;
+			sourceTree = "<group>";
+		};
+		"TEMP_4298C648-7628-45FF-B716-18A4E3D2FF3D" /* arm64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = arm64;
+			sourceTree = "<group>";
+		};
+		"TEMP_6E12BF09-E77F-49CA-A6FF-41DFBBDEB92D" /* x86_64 */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = x86_64;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -245,6 +262,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CE0A203E98EB0DFD97449CE8 /* FolderPicker.swift in Sources */,
 				1271DD300A06CEBD9209EF6B /* main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -276,7 +294,7 @@
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.archiveos.app;
-				PRODUCT_NAME = "ArchiveOS";
+				PRODUCT_NAME = "Arkhive";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;
@@ -426,7 +444,7 @@
 				"LIBRARY_SEARCH_PATHS[arch=arm64]" = "$(inherited) $(PROJECT_DIR)/Externals/arm64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				"LIBRARY_SEARCH_PATHS[arch=x86_64]" = "$(inherited) $(PROJECT_DIR)/Externals/x86_64/$(CONFIGURATION) $(SDKROOT)/usr/lib/swift $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift/$(PLATFORM_NAME) $(DEVELOPER_DIR)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.0/$(PLATFORM_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = dev.archiveos.app;
-				PRODUCT_NAME = "ArchiveOS";
+				PRODUCT_NAME = "Arkhive";
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = arm64;

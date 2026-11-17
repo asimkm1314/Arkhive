@@ -7,6 +7,13 @@
   <string>Arkhive listens only while the mic is on, to turn what you say into a file search.</string>
   <key>NSSpeechRecognitionUsageDescription</key>
   <string>Arkhive turns what you say into a file search while the mic is on.</string>
+  <!-- Shown in the one-time prompts macOS raises when the index first reads these folders. -->
+  <key>NSDesktopFolderUsageDescription</key>
+  <string>Arkhive reads your Desktop to list, search and show your files. Nothing leaves your Mac.</string>
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>Arkhive reads your Documents folder to list, search and show your files. Nothing leaves your Mac.</string>
+  <key>NSDownloadsFolderUsageDescription</key>
+  <string>Arkhive reads your Downloads folder to list, search and show your files. Nothing leaves your Mac.</string>
   <!-- Moving a file to the Trash is done by Finder, so it can be put back. macOS asks the owner once. -->
   <key>NSAppleEventsUsageDescription</key>
   <string>Arkhive asks Finder to move a file to the Trash when you choose Move to Trash.</string>

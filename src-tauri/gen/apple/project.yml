@@ -45,6 +45,9 @@ targets:
       path: archiveos_iOS/Info.plist
       properties:
         LSRequiresIPhoneOS: true
+        # the Files app shows Arkhive's own folder (see Info.ios.plist); kept here so xcodegen does not drop them
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
         UILaunchStoryboardName: LaunchScreen
         UIRequiredDeviceCapabilities: [arm64, metal]
         UISupportedInterfaceOrientations:

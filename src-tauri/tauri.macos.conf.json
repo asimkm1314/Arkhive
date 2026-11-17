@@ -1,0 +1,16 @@
+{
+  "bundle": {
+    "externalBin": [
+      "binaries/arkhive-speech",
+      "binaries/arkhive-ocr"
+    ],
+    "macOS": {
+      "entitlements": "./Entitlements.plist",
+      "signingIdentity": "-"
+    },
+    "targets": [
+      "app",
+      "dmg"
+    ]
+  }
+}
