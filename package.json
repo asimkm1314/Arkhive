@@ -5,12 +5,10 @@
   "scripts": {
     "test": "node --test tests/*.test.js",
     "test:ui": "playwright test",
-    "tauri": "tauri",
-    "vendor": "mkdir -p app/vendor && cp node_modules/three/build/three.module.min.js app/vendor/three.module.min.js"
+    "tauri": "tauri"
   },
   "devDependencies": {
     "@playwright/test": "1.65.0",
-    "@tauri-apps/cli": "2.12.4",
-    "three": "0.160.0"
+    "@tauri-apps/cli": "2.12.4"
   }
 }

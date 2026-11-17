@@ -11,9 +11,12 @@
     { key: 'DOCX', label: 'DOCX', sub: 'Word docs, notes & Markdown', group: 'docs', exts: ['docx', 'doc', 'md', 'txt', 'rtf'] },
     { key: 'XLSX', label: 'XLSX', sub: 'Spreadsheets & CSV ledgers', group: 'code', exts: ['xlsx', 'csv', 'numbers'] },
     { key: 'CODE', label: 'CODE', sub: 'Source code & configs', group: 'code', exts: ['py', 'rs', 'ts', 'tsx', 'js', 'cpp', 'json', 'sql'] },
+    { key: 'DESKTOP', label: 'DESKTOP', sub: 'Everything on your Desktop', group: null, dir: 'Desktop' },
+    { key: 'DOCUMENTS', label: 'DOCUMENTS', sub: 'Your Documents folder', group: null, dir: 'Documents' },
+    { key: 'DOWNLOADS', label: 'DOWNLOADS', sub: 'Your Downloads folder', group: null, dir: 'Downloads' },
     { key: 'FOLDERS', label: 'FOLDERS', sub: 'Desktop, Documents & Downloads', group: null, folders: true },
     { key: 'MEDICAL', label: 'MEDICAL / HEALTH', sub: 'Lab results, prescriptions, bloodwork, imaging', group: 'smart',
-      keywords: ['blood', 'hemoglobin', 'haemoglobin', 'hematology', 'cbc', 'prescription', 'mri', 'pathology', 'clinic', 'hospital', 'patient', 'diagnosis', 'lipid', 'glucose', 'platelet', 'serum'] },
+      keywords: ['blood', 'hemoglobin', 'haemoglobin', 'hematology', 'cbc', 'prescription', 'mri', 'pathology', 'clinic', 'hospital', 'patient', 'diagnosis', 'lipid', 'glucose', 'platelet', 'serum', 'erythrocyte'] },
     { key: 'MEDIA', label: 'MEDIA', sub: 'Audio & video recordings', group: 'media', exts: ['mp4', 'mov', 'wav', 'mp3'] },
     { key: 'ZIP', label: 'ARCHIVES', sub: 'Compressed archives & disk images', group: 'code', exts: ['zip', 'tar', 'dmg', '7z'] },
     // keywords match as word prefixes, so none may be the start of an unrelated common word ("repo" → "report")
@@ -21,6 +24,10 @@
       keywords: ['hackathon', 'project', 'pitch', 'repository', 'roadmap', 'sprint', 'prototype'] },
     { key: 'RECENT', label: 'RECENT', sub: 'Last 7 days, all formats', group: null, recentDays: 7 },
   ];
+  // ALL FILES: every format vault's extensions (media and archives have their own vaults)
+  const FORMAT_KEYS = ['PDF', 'PPTX', 'JPEG', 'DOCX', 'XLSX', 'CODE'];
+  CATEGORIES.unshift({ key: 'ALL', label: 'ALL FILES', sub: 'Every document, image and code file', group: null,
+    exts: FORMAT_KEYS.flatMap((k) => CATEGORIES.find((c) => c.key === k).exts) });
 
   const STOP = new Set(('find show get give open search look the an file files which that this these has have having with ' +
     'about related relating regarding of for to in on at my me is are was and or any all some containing contains contain ' +
@@ -55,9 +62,20 @@
 
   function categoryOf(ext) {
     const e = String(ext || '').toLowerCase();
-    const c = CATEGORIES.find((c) => c.exts && c.exts.includes(e));
+    const c = CATEGORIES.find((c) => c.key !== 'ALL' && c.exts && c.exts.includes(e));
     return c ? c.key : 'OTHER';
   }
+
+  // How the in-app viewer shows a file: straight from disk (pdf, image, video, audio), read as text,
+  // converted to a page by the backend (doc), or not at all (none). Matches converter_for in lib.rs.
+  const VIEW = {
+    pdf: ['pdf'], image: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif', 'bmp', 'tif', 'tiff', 'svg'],
+    video: ['mp4', 'mov', 'm4v'], audio: ['mp3', 'm4a', 'wav', 'aac', 'aiff'],
+    doc: ['docx', 'pptx', 'xlsx', 'ppt', 'xls', 'csv', 'pages', 'key', 'numbers', 'rtf', 'rtfd', 'doc', 'odt'],
+    text: ['txt', 'md', 'log', 'json', 'xml', 'yaml', 'yml', 'toml', 'ini', 'html', 'css', 'js', 'ts', 'tsx', 'jsx', 'py', 'rs', 'c', 'h', 'cpp', 'hpp',
+      'java', 'kt', 'swift', 'go', 'rb', 'php', 'sh', 'zsh', 'sql', 'r', 'm', 'tex', 'srt', 'vtt'],
+  };
+  const viewKind = (ext) => Object.keys(VIEW).find((k) => VIEW[k].includes(String(ext || '').toLowerCase())) || 'none';
 
   // Mirrors the Spotlight query: word-prefix in the name (3 pts) or in the contents (1 pt).
   function scoreFile(f, terms) {
@@ -105,12 +123,33 @@
   const SORTS = {
     relevance: (a, b) => (b.score || 0) - (a.score || 0) || b.modified - a.modified,
     name: (a, b) => a.name.localeCompare(b.name, 'en', { numeric: true, sensitivity: 'base' }),
+    nameDesc: (a, b) => b.name.localeCompare(a.name, 'en', { numeric: true, sensitivity: 'base' }),
     newest: (a, b) => b.modified - a.modified,
     oldest: (a, b) => a.modified - b.modified,
     largest: (a, b) => b.size - a.size,
   };
   const sortFiles = (files, mode) => [...files].sort((a, b) => (b.kind === 'dir') - (a.kind === 'dir') || SORTS[mode](a, b));
   const filterFormat = (files, fmt) => (fmt === 'ALL' ? files : files.filter((f) => (fmt === 'FOLDERS' ? f.kind === 'dir' : f.kind !== 'dir' && categoryOf(f.ext) === fmt)));
+
+  // Vault shelf order. summary[key] is undefined while counting; those vaults go last.
+  function sortVaults(cats, summary, by) {
+    if (by === 'relevance') return [...cats];
+    if (by === 'name' || by === 'nameDesc') return [...cats].sort((a, b) => SORTS[by]({ name: a.label }, { name: b.label }));
+    const val = (c) => { const s = summary[c.key]; return !s || s.failed ? null : by === 'largest' ? s.bytes : s.newest ? s.newest.modified : null; };
+    const dir = by === 'oldest' ? 1 : -1;
+    return [...cats].sort((a, b) => { const x = val(a), y = val(b); return x === null ? (y === null ? 0 : 1) : y === null ? -1 : dir * (x - y); });
+  }
+
+  // How many of a shelf's records each FILE TYPES option would show.
+  function formatCounts(files) {
+    const out = { ALL: files.length, FOLDERS: 0 };
+    for (const k of FORMAT_KEYS) out[k] = 0;
+    for (const f of files) {
+      if (f.kind === 'dir') out.FOLDERS++;
+      else { const k = categoryOf(f.ext); if (k in out) out[k]++; }
+    }
+    return { ALL: out.ALL, PDF: out.PDF, PPTX: out.PPTX, JPEG: out.JPEG, DOCX: out.DOCX, XLSX: out.XLSX, CODE: out.CODE, FOLDERS: out.FOLDERS };
+  }
 
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -162,12 +201,6 @@
     return out;
   }
 
-  // Hero story: scroll position 0…1 → which of n stages, and how far through it (0…1).
-  function storyAt(p, n = 4) {
-    const c = Math.min(1, Math.max(0, p));
-    const stage = Math.min(n - 1, Math.floor(c * n));
-    return { stage, t: c === 1 ? 1 : c * n - stage };
-  }
 
   const trayAdd = (tray, f) => (f.kind === 'dir' || tray.some((t) => t.path === f.path) ? tray : [...tray, f]);
 
@@ -200,9 +233,9 @@
   }
 
   const api = {
-    CATEGORIES, esc, cleanQuery, expandTerms, categoryOf, searchLocal, snippetFor, filesInCategory,
+    CATEGORIES, esc, cleanQuery, expandTerms, categoryOf, viewKind, searchLocal, snippetFor, filesInCategory,
     categoriesForTab, sortFiles, filterFormat, highlight, formatSize, formatDate, B, smoothstep, openness, wrapRel, xPos,
-    listChildren, parseVoice, trayAdd, formatPerms, tilde, matchKind, pathCrumbs, storyAt,
+    listChildren, parseVoice, trayAdd, formatPerms, tilde, matchKind, pathCrumbs, sortVaults, formatCounts,
   };
   root.ArchiveCore = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
