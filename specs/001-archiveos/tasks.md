@@ -77,8 +77,8 @@ description: "Task list for ArchiveOS"
 - [X] T030 Run all suites (`npm test`, `npm run test:ui`, `cargo test`), `cargo check --target aarch64-apple-ios`, `npm run tauri build -- --debug --bundles app`, and `tauri ios build --debug --target aarch64-sim` to verify both apps bundle
 - [X] T031 `README.md`: what it is, how to run, scope cuts, iOS notes
 - [ ] T900 Follow-up (documented skip): automate native-action checks (needs a live Finder/Quick Look); manual steps in quickstart.md until then. Real-Spotlight search is covered by the opt-in test `live_spotlight_finds_file_by_contents` (`cargo test -- --ignored`) in src-tauri/src/lib.rs
-- [ ] T901 Follow-up: iOS document-picker plugin with security-scoped bookmarks so iOS can search any folder the owner picks
-- [ ] T902 Follow-up: lazy snippet for the active file in src-tauri/src/lib.rs (only the top 6 content hits get snippets today, to keep search near 2 s)
+- [x] T901 Follow-up: iOS document-picker plugin with security-scoped bookmarks so iOS can search any folder the owner picks (done in specs/004-arkhive-workspace)
+- [x] T902 Follow-up: lazy snippet for the active file in src-tauri/src/lib.rs (only the top 6 content hits get snippets today, to keep search near 2 s) (done in specs/004-arkhive-workspace)
 
 ## Dependencies
 

@@ -88,14 +88,14 @@ Carries the three review fixes left failing on `001-archiveos` (FR-028) and the 
 ## Phase 9: Polish
 
 - [X] T032 `prefers-reduced-motion` covers the lid, dive, tray and pill in `app/index.html`; extend the reduced-motion UI test through the new entry and the tray
-- [ ] T033 Run `npm test`, `npm run test:ui`, `cargo test`, `cargo check --target aarch64-apple-ios`, and `npm run tauri build -- --debug --bundles app`
-- [ ] T034 Update `README.md`: name, entry, folders, voice, tray, limits
+- [x] T033 Run `npm test`, `npm run test:ui`, `cargo test`, `cargo check --target aarch64-apple-ios`, and `npm run tauri build -- --debug --bundles app` (done in specs/004-arkhive-workspace)
+- [x] T034 Update `README.md`: name, entry, folders, voice, tray, limits (done in specs/004-arkhive-workspace)
 - [ ] T904 Follow-up (documented skip): automate the hand checks in quickstart.md (V1, D1, D2, D3, X1), which need a live Mac session
-- [ ] T905 Follow-up: native speech recognition command, if hand check V1 shows the webview's speech input does not work
+- [x] T905 Follow-up: native speech recognition command, if hand check V1 shows the webview's speech input does not work (done in specs/004-arkhive-workspace)
 - [ ] T906 Follow-up: Android target
-- [ ] T907 Follow-up: Full Disk Access check and settings link
-- [ ] T908 Follow-up: real-folder picker for the browser preview
-- [ ] T909 Follow-up: remove a single card from the tray; choose the export destination
+- [x] T907 Follow-up: Full Disk Access check and settings link (done in specs/004-arkhive-workspace)
+- [x] T908 Follow-up: real-folder picker for the browser preview (done in specs/004-arkhive-workspace)
+- [x] T909 Follow-up: remove a single card from the tray; choose the export destination (done in specs/004-arkhive-workspace)
 
 Carried from 001 and still open: T900, T901, T902.
 

@@ -51,7 +51,7 @@
 - [X] T137 Full suites: `npm test`, `npm run test:ui`, `cargo test`, `cargo check --target aarch64-apple-ios`
 - [X] T138 Update `README.md`
 - [ ] T930 Follow-up (hand checks on a Mac, quickstart.md): H1, H2, C1, P1, O1, R1, T1, T2, F1. T2 was tried on 2026-11-12 and stopped after 50 s waiting on what is almost certainly the macOS "control Finder" prompt, so the live Trash move is unconfirmed
-- [ ] T931 Follow-up: a "move to folder" picker in the inspector
-- [ ] T932 Follow-up: undo for rename; batch rename and Trash from the tray
+- [x] T931 Follow-up: a "move to folder" picker in the inspector (done in specs/004-arkhive-workspace)
+- [x] T932 Follow-up: undo for rename; batch rename and Trash from the tray (done in specs/004-arkhive-workspace)
 
 Carried and still open: T900–T902, T904–T909.
