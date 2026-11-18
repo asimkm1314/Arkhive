@@ -1,0 +1,23 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "app/index.html"
+        ],
+        "createdAt": "2026-11-10T22:00:34.420Z",
+        "reason": "specified in the user's pasted ArchiveOS brief: --paper #EDE6DA is the mandated Soft Beige primary background"
+      },
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "createdAt": "2026-11-13T09:44:35.128Z",
+        "reason": "user chose option (b) in this session: the start screen keeps its Inter/black look until a separate spec (option c); Inter is only the hero face, from spec 003's brief"
+      }
+    ]
+  }
+}
