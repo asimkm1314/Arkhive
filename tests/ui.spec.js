@@ -543,7 +543,7 @@ test('tools: SORT and FILE TYPES show on the vault shelf and on a file shelf, ju
     await expect(label(page, 'pillFiles')).toBeVisible();
     const sort = await page.locator('#pillSort').boundingBox();
     const H = await page.$eval('#probe', (e) => e.getBoundingClientRect().height);
-    expect(Math.abs(sort.y - (450 - H / 2 - 76))).toBeLessThan(3);
+    expect(Math.abs(sort.y + sort.height / 2 - (450 - H / 2 - 76 + 14))).toBeLessThan(3); // centred where the 28px bar sat (US10)
   }
   await expect(label(page, 'pillSort')).toHaveText('SORT · RELEVANCE');
   await expect(label(page, 'pillFiles')).toHaveText('FILE TYPES · ALL FILES');
@@ -1045,10 +1045,11 @@ test('motion: / opens the search field at once; the pointer opens it in 200 ms',
   expect(await page.$eval('.pill', (e) => getComputedStyle(e).transitionDuration)).toBe('0.22s');
 });
 
-test('motion: the SORT marker slides by transform only; the voice pill moves in 200 ms; the toast in 400 ms ease', async ({ page }) => {
+test('motion: the SORT marker slides in 200 ms; the voice pill moves in 200 ms; the toast in 400 ms ease', async ({ page }) => {
   await start(page);
   const ind = await page.$eval('#pillSort .ind', (e) => ({ p: getComputedStyle(e).transitionProperty, d: getComputedStyle(e).transitionDuration, w: getComputedStyle(e).width }));
-  expect(ind).toEqual({ p: 'transform', d: '0.2s', w: '1px' });
+  expect(ind.p).toBe('transform, width'); // a rounded marker needs its real width (US10)
+  expect(ind.d).toBe('0.2s, 0.2s');
   expect(await page.$eval('#voicePill', (e) => getComputedStyle(e).transitionDuration)).toBe('0.2s');
   expect(await page.$eval('#toast', (e) => [getComputedStyle(e).transitionDuration, getComputedStyle(e).transitionTimingFunction])).toEqual(['0.4s', 'ease']);
 });
@@ -1082,6 +1083,51 @@ test('motion: with reduced motion sheets fade in 200 ms and the shelf steps with
   const b = await page.$eval('#shelf1 .tape.is-active', (e) => e.style.transform);
   expect(a).toBe(b); // already in place, nothing slides
   expect(a).toBe(x0); // the pulled-out slot sits where the last one sat
+});
+
+// ---------- 005 US10 soft edges ----------
+
+test('soft edges: buttons, bars, search and tray have rounded corners; the press is lighter; touch targets stay whole', async ({ page }) => {
+  await start(page);
+  const cs = (sel, prop) => page.$eval(sel, (e, p) => getComputedStyle(e)[p], prop);
+  for (const sel of ['#back', '#pickTop', '#inspectBtn', '#plus', '#closeBtn', '.act', '[data-tray="export"]', '#micBadge']) {
+    expect(await cs(sel, 'borderTopLeftRadius'), sel).toBe('8px');
+  }
+  expect(await cs('#back', 'overflow')).toBe('visible'); // the enlarged touch area of a .box is not clipped
+  expect(await cs('#pillSort', 'borderTopLeftRadius')).toBe('12px');
+  expect(await cs('#pillSort', 'paddingTop')).toBe('4px');
+  expect(await cs('#pillSort', 'boxShadow')).toContain('rgba(38, 26, 20, 0.15)');
+  expect(await cs('#pillSort .pill-label', 'borderTopLeftRadius')).toBe('7px');
+  expect(await cs('#pillSort .ind', 'borderTopLeftRadius')).toBe('7px');
+  expect(await cs('#pillSort .pill-opts button', 'borderTopLeftRadius')).toBe('6px');
+  expect(await cs('#sbox', 'height')).toBe('1.5px');
+  expect(await cs('#sbox', 'borderTopLeftRadius')).toBe('999px');
+  await page.keyboard.press('/');
+  expect(await cs('#sbox', 'borderTopLeftRadius')).toBe('12px');
+  expect(await cs('#sbox', 'boxShadow')).toContain('rgba(38, 26, 20, 0.16)');
+  expect(await cs('#sbox', 'borderLeftColor')).toBe('rgb(35, 68, 52)'); // focused: forest, the field's focus cue
+  expect(await cs('#tray', 'borderRadius')).toBe('14px 14px 0px 0px');
+});
+
+test('soft edges: ENTER ARKHIVE rests on a softer shadow and presses to -1px at 0.99', async ({ page }) => {
+  await page.goto(URL);
+  await settled(page);
+  expect(await page.$eval('#btn-enter-arkhive', (e) => getComputedStyle(e).boxShadow)).toContain('0px 3px 0px');
+  const active = await page.evaluate(() => {
+    for (const sh of document.styleSheets) for (const r of sh.cssRules) if (r.selectorText === '#btn-enter-arkhive:active') return [r.style.transform, r.style.boxShadow];
+    return null;
+  });
+  expect(active[0]).toBe('translate(-50%, -1px) scale(0.99)');
+  expect(active[1]).toMatch(/^0(px)? 2px 0(px)? /);
+});
+
+test('soft edges: a staged file card has 8px corners', async ({ page }) => {
+  await start(page);
+  await search(page, 'blood');
+  await view(page, 'tier2');
+  await page.locator('#plus').click();
+  await expect(page.locator('#trayList li')).toHaveCount(1);
+  expect(await page.$eval('#trayList li', (e) => getComputedStyle(e).borderTopLeftRadius)).toBe('8px');
 });
 
 test('reduced motion: the whole flow still completes', async ({ page }) => {
