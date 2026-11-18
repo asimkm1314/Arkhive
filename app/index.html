@@ -15,6 +15,7 @@
   --forest: #234434; --forest-light: #3A634C; --gold: #B89658; --silver: #D8CFC0;
   --rule: rgba(38, 26, 20, .88);
   --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-out: cubic-bezier(.23, 1, .32, 1); /* strong ease-out for UI that must keep up */
   --H: min(46vh, 31vw);
   --font-serif: "Newsreader", Georgia, serif;
   --font-sans: "Inter Tight", system-ui, sans-serif;
@@ -48,7 +49,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 
 /* masked line reveals: overflow mask + translate, never opacity */
 .m { display: block; overflow: hidden; }
-.mi { display: block; transform: translateY(110%); transition: transform .9s var(--ease) var(--dl, 0s); }
+.mi { display: block; transform: translateY(110%); transition: transform .3s var(--ease-out) var(--dl, 0s); }
 /* roll containers: stacked spans that slide through a mask */
 .rl { display: inline-grid; overflow: hidden; vertical-align: top; }
 .rl > span { grid-area: 1 / 1; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
@@ -77,13 +78,15 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   background: var(--forest); color: var(--sheet); border: 1.5px solid var(--mocha-ink); box-shadow: 0 4px 0 var(--mocha-ink), 0 10px 24px -6px rgba(38, 26, 20, .28);
   font: 700 13px/1 var(--font-sans); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
   transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .2s ease; }
-#btn-enter-arkhive:hover { transform: translate(-50%, -4px) scale(1.02); border-color: var(--gold); box-shadow: 0 7px 0 var(--mocha-ink), 0 14px 24px -8px rgba(35, 68, 52, .3); }
+@media (hover: hover) and (pointer: fine) { /* touch fires a false hover on tap */
+  #btn-enter-arkhive:hover { transform: translate(-50%, -4px) scale(1.02); border-color: var(--gold); box-shadow: 0 7px 0 var(--mocha-ink), 0 14px 24px -8px rgba(35, 68, 52, .3); }
+  #btn-enter-arkhive:hover .bt-a { transform: translateY(-110%); }
+  #btn-enter-arkhive:hover .bt-b { transform: translateY(0%); }
+}
 #btn-enter-arkhive:active { transform: translate(-50%, -2px) scale(.98); box-shadow: 0 2px 0 var(--mocha-ink); transition-duration: .08s; }
 .bt-roll { position: relative; z-index: 1; display: inline-grid; height: 1.2em; line-height: 1.2em; overflow: hidden; vertical-align: middle; }
-.bt-roll > span { grid-area: 1 / 1; transition: transform .38s cubic-bezier(.2, .8, .2, 1); }
+.bt-roll > span { grid-area: 1 / 1; transition: transform .25s var(--ease-out); }
 .bt-b { color: var(--gold); transform: translateY(110%); }
-#btn-enter-arkhive:hover .bt-a { transform: translateY(-110%); }
-#btn-enter-arkhive:hover .bt-b { transform: translateY(0%); }
 #hero[data-scene="flat"] .desk { display: none; }
 #micBadge { padding: 0 8px; height: 24px; display: inline-flex; align-items: center; border: 1px solid var(--rule); }
 [data-mic="on"] #micBadge { background: var(--forest); color: var(--paper); border-color: var(--forest); }
@@ -135,12 +138,13 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 #sbox {
   position: absolute; left: 50%; top: 62px; width: 48px; height: 1px; transform: translateX(-50%); overflow: hidden; pointer-events: auto;
   background: var(--mocha-ink); border: 0 solid var(--rule);
-  transition: width .45s var(--ease), height .45s var(--ease), background-color .45s var(--ease), border-width .45s var(--ease);
+  transition: width .2s var(--ease-out), height .2s var(--ease-out), background-color .2s var(--ease-out), border-width .2s var(--ease-out);
 }
 #sHit { position: absolute; left: 50%; top: 52px; width: 48px; height: 21px; transform: translateX(-50%); } /* a taller target for the pointer than one pixel */
 #sbox[data-open] { width: min(440px, calc(100vw - 28px)); height: 40px; background: var(--sheet); border-width: 1px 1px 2px; border-bottom-color: var(--forest); }
-#searchForm { position: relative; display: flex; align-items: stretch; height: 37px; width: min(438px, calc(100vw - 30px)); visibility: hidden; transition: visibility 0s .45s; }
+#searchForm { position: relative; display: flex; align-items: stretch; height: 37px; width: min(438px, calc(100vw - 30px)); visibility: hidden; transition: visibility 0s .2s; }
 #sbox[data-open] #searchForm { visibility: visible; transition-delay: 0s; }
+#sbox.instant, #sbox.instant * { transition: none !important; } /* opened from the keyboard: no animation */
 #q { flex: 1; min-width: 0; border: 0; background: transparent; outline: none; padding: 0 12px; font: 400 16px var(--font-serif); color: var(--mocha-ink); user-select: text; -webkit-user-select: text; }
 #q::placeholder { color: var(--mocha-mid); }
 .mic { flex: none; width: 40px; display: grid; place-items: center; border-left: 1px solid var(--rule); color: var(--forest); transition: background-color .3s var(--ease), color .3s var(--ease); }
@@ -151,7 +155,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .rows > .m { overflow: visible; clip-path: inset(-4px 0); }
 /* SORT and FILE TYPES: right under the wordmark's search line; they step down while the field is open */
 .tools { position: absolute; left: 0; right: 0; top: max(118px, calc(50% - var(--H) / 2 - 76px)); z-index: 35; display: flex; justify-content: center; gap: 12px; pointer-events: none; }
-.pill { pointer-events: auto; display: grid; grid-template-columns: auto 0fr; height: 28px; max-width: calc(100vw - 20px); background: var(--sheet); border: 1px solid var(--rule); transition: grid-template-columns .35s var(--ease); }
+.pill { pointer-events: auto; display: grid; grid-template-columns: auto 0fr; height: 28px; max-width: calc(100vw - 20px); background: var(--sheet); border: 1px solid var(--rule); transition: grid-template-columns .22s var(--ease-out); }
 .pill[data-open] { grid-template-columns: auto 1fr; }
 .pill-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; white-space: nowrap; transition: background-color .15s var(--ease), color .15s var(--ease); }
 .pill-label:hover { background: var(--paper); }
@@ -163,7 +167,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .pill-opts button[aria-pressed="true"] { color: var(--paper); }
 .pill-opts .n { font-weight: 500; color: var(--mocha-muted); }
 .pill-opts button[aria-pressed="true"] .n { color: var(--gold); }
-.pill-opts .ind { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .35s var(--ease), width .35s var(--ease); }
+.pill-opts .ind { position: absolute; left: 0; top: 0; bottom: 0; width: 1px; transform-origin: left; transform: scaleX(0); background: var(--forest); border-bottom: 2px solid var(--gold); transition: transform .2s var(--ease-out); }
 #ctx { max-width: 92vw; text-align: center; color: var(--mocha-mid); }
 #ctx button { text-transform: inherit; letter-spacing: inherit; color: var(--forest); padding-bottom: 2px; border-bottom: 1px solid var(--forest); }
 #ctx .crumb[aria-current] { color: inherit; border-bottom-color: transparent; }
@@ -193,7 +197,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 #detail .close:hover { background: var(--gold); }
 .d-left .m { padding: 3px; margin: -3px; } /* room for focus rings inside the reveal mask */
 .d-left .m + .m { margin-top: 15px; }
-.d-left .mi { transition-duration: .9s; transform: translateY(115%); }
+.d-left .mi { transform: translateY(115%); }
 #detail.in .d-left .mi { transform: none; }
 #d-name { font: 400 clamp(34px, 4.2vw, 64px)/1.04 var(--font-serif); letter-spacing: -.015em; overflow-wrap: break-word; }
 #d-name:focus { outline: none; }
@@ -271,7 +275,7 @@ body:not([data-tray="0"]) :is(.shelf, .cap, .rows) { translate: 0 -56px; }
 [data-tray="trashAll"].armed { background: var(--mocha-ink); color: var(--paper); }
 #voicePill {
   position: fixed; left: 50%; top: 112px; z-index: 80; max-width: min(92vw, 720px); display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 14px;
-  background: var(--forest); color: var(--paper); border: 1px solid var(--gold); transform: translate(-50%, -200px); transition: transform .5s var(--ease);
+  background: var(--forest); color: var(--paper); border: 1px solid var(--gold); transform: translate(-50%, -200px); transition: transform .2s var(--ease-out);
 }
 [data-mic="on"] #voicePill { transform: translate(-50%, 0); }
 [data-mode="landing"] #voicePill { top: 78px; }
@@ -284,7 +288,7 @@ body:not([data-tray="0"]) :is(.shelf, .cap, .rows) { translate: 0 -56px; }
 @keyframes wave { to { transform: scaleY(1); } }
 #toast {
   --b: 28px; position: fixed; left: clamp(14px, 3vw, 40px); bottom: var(--b); z-index: 90; max-width: min(380px, calc(100vw - 28px));
-  transform: translateY(calc(100% + var(--b) + 12px)); transition: transform .5s var(--ease);
+  transform: translateY(calc(100% + var(--b) + 12px)); transition: transform .4s ease;
   background: var(--mocha-ink); color: var(--paper); border: 1px solid var(--gold); padding: 12px 16px; font: 400 15px/1.4 var(--font-serif);
 }
 #toast.on { transform: none; }
@@ -311,7 +315,7 @@ body:not([data-tray="0"]) :is(.shelf, .cap, .rows) { translate: 0 -56px; }
    inherited visibility, so a just-revealed input stays unfocusable for a frame. */
 @media (prefers-reduced-motion: reduce) {
   .mi, .rl > span, .pill, .pill-opts .ind, .pill-opts button, #sbox, #toast, #cursor i, .act, #tray, #voicePill, .mic, .enter,
-  #btn-enter-arkhive, .bt-roll > span { transition-duration: 1ms !important; transition-delay: 0s !important; }
+  #btn-enter-arkhive, .bt-roll > span, .shelf, .cap, .rows { transition-duration: 1ms !important; transition-delay: 0s !important; }
   .wave i { animation: none !important; }
 }
 </style>
@@ -394,15 +398,15 @@ body:not([data-tray="0"]) :is(.shelf, .cap, .rows) { translate: 0 -56px; }
 <section id="detail" class="sheet" aria-label="File inspector">
   <button class="lbl box close" id="closeBtn">Close</button>
   <div class="d-left">
-    <div class="m"><div class="mi" style="--dl:.62s">
+    <div class="m"><div class="mi" style="--dl:.2s">
       <h2 id="d-name" tabindex="-1" title="Click to rename"></h2>
       <form id="renameForm"><label class="sr" for="renameInput">New name</label><input id="renameInput" type="text" autocomplete="off" spellcheck="false" maxlength="255"></form>
     </div></div>
-    <div class="m"><div class="mi lbl" id="d-badge" style="--dl:.695s"></div></div>
-    <div class="m"><div class="mi lbl" id="d-meta" style="--dl:.77s"></div></div>
-    <div class="m"><p class="mi" id="d-snippet" style="--dl:.845s"></p></div>
-    <div class="m"><nav class="mi" id="d-path" aria-label="Folders above this file" style="--dl:.92s"></nav></div>
-    <div class="m"><div class="mi d-acts" style="--dl:.995s">
+    <div class="m"><div class="mi lbl" id="d-badge" style="--dl:.24s"></div></div>
+    <div class="m"><div class="mi lbl" id="d-meta" style="--dl:.28s"></div></div>
+    <div class="m"><p class="mi" id="d-snippet" style="--dl:.32s"></p></div>
+    <div class="m"><nav class="mi" id="d-path" aria-label="Folders above this file" style="--dl:.36s"></nav></div>
+    <div class="m"><div class="mi d-acts" style="--dl:.4s">
       <button class="lbl box act primary" data-act="view">View in Arkhive</button>
       <button class="lbl box act" data-act="open_file">Open in default app</button>
       <button class="lbl box act" data-act="quick_look">Quick Look (space)</button>
@@ -473,7 +477,8 @@ const body = document.body, rootStyle = document.documentElement.style;
 const esc = C.esc;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const dur = (ms) => (reduce ? 1 : ms);
-const SHEET_EASE = 'cubic-bezier(.76, 0, .18, 1)';
+const SHEET_EASE = 'cubic-bezier(.32, .72, 0, 1)', EASE_OUT = 'cubic-bezier(.23, 1, .32, 1)';
+const OPEN_MS = 450, CLOSE_MS = 300; // sheets: open slower than they fold back
 const INK = '#261A14', MID = '#5C463B', MUTED = '#8A7367', FOREST = '#234434', GOLD = '#B89658', PAPER = '#EDE6DA', SHEET = '#F5EFE6';
 const mod = (a, n) => ((a % n) + n) % n;
 const ROOT = { name: 'FOLDERS', path: null }; // first crumb of every folder trail
@@ -530,7 +535,7 @@ function roll(el, html, dir = 1) {
   span.innerHTML = html;
   el.appendChild(span);
   if (!old.length || reduce) { old.forEach((o) => o.remove()); return; }
-  const opt = { duration: 650, easing: 'cubic-bezier(.2, .8, .2, 1)' };
+  const opt = { duration: 180, easing: EASE_OUT }; // fires on every shelf step: keep up with the keys
   span.animate([{ transform: `translateY(${dir * 105}%)` }, { transform: 'translateY(0)' }], opt);
   for (const o of old) {
     o.getAnimations().forEach((a) => a.cancel());
@@ -846,7 +851,7 @@ function setItems(sh, items, keep = false) {
 
 function updateShelf(sh, dt) {
   if (!sh.total) return;
-  sh.s += (sh.T - sh.s) * (1 - Math.exp(-(sh.dragging ? 18 : 5.2) * Math.min(dt, 0.05)));
+  sh.s = reduce ? sh.T : sh.s + (sh.T - sh.s) * (1 - Math.exp(-(sh.dragging ? 18 : 5.2) * Math.min(dt, 0.05)));
   const tl = sh.tilt, ta = 1 - Math.exp(-7 * dt);
   tl.x += (tl.tx - tl.x) * ta; tl.y += (tl.ty - tl.y) * ta;
   const la = 1 - Math.exp(-12 * dt), half = innerWidth / 2 + d + ws;
@@ -1075,7 +1080,9 @@ async function sheet(el, rect, rot, ms, open, radius = 3) {
   el.style.visibility = 'visible';
   const small = { clipPath: insetOf(rect, radius), transform: `rotate(${rot}deg)` };
   const full = { clipPath: 'inset(0px 0px 0px 0px round 0px)', transform: 'rotate(0deg)' };
-  const a = el.animate(open ? [small, full] : [full, small], { duration: dur(ms), easing: SHEET_EASE, fill: 'forwards' });
+  const a = reduce // reduced motion: a short fade instead of growing out of the rect
+    ? el.animate(open ? [{ opacity: 0 }, { opacity: 1 }] : [{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease', fill: 'forwards' })
+    : el.animate(open ? [small, full] : [full, small], { duration: ms, easing: SHEET_EASE, fill: 'forwards' });
   await a.finished;
   a.cancel();
   if (!open) el.style.visibility = 'hidden';
@@ -1092,8 +1099,8 @@ async function enterVault(origin = $('#btn-enter-arkhive')) {
   const at = shelf1.items.findIndex((c) => c.key === 'PDF'); // the vault opens on PDF; ALL FILES sits just before it
   if (at >= 0) shelf1.T = shelf1.s = at;
   setMode('vault');
-  const rise = $('#shelf1').animate([{ transform: 'translateY(25%)' }, { transform: 'translateY(0)' }], { duration: dur(600), delay: dur(100), easing: 'cubic-bezier(.2, .8, .2, 1)', fill: 'backwards' });
-  await sheet(els.vault, rect, 0, 600, true, st.origin.radius);
+  const rise = $('#shelf1').animate([{ transform: 'translateY(25%)' }, { transform: 'translateY(0)' }], { duration: dur(OPEN_MS), delay: dur(50), easing: EASE_OUT, fill: 'backwards' });
+  await sheet(els.vault, rect, 0, OPEN_MS, true, st.origin.radius);
   body.dataset.chrome = 'on';
   await rise.finished;
   st.busy = false;
@@ -1107,7 +1114,7 @@ async function backToStart() {
   closePills();
   setMode('landing');
   const o = st.origin || { el: $('#btn-enter-arkhive'), radius: 999 };
-  await sheet(els.vault, o.el.getBoundingClientRect(), 0, 600, false, o.radius);
+  await sheet(els.vault, o.el.getBoundingClientRect(), 0, CLOSE_MS, false, o.radius);
   st.busy = false;
   setView('landing');
 }
@@ -1149,7 +1156,7 @@ async function showFiles(files, sort) {
   st.busy = true;
   setFiles(files, sort);
   setMode('files');
-  await sheet(els.tier2, rect, -4.5, 950, true);
+  await sheet(els.tier2, rect, -4.5, OPEN_MS, true);
   st.busy = false;
   setView('tier2');
 }
@@ -1197,7 +1204,7 @@ async function collapse() {
   if (st.busy || st.mode !== 'files') return;
   st.busy = true;
   setMode('vault');
-  await sheet(els.tier2, coverRect(shelf1), -4.5, 850, false);
+  await sheet(els.tier2, coverRect(shelf1), -4.5, CLOSE_MS, false);
   $('#empty').classList.remove('on');
   st.busy = false;
   setView('tier1');
@@ -1267,8 +1274,8 @@ async function openDetail() {
   els.detail.classList.remove('in');
   void els.detail.offsetWidth;
   els.detail.classList.add('in');
-  ink = { start: performance.now() + dur(520) };
-  await sheet(els.detail, rect, -4.5, 1050, true);
+  ink = { start: performance.now() + dur(200) };
+  await sheet(els.detail, rect, -4.5, OPEN_MS, true);
   $('#d-name').focus({ preventScroll: true }); // announce the file; Space stays Quick Look (not a button press)
   st.busy = false;
   setView('detail');
@@ -1280,7 +1287,7 @@ async function closeDetail() {
   disarmTrash();
   els.detail.classList.remove('in');
   setMode('files');
-  await sheet(els.detail, coverRect(shelf2), -4.5, 850, false);
+  await sheet(els.detail, coverRect(shelf2), -4.5, CLOSE_MS, false);
   st.busy = false;
   setView('tier2');
 }
@@ -1362,7 +1369,7 @@ async function openViewer(f, rect) {
   $('#v-name').textContent = f.name;
   vBody.replaceChildren();
   body.dataset.viewing = '';
-  viewer.opening = sheet(els.viewer, rect, 0, 700, true);
+  viewer.opening = sheet(els.viewer, rect, 0, OPEN_MS, true);
   let shown;
   try { shown = await viewNode(f); } catch (err) { shown = vMsg(`${f.name} could not be shown here: ${err}`); }
   if (viewer.file === f) vBody.replaceChildren(shown); // the owner may have closed it while it converted
@@ -1373,7 +1380,7 @@ async function closeViewer() {
   if (!viewer.file || viewer.closing) return;
   viewer.closing = true;
   await viewer.opening;
-  await sheet(els.viewer, viewer.rect, 0, 600, false);
+  await sheet(els.viewer, viewer.rect, 0, CLOSE_MS, false);
   vBody.replaceChildren(); // stops a video and drops the page
   delete body.dataset.viewing;
   Object.assign(viewer, { file: null, closing: false });
@@ -1631,8 +1638,7 @@ if (TAURI && window.__TAURI__.event) {
 const pillSort = $('#pillSort'), pillFiles = $('#pillFiles'), PILLS = [pillSort, pillFiles];
 function moveInd(pill) {
   const on = pill.querySelector('[aria-pressed="true"]'), ind = pill.querySelector('.ind');
-  ind.style.width = (on ? on.offsetWidth : 0) + 'px';
-  ind.style.transform = `translateX(${on ? on.offsetLeft : 0}px)`;
+  ind.style.transform = `translateX(${on ? on.offsetLeft : 0}px) scaleX(${on ? on.offsetWidth : 0})`; // 1px wide, scaled: no layout per frame
 }
 // On the vault shelf FILE TYPES counts each type's vault; on a file shelf, the files on show.
 function typeCounts() {
@@ -1703,9 +1709,11 @@ $('#pickTop').addEventListener('click', pickFolder);
 
 // ---------- search: a hairline under the wordmark that pops out ----------
 const searchOpen = () => els.sbox.hasAttribute('data-open');
-function openSearch(focus) {
+function openSearch(focus, instant = false) { // instant: opened from the keyboard, so no animation
   if (st.mode === 'landing' || st.mode === 'detail') return;
+  els.sbox.classList.toggle('instant', instant);
   els.sbox.setAttribute('data-open', '');
+  if (instant) { void els.sbox.offsetWidth; els.sbox.classList.remove('instant'); } // styles land at full size, so nothing transitions
   $('#brand').setAttribute('aria-expanded', 'true');
   if (focus) { els.q.focus(); els.q.select(); }
 }
@@ -1838,7 +1846,7 @@ addEventListener('keydown', (e) => {
   if (e.key === '/' || (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey))) {
     if (st.mode === 'detail') return;
     e.preventDefault();
-    go(() => openSearch(true));
+    go(() => openSearch(true, true));
     return;
   }
   const onButton = e.target.closest && e.target.closest('button');
@@ -1884,7 +1892,7 @@ function frame(now) {
   if (ink) {
     let done = true;
     $$('#blobs circle').forEach((c, i) => {
-      const p = Math.max(0, Math.min(1, (now - ink.start - dur(BLOBS[i][2])) / dur(1250)));
+      const p = Math.max(0, Math.min(1, (now - ink.start - dur(BLOBS[i][2] / 2)) / dur(600)));
       if (p < 1) done = false;
       c.setAttribute('r', (720 * (1 - Math.pow(1 - p, 3))).toFixed(1));
     });

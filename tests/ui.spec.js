@@ -296,12 +296,12 @@ const near = (o) => {
   expect(Math.abs(900 - o.inset.bottom - (o.r.y + o.r.height))).toBeLessThan(2);
 };
 
-test('hero: Enter Arkhive grows the vault out of the button itself, round 999px, 880 ms', async ({ page }) => {
+test('hero: Enter Arkhive grows the vault out of the button itself, round 999px, 450 ms', async ({ page }) => {
   const o = await originOf(page, '#btn-enter-arkhive');
   near(o);
   expect(o.round).toBe('999');
-  expect(o.duration).toBe(600);
-  expect(o.easing).toBe('cubic-bezier(0.76, 0, 0.18, 1)');
+  expect(o.duration).toBe(450);
+  expect(o.easing).toBe('cubic-bezier(0.32, 0.72, 0, 1)');
   await view(page, 'tier1');
 });
 
@@ -975,6 +975,113 @@ test('tray: dragging the pulled-out cover onto the tray stages it without openin
   await page.mouse.up();
   await expect(cards(page)).toHaveCount(1);
   await expect(page.locator('body')).toHaveAttribute('data-view', 'tier2');
+});
+
+// ---------- 005 US9 motion review fixes ----------
+
+// Records every Web Animations call: which element, how long, which curve, which properties.
+const recordAnims = (page) => page.addInitScript(() => {
+  window.__anims = [];
+  const orig = Element.prototype.animate;
+  Element.prototype.animate = function (k, o) {
+    window.__anims.push({ id: this.id, cls: this.className && String(this.className), d: o && o.duration, e: o && o.easing, props: Object.keys((k && k[0]) || {}) });
+    return orig.call(this, k, o);
+  };
+});
+const sheetAnims = (page, id) => page.evaluate((id) => window.__anims.filter((a) => a.id === id).map((a) => [a.d, a.e]), id);
+
+test('motion: every sheet opens in 450 ms and folds back in 300 ms on the drawer curve', async ({ page }) => {
+  await recordAnims(page);
+  await start(page);
+  await search(page, 'blood');
+  await view(page, 'tier2');
+  await page.keyboard.press('Enter');
+  await view(page, 'detail');
+  await page.keyboard.press('Escape');
+  await view(page, 'tier2');
+  await page.keyboard.press('Escape');
+  await view(page, 'tier1');
+  await page.locator('#back').click();
+  await view(page, 'landing');
+  const D = 'cubic-bezier(.32, .72, 0, 1)';
+  expect(await sheetAnims(page, 'vault')).toEqual([[450, D], [300, D]]);
+  expect(await sheetAnims(page, 'tier2')).toEqual([[450, D], [300, D]]);
+  expect(await sheetAnims(page, 'detail')).toEqual([[450, D], [300, D]]);
+});
+
+test('motion: the viewer opens in 450 ms and folds back in 300 ms', async ({ page }) => {
+  await recordAnims(page);
+  await viewIn(page, 'PDF', CBC);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#viewer')).toBeHidden();
+  expect(await sheetAnims(page, 'viewer')).toEqual([[450, 'cubic-bezier(.32, .72, 0, 1)'], [300, 'cubic-bezier(.32, .72, 0, 1)']]);
+});
+
+test('motion: a caption rolls in 180 ms when the shelf steps; the inspector text reveals in 300 ms with 40 ms steps', async ({ page }) => {
+  await recordAnims(page);
+  await start(page);
+  await page.evaluate(() => { window.__anims.length = 0; });
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => page.evaluate(() => window.__anims.filter((a) => a.props.includes('transform') && !a.id).length)).toBeGreaterThan(0);
+  const rolls = await page.evaluate(() => window.__anims.filter((a) => !a.id).map((a) => [a.d, a.e]));
+  for (const r of rolls) expect(r).toEqual([180, 'cubic-bezier(.23, 1, .32, 1)']);
+  const mi = await page.evaluate(() => ({
+    d: getComputedStyle(document.querySelector('#d-name').closest('.mi') || document.querySelector('.d-left .mi')).transitionDuration,
+    delays: [...document.querySelectorAll('.d-left .mi')].map((e) => parseFloat(e.style.getPropertyValue('--dl'))),
+  }));
+  expect(mi.d).toBe('0.3s');
+  mi.delays.forEach((v, i) => { if (i) expect(Math.round((v - mi.delays[i - 1]) * 1000)).toBe(40); });
+  expect(Math.max(...mi.delays)).toBeLessThanOrEqual(0.4);
+});
+
+test('motion: / opens the search field at once; the pointer opens it in 200 ms', async ({ page }) => {
+  await start(page);
+  await page.keyboard.press('/');
+  expect((await page.locator('#sbox').boundingBox()).width).toBeGreaterThan(300); // no waiting
+  await page.keyboard.press('Escape');
+  await page.mouse.click(5, 890);
+  await expect(page.locator('#sbox')).not.toHaveAttribute('data-open', /.*/);
+  expect(await page.$eval('#sbox', (e) => getComputedStyle(e).transitionDuration)).toMatch(/^0\.2s/);
+  expect(await page.$eval('.pill', (e) => getComputedStyle(e).transitionDuration)).toBe('0.22s');
+});
+
+test('motion: the SORT marker slides by transform only; the voice pill moves in 200 ms; the toast in 400 ms ease', async ({ page }) => {
+  await start(page);
+  const ind = await page.$eval('#pillSort .ind', (e) => ({ p: getComputedStyle(e).transitionProperty, d: getComputedStyle(e).transitionDuration, w: getComputedStyle(e).width }));
+  expect(ind).toEqual({ p: 'transform', d: '0.2s', w: '1px' });
+  expect(await page.$eval('#voicePill', (e) => getComputedStyle(e).transitionDuration)).toBe('0.2s');
+  expect(await page.$eval('#toast', (e) => [getComputedStyle(e).transitionDuration, getComputedStyle(e).transitionTimingFunction])).toEqual(['0.4s', 'ease']);
+});
+
+test('motion: the ENTER ARKHIVE hover lift runs only for a fine pointer that can hover', async ({ page }) => {
+  await page.goto(URL);
+  const media = await page.evaluate(() => {
+    const out = [];
+    for (const sh of document.styleSheets) for (const r of sh.cssRules) {
+      const inner = r.cssRules ? [...r.cssRules] : [r];
+      for (const x of inner) if (x.selectorText && /#btn-enter-arkhive:hover/.test(x.selectorText)) out.push(r.media ? r.media.mediaText : '');
+    }
+    return out;
+  });
+  expect(media.length).toBeGreaterThan(0);
+  for (const m of media) expect(m).toBe('(hover: hover) and (pointer: fine)');
+  expect(await page.$eval('.bt-roll > span', (e) => getComputedStyle(e).transitionDuration)).toBe('0.25s');
+});
+
+test('motion: with reduced motion sheets fade in 200 ms and the shelf steps without sliding', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await recordAnims(page);
+  await start(page);
+  const v = await page.evaluate(() => window.__anims.filter((a) => a.id === 'vault').map((a) => [a.d, a.props.join()]));
+  expect(v[0]).toEqual([200, 'opacity']);
+  const x0 = await page.$eval('#shelf1 .tape.is-active', (e) => e.style.transform);
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(40);
+  const a = await page.$eval('#shelf1 .tape.is-active', (e) => e.style.transform);
+  await page.waitForTimeout(200);
+  const b = await page.$eval('#shelf1 .tape.is-active', (e) => e.style.transform);
+  expect(a).toBe(b); // already in place, nothing slides
+  expect(a).toBe(x0); // the pulled-out slot sits where the last one sat
 });
 
 test('reduced motion: the whole flow still completes', async ({ page }) => {
