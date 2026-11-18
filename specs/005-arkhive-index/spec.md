@@ -67,6 +67,14 @@ Builds on 001–004; where it differs, this spec wins.
 3. A refused folder is named in the vault with the settings button and "then reopen Arkhive".
 4. The README gives the install steps, including Open Anyway.
 
+### US9 Motion that keeps up (P1, owner 2026-11-18: ran /review-animations, "apply the fixes")
+1. Sheets (vault, file shelf, inspector, viewer) open in 450 ms and fold back in 300 ms on the drawer curve cubic-bezier(.32, .72, 0, 1).
+2. Captions and labels roll in 180 ms; the inspector text reveals in 300 ms with 40 ms steps.
+3. The search field opens at once from `/` or ⌘K; by pointer it opens in 200 ms. SORT and FILE TYPES unfold in 220 ms; their marker slides by transform.
+4. The voice pill moves in 200 ms; the toast in 400 ms `ease`.
+5. The ENTER ARKHIVE hover lift and label roll (250 ms) run only for a fine pointer that can hover.
+6. With reduced motion, sheets fade in 200 ms instead of growing, and the shelf steps without sliding.
+
 ## Requirements
 - FR-001 DB at the app data folder `arkhive_real_index.db`, WAL, synchronous NORMAL, busy_timeout 5000.
 - FR-002 One writer thread; readers open their own connections.
