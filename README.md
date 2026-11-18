@@ -8,10 +8,10 @@ Everything on screen is your own files. The app ships no sample data.
 - **Viewing**: clicking a file shows it inside Arkhive. PDFs, pictures, video and audio load straight from disk; Word, PowerPoint, Excel and CSV become a page through macOS Quick Look (RTF and DOC through textutil); text and code are read as text. Nothing is handed to Finder unless you press OPEN IN DEFAULT APP.
 - **Folders**: every folder Finder shows in your home folder, plus iCloud Drive and Applications. Apps and the Photos library are single items, as in Finder.
 - **Vault shelf**: 16 vaults (All files, PDF, PPTX, JPEG, DOCX, XLSX, Code, Desktop, Documents, Downloads, Folders, Medical / Health, Media, Archives, Projects, Recent), each with its real file count and total size.
-- **[ SORT ] and [ FILE TYPES ]**: two boxed buttons just above the shelf, on every shelf. Press one to unfold its options; a choice applies and folds it. SORT: relevance, name A–Z / Z–A, date newest / oldest, size. FILE TYPES lists each type with its count; on the vault shelf it opens that type.
+- **SORT and FILE TYPES**: two boxed buttons just above the shelf, on every shelf. Press one to unfold its options; a choice applies and folds it. SORT: relevance, name A–Z / Z–A, date newest / oldest, size. FILE TYPES lists each type with its count; on the vault shelf it opens that type.
 - **File shelf**: the files in a vault, a search, or a folder. The pulled-out cover shows a real preview of the file.
 - **Search**: click the ARKHIVE wordmark (or press `/` or `⌘K`) and the hairline under it opens into a search field.
-- **Open**: click the pulled-out cover. A file opens in its default app and shows its inspector; a folder opens on the shelf.
+- **Open**: click the pulled-out cover. A file is shown inside Arkhive (see Viewing); a folder opens on the shelf.
 - **Inspector**: details and permissions, the matched text highlighted, the folder path (each folder opens on the shelf), and Open / Quick Look / Reveal in Finder / Rename (with UNDO) / Move to folder / Add to export tray / Move to Trash.
 - **Export tray**: stage files, then export copies to Downloads or a folder you pick, copy their paths, reveal them, rename them all ("Lab 1.pdf", "Lab 2.pdf", …), or move them all to the Trash. Each card has its own remove button. The pulled-out cover also drags straight into Finder, Mail or any other Mac app.
 - **Voice**: turn the mic on with `V` or the mic button, then say "Hey Arkhive, find the file which has blood related". The Mac app uses macOS speech recognition through a small bundled helper.
@@ -59,7 +59,7 @@ Checks that need a live Mac session are listed in `specs/003-arkhive-prism/quick
 - **Counts and sizes**: one `vault_summary` call runs every vault's query and returns its count, total bytes and newest file.
 - **Previews**: `thumbnail` asks macOS Quick Look for a PNG, so any file type the Mac can preview gets a real cover.
 - **Rename** never replaces another file. **Move to Trash** goes through Finder, so the file can be put back; macOS asks once for permission.
-- **Start screen**: `app/landing.js` draws the scene on two canvases in whole art pixels (4 CSS px), palette colours only; clouds, the flower and the laptop screen move, nothing moves with reduced motion. Without canvas the words and buttons still work on a flat ground.
+- **Home**: `app/landing.js` draws only the pixel laptop, notebook and pen, in palette colours; the laptop screen moves, nothing moves with reduced motion. Without canvas the words and buttons still work on a flat ground.
 - **Live counts**: when the window comes back into focus (at most every 5 s), vault counts, the access check and an open folder shelf refresh.
 - **Voice on Mac**: `src-tauri/speech/main.swift` (SFSpeechRecognizer, on-device when available) is compiled by `build.rs` and shipped beside the app (`tauri.macos.conf.json`). It prints one line per event; a 1.4 s pause ends a phrase.
 - **iPhone** can't search other apps' files. Arkhive searches its own Documents folder plus folders you add; `gen/apple/Sources/archiveos/FolderPicker.swift` keeps them as security-scoped bookmarks.
@@ -90,4 +90,4 @@ tests/               core.test.js (node), ui.spec.js (Playwright), fixtures/ (st
 - **iPhone**: a white band shows below the page on the simulator (the webview frame stops short of the screen bottom, T933).
 - **No Android build yet** (T906): deferred for disk space; it needs about 6–8 GB free.
 - The app's internal identifier is still `dev.archiveos.app`; only the visible name changed.
-- Fonts load from Google Fonts. Offline, the page falls back to Georgia and the system sans-serif.
+- Inter Tight and Newsreader ship inside the app (`app/fonts/`, SIL OFL); nothing is fetched from the internet.

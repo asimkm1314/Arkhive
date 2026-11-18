@@ -27,5 +27,5 @@
 - [x] T119 release build: codesign verify, helpers inside, usage strings in the bundle, app launches
 - [ ] T120 (owner, later) Developer ID signing and notarization
 ## C Finish
-- [ ] T107 all suites, app build, launch on the owner's Mac, README
+- [x] T107 all suites, app build, launch on the owner's Mac, README
 - [ ] T906 Android (deferred; owner 2026-11-15: keep as backup, do not build yet)
