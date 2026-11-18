@@ -75,6 +75,13 @@ Builds on 001–004; where it differs, this spec wins.
 5. The ENTER ARKHIVE hover lift and label roll (250 ms) run only for a fine pointer that can hover.
 6. With reduced motion, sheets fade in 200 ms instead of growing, and the shelf steps without sliding.
 
+### US10 Soft edges (P2, owner brief 2026-11-18: "soften square button/bar edges")
+1. ENTER ARKHIVE rests on a softer shadow (0 3px 0), presses to -1px at 0.99; the hover lift stays at -4px / 1.02 (already halved on 2026-11-18).
+2. Every boxed button (.box: back, close, inspector actions, tray, viewer bar) and the MIC badge have 8px corners; touch targets are not clipped.
+3. SORT and FILE TYPES: 12px bar with 4px padding and a soft shadow; the label and marker nest at 7px, options at 6px.
+4. The search line is a 1.5px rounded hairline; open, the field has 12px corners, a soft border and shadow, and turns forest while focused.
+5. The export tray has 14px top corners; its cards 8px.
+
 ## Requirements
 - FR-001 DB at the app data folder `arkhive_real_index.db`, WAL, synchronous NORMAL, busy_timeout 5000.
 - FR-002 One writer thread; readers open their own connections.

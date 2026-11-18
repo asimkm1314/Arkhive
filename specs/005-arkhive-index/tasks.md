@@ -29,6 +29,9 @@
 ## H Motion review fixes (US9)
 - [x] T121 UI tests: sheet durations and curve, caption roll, inspector reveal, instant keyboard search, pill marker by transform, voice pill and toast timing, hover gating, reduced-motion fade and shelf step
 - [x] T122 index.html motion fixes
+## I Soft edges (US10)
+- [x] T123 UI tests: radii, shadows, press state, focus cue, touch targets unclipped
+- [x] T124 index.html soft edges
 ## C Finish
 - [x] T107 all suites, app build, launch on the owner's Mac, README
 - [ ] T906 Android (deferred; owner 2026-11-15: keep as backup, do not build yet)
