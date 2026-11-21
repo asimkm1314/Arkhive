@@ -6,6 +6,7 @@ Everything on screen is your own files. The app ships no sample data.
 
 - **Home**: on open ARKHIVE travels through two layers of gold and cream curves to the centre; ENTER ARKHIVE rises at the bottom centre and lifts under the pointer; the pixel laptop with a leather notebook sits bottom-right. Each of them grows the vault out of itself; ← HOME folds it back in.
 - **Viewing**: clicking a file shows it inside Arkhive. PDFs, pictures, video and audio load straight from disk; Word, PowerPoint, Excel and CSV become a page through macOS Quick Look (RTF and DOC through textutil); text and code are read as text. Nothing is handed to Finder unless you press OPEN IN DEFAULT APP.
+- **Dark mode**: DARK MODE in the top bar grows the dark theme out of the button to the whole screen (LIGHT MODE switches back); the choice is remembered, light is the default.
 - **Folders**: every folder Finder shows in your home folder, plus iCloud Drive and Applications. Apps and the Photos library are single items, as in Finder.
 - **Vault shelf**: 16 vaults (All files, PDF, PPTX, JPEG, DOCX, XLSX, Code, Desktop, Documents, Downloads, Folders, Medical / Health, Media, Archives, Projects, Recent), each with its real file count and total size.
 - **SORT and FILE TYPES**: two boxed buttons just above the shelf, on every shelf. Press one to unfold its options; a choice applies and folds it. SORT: relevance, name A–Z / Z–A, date newest / oldest, size. FILE TYPES lists each type with its count; on the vault shelf it opens that type.
