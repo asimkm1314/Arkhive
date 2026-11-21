@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>try { if (localStorage.getItem("arkhive-theme") === "dark") document.documentElement.dataset.theme = "dark"; } catch (e) {} /* before paint: no light flash */</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Arkhive</title>
 <link rel="icon" href="data:,">
@@ -14,11 +15,27 @@
   --mocha-ink: #261A14; --mocha-mid: #5C463B; --mocha-muted: #8A7367;
   --forest: #234434; --forest-light: #3A634C; --gold: #B89658; --silver: #D8CFC0;
   --rule: rgba(38, 26, 20, .88);
+  --edge: rgba(38, 26, 20, .55); --edge-soft: rgba(38, 26, 20, .45); /* outlines of the bars and the search field */
+  --base: var(--mocha-ink); /* the ledge under ENTER ARKHIVE */
   --ease: cubic-bezier(.2, .8, .2, 1);
   --ease-out: cubic-bezier(.23, 1, .32, 1); /* strong ease-out for UI that must keep up */
   --H: min(46vh, 31vw);
   --font-serif: "Newsreader", Georgia, serif;
   --font-sans: "Inter Tight", system-ui, sans-serif;
+}
+/* Dark mode: the same roles, lit from below. Cover art and the pixel desk keep their own colours. */
+:root[data-theme="dark"] {
+  --paper: #16110E; --sheet: #211914;
+  --mocha-ink: #EFE7DB; --mocha-mid: #C7B6A8; --mocha-muted: #A3907F;
+  --forest: #93BC9F; --gold: #C9A86A;
+  --rule: rgba(239, 231, 219, .5);
+  --edge: rgba(239, 231, 219, .32); --edge-soft: rgba(239, 231, 219, .26); --base: #0A0705;
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .sp { background: #5C463B; } /* spines stay leather */
+:root[data-theme="dark"] .t1 .sp { background: #234434; }
+@media (prefers-reduced-motion: no-preference) { /* the reveal is ours; reduced motion keeps the default crossfade */
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 }
 @media (max-width: 767px) { :root { --H: min(60vw, 40svh); } }
 
@@ -75,15 +92,15 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 #hero-computer { left: 8%; top: 11%; width: 67%; height: 84%; }
 #hero-book { left: 75%; top: 61%; width: 24%; height: 34%; }
 #btn-enter-arkhive { position: fixed; left: 50%; bottom: 5.5vh; transform: translateX(-50%); z-index: 30; height: 52px; padding: 0 38px; border-radius: 999px; overflow: hidden;
-  background: var(--forest); color: var(--sheet); border: 1.5px solid var(--mocha-ink); box-shadow: 0 3px 0 var(--mocha-ink), 0 6px 14px -4px rgba(38, 26, 20, .22);
+  background: var(--forest); color: var(--sheet); border: 1.5px solid var(--base); box-shadow: 0 3px 0 var(--base), 0 6px 14px -4px rgba(38, 26, 20, .22);
   font: 700 13px/1 var(--font-sans); letter-spacing: .16em; text-transform: uppercase; white-space: nowrap;
   transition: transform .25s var(--ease), box-shadow .25s var(--ease), border-color .2s ease; }
 @media (hover: hover) and (pointer: fine) { /* touch fires a false hover on tap */
-  #btn-enter-arkhive:hover { transform: translate(-50%, -4px) scale(1.02); border-color: var(--gold); box-shadow: 0 7px 0 var(--mocha-ink), 0 14px 22px -6px rgba(35, 68, 52, .3); }
+  #btn-enter-arkhive:hover { transform: translate(-50%, -4px) scale(1.02); border-color: var(--gold); box-shadow: 0 7px 0 var(--base), 0 14px 22px -6px rgba(35, 68, 52, .3); }
   #btn-enter-arkhive:hover .bt-a { transform: translateY(-110%); }
   #btn-enter-arkhive:hover .bt-b { transform: translateY(0%); }
 }
-#btn-enter-arkhive:active { transform: translate(-50%, -1px) scale(.99); box-shadow: 0 2px 0 var(--mocha-ink); transition-duration: .08s; }
+#btn-enter-arkhive:active { transform: translate(-50%, -1px) scale(.99); box-shadow: 0 2px 0 var(--base); transition-duration: .08s; }
 .bt-roll { position: relative; z-index: 1; display: inline-grid; height: 1.2em; line-height: 1.2em; overflow: hidden; vertical-align: middle; }
 .bt-roll > span { grid-area: 1 / 1; transition: transform .25s var(--ease-out); }
 .bt-b { color: var(--gold); transform: translateY(110%); }
@@ -141,7 +158,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
   transition: width .2s var(--ease-out), height .2s var(--ease-out), background-color .2s var(--ease-out), border-width .2s var(--ease-out);
 }
 #sHit { position: absolute; left: 50%; top: 52px; width: 48px; height: 21px; transform: translateX(-50%); } /* a taller target for the pointer than one pixel */
-#sbox[data-open] { width: min(440px, calc(100vw - 28px)); height: 40px; background: var(--sheet); border-width: 1px; border-color: rgba(38, 26, 20, .45); border-radius: 12px; box-shadow: 0 10px 28px -10px rgba(38, 26, 20, .16); }
+#sbox[data-open] { width: min(440px, calc(100vw - 28px)); height: 40px; background: var(--sheet); border-width: 1px; border-color: var(--edge-soft); border-radius: 12px; box-shadow: 0 10px 28px -10px rgba(38, 26, 20, .16); }
 #sbox[data-open]:focus-within { border-color: var(--forest); } /* the field's focus cue */
 #searchForm { position: relative; display: flex; align-items: stretch; height: 37px; width: min(438px, calc(100vw - 30px)); visibility: hidden; transition: visibility 0s .2s; }
 #sbox[data-open] #searchForm { visibility: visible; transition-delay: 0s; }
@@ -156,7 +173,7 @@ mark { background: rgba(184, 150, 88, .28); color: inherit; padding: 0 .08em; }
 .rows > .m { overflow: visible; clip-path: inset(-4px 0); }
 /* SORT and FILE TYPES: right under the wordmark's search line; they step down while the field is open */
 .tools { position: absolute; left: 0; right: 0; top: max(113px, calc(50% - var(--H) / 2 - 81px)); /* 38px bars: centred where the 28px ones sat */ z-index: 35; display: flex; justify-content: center; gap: 12px; pointer-events: none; }
-.pill { pointer-events: auto; display: grid; grid-template-columns: auto 0fr; height: 38px; padding: 4px; max-width: calc(100vw - 20px); background: var(--sheet); border: 1px solid rgba(38, 26, 20, .55); border-radius: 12px; box-shadow: 0 8px 24px -8px rgba(38, 26, 20, .15); transition: grid-template-columns .22s var(--ease-out); }
+.pill { pointer-events: auto; display: grid; grid-template-columns: auto 0fr; height: 38px; padding: 4px; max-width: calc(100vw - 20px); background: var(--sheet); border: 1px solid var(--edge); border-radius: 12px; box-shadow: 0 8px 24px -8px rgba(38, 26, 20, .15); transition: grid-template-columns .22s var(--ease-out); }
 .pill[data-open] { grid-template-columns: auto 1fr; }
 .pill-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; border-radius: 7px; white-space: nowrap; transition: background-color .15s var(--ease), color .15s var(--ease); }
 .pill-label:hover { background: var(--paper); }
@@ -351,6 +368,7 @@ body:not([data-tray="0"]) :is(.shelf, .cap, .rows) { translate: 0 -56px; }
       <div class="m"><div class="mi lbl count" id="count" style="--dl:.12s"></div></div>
       <div class="m"><div class="mi lbl" style="--dl:.14s"><span id="micBadge">MIC OFF</span></div></div>
       <div class="m"><div class="mi" style="--dl:.16s"><button class="lbl box hit" id="pickTop">Choose folder</button></div></div>
+      <div class="m"><div class="mi" style="--dl:.18s"><button class="lbl box hit" id="themeBtn" aria-pressed="false">Dark mode</button></div></div>
     </div>
   </header>
   <div class="hit" id="sHit" aria-hidden="true"></div>
@@ -1903,6 +1921,29 @@ function frame(now) {
   }
   requestAnimationFrame(frame);
 }
+
+// ---------- dark mode: the new theme grows out of the button, as the vault grows out of ENTER ARKHIVE ----------
+const themeBtn = $('#themeBtn'), docEl = document.documentElement;
+function showTheme() {
+  const dark = docEl.dataset.theme === 'dark';
+  themeBtn.textContent = dark ? 'Light mode' : 'Dark mode';
+  themeBtn.setAttribute('aria-pressed', String(dark));
+}
+function toggleTheme() {
+  const dark = docEl.dataset.theme !== 'dark';
+  const apply = () => {
+    if (dark) docEl.dataset.theme = 'dark'; else delete docEl.dataset.theme;
+    try { localStorage.setItem('arkhive-theme', dark ? 'dark' : 'light'); } catch (err) { console.info(`Arkhive: theme not saved: ${err}`); }
+    showTheme();
+  };
+  if (!document.startViewTransition) return apply();
+  const from = insetOf(themeBtn.getBoundingClientRect(), 8);
+  const t = document.startViewTransition(apply);
+  if (!reduce) t.ready.then(() => docEl.animate({ clipPath: [from, 'inset(0px 0px 0px 0px round 0px)'] }, { duration: 700, easing: SHEET_EASE, pseudoElement: '::view-transition-new(root)' }))
+    .catch((err) => console.info(`Arkhive: theme reveal skipped: ${err}`));
+}
+themeBtn.addEventListener('click', toggleTheme);
+showTheme();
 
 // ---------- boot ----------
 measure();

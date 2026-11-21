@@ -82,6 +82,12 @@ Builds on 001–004; where it differs, this spec wins.
 4. The search line is a 1.5px rounded hairline; open, the field has 12px corners, a soft border and shadow, and turns forest while focused.
 5. The export tray has 14px top corners; its cards 8px.
 
+### US11 Dark mode (P2, owner 2026-11-19: "add a dark mode ... slow change from the button to the whole screen like how other button works")
+1. A "Dark mode" / "Light mode" button sits in the top bar (aria-pressed); the choice is remembered across launches; light is the default.
+2. Switching grows the new theme out of the button's own rectangle to the whole screen in 700 ms (the sheets' drawer curve), as ENTER ARKHIVE grows the vault.
+3. With reduced motion the themes crossfade instead.
+4. In dark mode the page, sheets, labels and borders switch; body text and labels keep at least 4.5:1 contrast. Cover art and the pixel desk keep their own colours.
+
 ## Requirements
 - FR-001 DB at the app data folder `arkhive_real_index.db`, WAL, synchronous NORMAL, busy_timeout 5000.
 - FR-002 One writer thread; readers open their own connections.
