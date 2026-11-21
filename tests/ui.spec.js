@@ -1130,6 +1130,68 @@ test('soft edges: a staged file card has 8px corners', async ({ page }) => {
   expect(await page.$eval('#trayList li', (e) => getComputedStyle(e).borderTopLeftRadius)).toBe('8px');
 });
 
+// ---------- 005 US11 dark mode ----------
+
+const lum = (rgb) => { const [r, g, b] = rgb.match(/\d+/g).slice(0, 3).map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+const contrast = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05); };
+
+test('dark mode: the top-bar button switches the theme, says which one it offers, and is remembered after a relaunch', async ({ page }) => {
+  await start(page);
+  const btn = page.locator('#themeBtn');
+  await expect(btn).toHaveText('Dark mode');
+  await expect(btn).toHaveAttribute('aria-pressed', 'false');
+  await btn.click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await expect(btn).toHaveText('Light mode');
+  await expect(btn).toHaveAttribute('aria-pressed', 'true');
+  await page.waitForTimeout(900);
+  const dark = await page.evaluate(() => ({ bg: getComputedStyle(document.querySelector('#vault')).backgroundColor, ink: getComputedStyle(document.querySelector('#count')).color, back: getComputedStyle(document.querySelector('#back')).color }));
+  expect(lum(dark.bg)).toBeLessThan(0.05);
+  expect(contrast(dark.ink, dark.bg)).toBeGreaterThanOrEqual(4.5);
+  expect(contrast(dark.back, dark.bg)).toBeGreaterThanOrEqual(4.5);
+  await page.reload();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark'); // set before the page paints: no light flash
+  expect(lum(await page.$eval('#hero', (e) => getComputedStyle(e).backgroundColor))).toBeLessThan(0.05);
+  await enterVault(page);
+  await page.locator('#themeBtn').click();
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /.*/);
+  await expect(page.locator('#themeBtn')).toHaveText('Dark mode');
+});
+
+test('dark mode: the new theme grows out of the button to the whole screen in 700 ms', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__vt = [];
+    const orig = Element.prototype.animate;
+    Element.prototype.animate = function (k, o) { if (o && o.pseudoElement) window.__vt.push({ k: JSON.parse(JSON.stringify(k)), o: { duration: o.duration, easing: o.easing, pseudoElement: o.pseudoElement } }); return orig.call(this, k, o); };
+  });
+  await start(page);
+  const r = await page.locator('#themeBtn').boundingBox();
+  await page.locator('#themeBtn').click();
+  await expect.poll(() => page.evaluate(() => window.__vt.length)).toBe(1);
+  const a = await page.evaluate(() => window.__vt[0]);
+  expect(a.o).toEqual({ duration: 700, easing: 'cubic-bezier(.32, .72, 0, 1)', pseudoElement: '::view-transition-new(root)' });
+  const [top, right, bottom, left] = a.k.clipPath[0].split('round')[0].match(/[\d.]+px/g).map(parseFloat);
+  expect(Math.abs(top - r.y)).toBeLessThan(2);
+  expect(Math.abs(left - r.x)).toBeLessThan(2);
+  expect(Math.abs(1440 - right - (r.x + r.width))).toBeLessThan(2);
+  expect(Math.abs(900 - bottom - (r.y + r.height))).toBeLessThan(2);
+  expect(a.k.clipPath[1]).toMatch(/^inset\(0px 0px 0px 0px round 0px\)$/);
+});
+
+test('dark mode: with reduced motion the themes crossfade, with no reveal from the button', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.addInitScript(() => {
+    window.__vt = 0;
+    const orig = Element.prototype.animate;
+    Element.prototype.animate = function (k, o) { if (o && o.pseudoElement) window.__vt++; return orig.call(this, k, o); };
+  });
+  await start(page);
+  await page.locator('#themeBtn').click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => window.__vt)).toBe(0);
+});
+
 test('reduced motion: the whole flow still completes', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await start(page);
